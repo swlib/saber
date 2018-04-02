@@ -10,6 +10,8 @@
 
 HTTP军刀, `Swoole人性化组件库`之PHP高性能HTTP客户端, 基于Swoole原生协程, 支持多种风格操作, 底层提供高性能解决方案, 让开发者专注于功能开发, 从传统同步阻塞且配置繁琐的Curl中解放.
 
+>  **[English Document](./README-en.md)**
+
 - 基于Swoole协程Client开发
 - 人性化使用风格, ajax.js/axios.js/requests.py用户福音, 同时支持PSR风格操作
 - 浏览器级别完备的Cookie管理机制, 完美适配爬虫/API代理应用
@@ -22,7 +24,6 @@ HTTP军刀, `Swoole人性化组件库`之PHP高性能HTTP客户端, 基于Swoole
 - 自动化 编码请求/解析响应 数据
 - 毫秒超时定时器
 - 随机UA生成器
-
 
 
 
