@@ -1,0 +1,49 @@
+{
+  "name": "swlib/saber",
+  "type": "library",
+  "keywords": [
+    "php",
+    "swoole",
+    "http",
+    "client",
+    "psr7",
+    "coroutine",
+    "axios",
+    "ajax",
+    "requests",
+    "curl"
+  ],
+  "description": "Swoole coroutine HTTP client",
+  "license": "Apache-2.0",
+  "authors": [
+    {
+      "name": "twosee",
+      "email": "twose@qq.com"
+    }
+  ],
+  "require": {
+    "php": ">=7.0",
+    "psr/http-message": "~1.0",
+    "swlib/http": "dev-master",
+    "swlib/util": "dev-master"
+  },
+  "autoload": {
+    "psr-4": {
+      "Swlib\\": "src",
+      "Swlib\\Saber\\": "src"
+    }
+  },
+  "repositories": [
+    {
+      "type": "composer",
+      "url": "https://packagist.phpcomposer.com"
+    }
+  ],
+  "require-dev": {
+    "eaglewu/swoole-ide-helper": "dev-master",
+    "phpunit/phpunit": "^5.7"
+  },
+  "scripts": {
+    "test": "./vendor/bin/phpunit -c phpunit.xml"
+  }
+}
