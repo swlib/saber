@@ -33,4 +33,14 @@ class ResponseMap extends \ArrayObject
         $response->success ? $this->success_num++ : $this->error_num++;
     }
 
+    public function __toString()
+    {
+        $results = [];
+        foreach ($this as $response) {
+            $results[] = (string)$response;
+        }
+
+        return implode("\r\n\r\n\r\n\r\n", $results);
+    }
+
 }

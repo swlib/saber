@@ -15,6 +15,9 @@ class RequestQueue extends \SplQueue
         if (!($request instanceof Request)) {
             throw new \InvalidArgumentException('Value must be instance of ' . Request::class);
         }
+        if ($request->isWaiting()) {
+            throw new \InvalidArgumentException('You can\'t send a request which is waiting to the queue.');
+        }
         /**
          * 注意! `withRedirectWait`是并发重定向优化
          * 原理是重定向时并不如同单个请求一样马上收包,而是将其再次加入请求队列执行defer等待收包

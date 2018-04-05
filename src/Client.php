@@ -22,23 +22,21 @@ use Swlib\Http\Uri;
 class Client
 {
 
-    private static $default_options_multi_fields = [
-        'headers',
-    ];
     private static $default_options = [
-        'connect_timeout' => 3, //连接超时时间
-        'timeout' => 5,
+        'timeout' => 5.000,
         'proxy' => null,
-        'ssl' => false,
-        'ssl_verify' => true,
+        'ssl' => null,
         'cafile' => __DIR__ . '/cacert.pem',
+        'ssl_verify_peer' => false,
+        'ssl_host_name' => null,
+        'ssl_allow_self_signed' => true,
         'protocol_version' => '1.1',
         'method' => 'GET',
         'base_uri' => null,
         'uri' => null,
         'headers' => [
-            'accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-            'accept-encoding' => 'gzip',
+            'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+            'Accept-Encoding' => 'gzip',
         ],
         'cookies' => false,
         'useragent' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36',
@@ -46,33 +44,39 @@ class Client
         'redirect' => 5,
         'keep_alive' => true,
         'data' => null,
+        'before' => null,
+        'callback' => null
     ];
+
+    private static $default_template_request;
+
+    private static function getTemplateRequestCopy(): Request
+    {
+        if (!isset(self::$default_template_request)) {
+            self::$default_template_request = new Request();
+            self::transOptionsToRequest(
+                self::$default_options,
+                self::$default_template_request
+            );
+        }
+
+        return clone self::$default_template_request;
+    }
 
     public static function create(array $options = []): self
     {
-        return new static(
-            self::mergeOptions($options, self::$default_options, self::$default_options_multi_fields)
-        );
+        return new static($options);
     }
 
+    public $raw;
     public $options = [];
 
     private function __construct(array $options)
     {
-        $this->options = $options;
-    }
-
-    private static function mergeOptions(array $options, array $default, array $multi_fields_keys = [])
-    {
-        /** merge default options */
-        //array fields would be overwrite without doing these
-        foreach ($multi_fields_keys as $key) {
-            if (isset($options[$key])) {
-                $options[$key] += self::$default_options[$key];
-            }
-        }
-
-        return $options + $default;
+        $this->setOptions(
+            $this->options = $options,
+            $this->raw = $this->getTemplateRequestCopy()
+        );
     }
 
     public function __call($name, $arguments)
@@ -116,13 +120,91 @@ class Client
      */
     public function request(array $options)
     {
-        $options = self::mergeOptions($options, $this->options, self::$default_options_multi_fields);
-        $uri = Uri::resolve($options['base_uri'], $options['uri']);
+        $request = clone $this->raw;
+        $this->setOptions($options, $request);
 
-        /**
-         * 设置请求的数据和method
-         */
-        $options['method'] = strtoupper($options['method']);
+        /** Psr style */
+        if ($options['psr'] ?? false) {
+            return $request;
+        }
+
+        $request->exec();
+
+        if ($options['wait'] ?? false) {
+            return $request;
+        }
+
+        return $request->recv();
+    }
+
+    /**
+     * @param array $options
+     * @param null|Request $request
+     * @return $this
+     */
+    public function setOptions(array $options = [], ?Request $request = null): self
+    {
+        if ($request === null) {
+            $request = $this->raw;
+            $this->options = $options + $this->options;
+        }
+        $options += [
+            'base_uri' => $this->options['base_uri'] ?? null,
+            'uri' => $this->options['uri'] ?? null
+        ];
+        self::transOptionsToRequest($options, $request);
+
+        return $this;
+    }
+
+    public static function transAlias(array &$options)
+    {
+        static $aliasMap = [
+            0 => 'method',
+            1 => 'uri',
+            2 => 'data',
+            'base_url' => 'base_uri',
+            'url' => 'uri',
+            'after' => 'callback',
+        ];
+
+        if (count($options) > count($aliasMap)) {
+            foreach ($aliasMap as $alias => $raw_key) {
+                if (isset($options[$alias])) {
+                    $options[$raw_key] = &$options[$alias];
+                }
+            }
+        } else {
+            foreach ($options as $key => &$val) {
+                if (isset($aliasMap[$key])) {
+                    $options[$aliasMap[$key]] = &$val;
+                }
+            }
+        }
+    }
+
+    public static function transOptionsToRequest(array $options, Request $request)
+    {
+        if (empty($options)) {
+            return;
+        }
+        self::transAlias($options);
+
+        if (isset($options['base_uri']) || isset($options['uri'])) {
+            $request->withUri(
+                Uri::resolve($options['base_uri'] ?? null, $options['uri'] ?? null)
+            );
+        }
+
+        /** 设置请求方法 */
+        if (isset($options['method'])) {
+            $request->withMethod($options['method']);
+        }
+
+        /** 设置请求的数据 */
+        if (isset($options['content_type'])) {
+            $request->withHeader('Content-type', $options['content_type']);
+        }
         if (!empty($options['data'])) {
             if (!is_string($options['data'])) {
                 switch ($options['content_type']) {
@@ -141,61 +223,60 @@ class Client
             $options['data'] = null;
         }
         $buffer = $options['data'] ? new BufferStream($options['data']) : null;
-
-        $request = new Request($uri, $options['method'], [], $buffer);
-
-        /**
-         * （可能的）HTTPS 连接证书
-         */
-        if ($uri->getPort() === 443 || $options['ssl']) {
-            $request->withSSL(true, $options['cafile']);
+        if (isset($buffer)) {
+            $request->withBody($buffer);
         }
 
-        /**
-         * 设置两个超时选项
-         */
+        /** （可能的）HTTPS 连接证书 */
+        if (isset($options['ssl'])) {
+            $request->withSSL($options['ssl']);
+        }
+        if (isset($options['ssl_allow_self_signed'])) {
+            $request->withSSLAllowSelfSigned($options['ssl_allow_self_signed']);
+        }
+        if (isset($options['ssl_verify_peer'])) {
+            $request->withSSLVerifyPeer(
+                $options['ssl_verify_peer'],
+                $options['ssl_host_name'] ?? ''
+            );
+        }
+
+        /** 设置超时 */
         if (isset($options['timeout'])) {
             $request->withTimeout($options['timeout']);
         }
 
-        /**
-         * 是否跟踪重定向
-         */
+        /** 是否跟踪重定向 */
         if (isset($options['redirect'])) {
             $request->withRedirect($options['redirect']);
         }
 
-        /**
-         * 设置请求标头
-         */
+        /** 设置请求标头 */
         if (isset($options['headers'])) {
-            foreach ($options['headers'] as $key => $val) {
-                if (is_numeric($key)) {
-                    $options['headers'] = Util::parseHeader($options['headers']); //TODO
-                } else {
+            if (is_array($options['headers'])) {
+                foreach ($options['headers'] as $key => $val) {
                     $request->withHeader($key, $val);
                 }
             }
         }
 
-        /**
-         * 设置COOKIE
-         */
+        /** 设置COOKIE */
         if (!empty($options['cookies'])) {
+            $cookies_default = ($uri = $request->getUri()) ? ['domain' => $uri->getHost()] : [];
             //everything can be a Cookies object
-            $request->cookies->adds($options['cookies']);
+            $request->cookies->adds(
+                $options['cookies'],
+                $cookies_default,
+                true
+            );
         }
 
-        /**
-         * 设置模拟的浏览器标识
-         */
+        /** 设置模拟的浏览器标识 */
         if (isset($options['useragent'])) {
             $request->withHeader('User-Agent', $options['useragent']);
         }
 
-        /**
-         * 设置来源页面
-         */
+        /** 设置来源页面 */
         if (isset($options['referer'])) {
             $request->withHeader('Referer', $options['referer']);
         }
@@ -204,9 +285,7 @@ class Client
             $request->withKeepAlive($options['keep_alive']);
         }
 
-        /**
-         * proxy 是否启用代理
-         */
+        /** proxy 是否启用代理 */
         if (isset($options['proxy'])) {
             $parse = parse_url($options['proxy']);
             if ($parse['scheme'] === 'socks5') {
@@ -219,34 +298,15 @@ class Client
             }
         }
 
-        /**
-         * 注册请求前前拦截器
-         */
+        /** 注册请求前前拦截器 */
         if (isset($options['before'])) {
-            $request->withInterceptor('request', $options['before']);
+            $request->withAddedInterceptor('request', (array)$options['before']);
         }
 
-        /**
-         * 注册回调函数
-         */
+        /** 注册回调函数 */
         if (isset($options['callback'])) {
-            $request->withInterceptor('response', $options['callback']);
+            $request->withAddedInterceptor('response', (array)$options['callback']);
         }
-
-        /**
-         * Psr style
-         */
-        if ($options['psr'] ?? false) {
-            return $request;
-        }
-
-        $request->exec();
-
-        if ($options['wait'] ?? false) {
-            return $request;
-        }
-
-        return $request->recv();
     }
 
     /** @return $this */
@@ -257,12 +317,9 @@ class Client
         return $this;
     }
 
-    /** @return $this */
-    public function psr()
+    public function psr(array $options)
     {
-        $this->options['psr'] = true;
-
-        return $this;
+        return $this->request(['psr' => true] + $options);
     }
 
     public static function merge_data($default, $add): array
@@ -280,7 +337,7 @@ class Client
     }
 
     /**
-     * 使用延迟收包发起一个并发请求
+     * 并发请求
      *
      * @param array $requests
      * @param array $_options
@@ -291,9 +348,11 @@ class Client
     public function requests(array $requests, array $default_options = []): ResponseMap
     {
         $req_queue = new RequestQueue(); //生成请求队列
-        foreach ($requests as $index => $options) {
-            $options = self::mergeOptions($options, $default_options);
-            $req_queue->enqueue($this->psr()->request($options));
+        foreach ($requests as $index => $request) {
+            $request_instance = clone $this->raw;
+            $this->setOptions($default_options, $request_instance);
+            $this->setOptions($request, $request_instance);
+            $req_queue->enqueue($request_instance);
         }
 
         return $req_queue->recv();

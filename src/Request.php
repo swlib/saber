@@ -7,6 +7,7 @@
 
 namespace Swlib\Saber;
 
+use Swlib\Http\Cookies;
 use Swlib\Http\CookiesManagerTrait;
 use Swlib\Http\Exception\ConnectException;
 use Swlib\Http\StreamInterface;
@@ -15,15 +16,19 @@ use Swlib\Util\InterceptorTrait;
 use Swoole\Coroutine;
 use Swoole\Coroutine\Http\Client;
 
-final class Request extends \Swlib\Http\Request
+class Request extends \Swlib\Http\Request
 {
+    /** @var string $name */
     public $name;
     /** @var \Swoole\Coroutine\Http\Client */
     public $client;
     /** @var bool 是否使用SSL连接 */
-    public $ssl = false;
+    public $ssl = null;
     /** @var string CA证书目录 */
     public $ca_file = '';
+    public $ssl_verify_peer = false;
+    public $ssl_host_name = '';
+    public $ssl_allow_self_signed = true;
     /** @var array 代理配置 */
     public $proxy = [];
     /** @var int IO超时时间 */
@@ -62,12 +67,17 @@ final class Request extends \Swlib\Http\Request
         $this->__cookiesInitialization(true);
     }
 
+    public function isWaiting(): bool
+    {
+        return $this->_status === self::WAITING;
+    }
+
     /**
      * 是否为SSL连接
      *
-     * @return bool
+     * @return null|bool
      */
-    public function isSSL(): bool
+    public function isSSL(): ?bool
     {
         return $this->ssl;
     }
@@ -75,22 +85,58 @@ final class Request extends \Swlib\Http\Request
     /**
      * enable/disable ssl and set a ca file.
      *
-     * @param bool $enable
-     * @param string $caFile
+     * @param null|bool $enable
+     * @param string $ca_file
      * @return $this
      */
-    public function withSSL(bool $enable = true, string $caFile = __DIR__ . '/cacert.pem'): self
+    public function withSSL(?bool $enable = true): self
     {
-        if ($enable) {
-            if ($caFile) {
-                $this->ca_file = $caFile;
-            }
-            $this->ssl = true;
-        } else {
-            $this->ssl = false;
+        $this->ssl = $enable;
+
+        return $this;
+    }
+
+    public function getCAFile(): string
+    {
+        return $this->ca_file;
+    }
+
+    public function withCAFile(string $ca_file = __DIR__ . '/cacert.pem'): self
+    {
+        $this->ca_file = $ca_file;
+
+        return $this;
+    }
+
+    public function withSSLVerifyPeer(bool $verify_peer = false, ?string $ssl_host_name = ''): self
+    {
+        $this->ssl_verify_peer = $verify_peer;
+        if ($this->ssl_verify_peer && $ssl_host_name) {
+            $this->ssl_host_name = $ssl_host_name;
         }
 
         return $this;
+    }
+
+    public function withSSLAllowSelfSigned(bool $allow = true): self
+    {
+        $this->ssl_allow_self_signed = $allow;
+
+        return $this;
+    }
+
+    public function getSSLConf()
+    {
+        return
+            [
+                'ssl_cafile' => $this->getCAFile(),
+                'ssl_allow_self_signed' => $this->ssl_allow_self_signed,
+            ] + (
+            $this->ssl_verify_peer ? [
+                'ssl_verify_peer' => $this->ssl_verify_peer,
+                'ssl_host_name' => $this->ssl_host_name ?: $this->uri->getHost()
+            ] : []
+            );
     }
 
     public function getKeepAlive()
@@ -107,11 +153,6 @@ final class Request extends \Swlib\Http\Request
         $this->keep_alive = $enable;
 
         return $this;
-    }
-
-    public function getCAFile(): string
-    {
-        return $this->ca_file;
     }
 
     /**
@@ -280,10 +321,13 @@ final class Request extends \Swlib\Http\Request
         //TODO: get ip error / ip cache
         $ip = Coroutine::getHostByName($host);
         if (empty($ip)) {
-            throw new ConnectException($this, 'Get ip failed!');
+            throw new ConnectException($this, 0, 'Get ip failed!');
         }
         $port = $this->uri->getPort();
         $is_ssl = $this->isSSL();
+        if ($is_ssl === null) {
+            $is_ssl = ($port === 443);
+        }
 
         /** 新建协程HTTP客户端 */
         /** @noinspection PhpUndefinedFieldInspection */
@@ -300,11 +344,7 @@ final class Request extends \Swlib\Http\Request
         $settings += $this->getProxy();
 
         if (!empty($ca_file = $this->getCAFile())) {
-            $settings += [
-                'ssl_verify_peer' => true,
-                'ssl_allow_self_signed' => true,
-                'ssl_cafile' => $ca_file,
-            ];
+            $settings += $this->getSSLConf();
         }
         $this->client->set($settings);
 
@@ -427,12 +467,26 @@ final class Request extends \Swlib\Http\Request
         return $response;
     }
 
+    /**
+     * clear tmp arguments
+     */
     private function clear()
     {
         $this->_redirect_times = 0;
         $this->_redirect_headers = [];
         $this->_start_time = 0;
         $this->_time = 0.000;
+        $this->incremental_cookies->reset();
+    }
+
+    /**
+     * Clear after clone
+     */
+    public function __clone()
+    {
+        $this->client = null;
+        $this->cookies = clone $this->cookies;
+        $this->incremental_cookies = new Cookies();
     }
 
 }

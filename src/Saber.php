@@ -23,6 +23,11 @@ class Saber
         return Client::create($options);
     }
 
+    public static function session(array $options = [])
+    {
+        return Client::session($options);
+    }
+
     public static function psr(array $options = [])
     {
         return self::getDefaultClient()->request(['psr' => true] + $options);
