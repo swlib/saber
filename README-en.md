@@ -78,7 +78,22 @@ echo $saber->put('/put');
 echo $saber->delete('/delete');
 ```
 
+### Create Session
+
+Session instance will save cookies automatically, Its implementation is browser-level complete.
+
+```php
+$session = Saber::session([
+    'base_uri' => 'http://httpbin.org',
+    'redirect' => 0
+]);
+$session->get('/cookies/set?foo=bar&k=v&apple=banana');
+$session->get('/cookies/delete?k');
+echo $session->get('/cookies')->body;
+```
+
 ### Multi Request
+
 Note: A concurrent redirection optimization scheme is used here. Multiple redirects are always concurrent and do not degenerate into a single request for the queue.
 ```php
 $responses = Saber::requests([

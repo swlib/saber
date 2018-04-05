@@ -80,7 +80,22 @@ echo $saber->put('/put');
 echo $saber->delete('/delete');
 ```
 
+### 生成会话
+
+Session会自动保存cookie信息, 其实现是**浏览器级别完备**的.
+
+```php
+$session = Saber::session([
+    'base_uri' => 'http://httpbin.org',
+    'redirect' => 0
+]);
+$session->get('/cookies/set?foo=bar&k=v&apple=banana');
+$session->get('/cookies/delete?k');
+echo $session->get('/cookies')->body;
+```
+
 ### 并发请求
+
 注意: 此处使用了并发重定向优化方案, 多个重定向总是依旧并发的而不会退化为队列的单个请求.
 ```php
 $responses = Saber::requests([
