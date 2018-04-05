@@ -10,7 +10,10 @@ use Swlib\Saber;
 require __DIR__ . '/../vendor/autoload.php';
 
 go(function () {
-    $session = Saber::session(['base_uri' => 'http://httpbin.org']);
+    $session = Saber::session([
+        'base_uri' => 'http://httpbin.org',
+        'redirect' => 0
+    ]);
     $session->get('/cookies/set?foo=bar&k=v&apple=banana');
     $session->get('/cookies/delete?k');
     echo $session->get('/cookies')->body;
