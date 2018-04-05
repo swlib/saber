@@ -38,7 +38,25 @@ class Client
         'form_data' => null,
         'data' => null,
         'before' => [],
-        'after' => []
+        'after' => [],
+        'before_redirect' => []
+    ];
+
+    private static $aliasMapLength;
+    private static $aliasMap = [
+        0 => 'method',
+        1 => 'uri',
+        2 => 'data',
+        'base_url' => 'base_uri',
+        'url' => 'uri',
+        'callback' => 'after',
+        'content-type' => 'content_type',
+        'cookie' => 'cookies',
+        'header' => 'headers',
+        'follow' => 'redirect',
+        'body' => 'data',
+        'query' => 'form_data',
+        'ua' => 'useragent'
     ];
 
     private static $default_template_request;
@@ -199,27 +217,27 @@ class Client
         return $this;
     }
 
+    public static function getAliasMap()
+    {
+        return self::$aliasMap;
+    }
+
     public static function transAlias(array &$options)
     {
-        static $aliasMap = [
-            0 => 'method',
-            1 => 'uri',
-            2 => 'data',
-            'base_url' => 'base_uri',
-            'url' => 'uri',
-            'callback' => 'after',
-        ];
+        if (!isset(self::$aliasMapLength)) {
+            self::$aliasMapLength = count(self::$aliasMap);
+        }
 
-        if (count($options) > count($aliasMap)) {
-            foreach ($aliasMap as $alias => $raw_key) {
-                if (isset($options[$alias])) {
+        if (count($options) > self::$aliasMapLength) {
+            foreach (self::$aliasMap as $alias => $raw_key) {
+                if (isset($options[$alias]) && !isset($options[$raw_key])) {
                     $options[$raw_key] = &$options[$alias];
                 }
             }
         } else {
             foreach ($options as $key => &$val) {
-                if (isset($aliasMap[$key])) {
-                    $options[$aliasMap[$key]] = &$val;
+                if (isset(self::$aliasMap[$key]) && !isset($options[self::$aliasMap[$key]])) {
+                    $options[self::$aliasMap[$key]] = &$val;
                 }
             }
         }
@@ -345,14 +363,19 @@ class Client
             }
         }
 
-        /** 注册请求前前拦截器 */
+        /** register Interceptor before request */
         if (!empty($options['before'])) {
             $request->withAddedInterceptor('request', (array)$options['before']);
         }
 
-        /** 注册回调函数 */
+        /** register callback (after response)  */
         if (!empty($options['after'])) {
             $request->withAddedInterceptor('response', (array)$options['after']);
+        }
+
+        /** register interceptor before every redirects */
+        if (!empty($options['before_redirect'])) {
+            $request->withAddedInterceptor('redirect', (array)$options['before_redirect']);
         }
     }
 

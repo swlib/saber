@@ -448,20 +448,29 @@ class Request extends \Swlib\Http\Request
                 ->withHeader('referer', $current_uri)
                 ->removeInterceptor('request');
 
+            // Redirect-interceptors have permission to release or intercept redirects,
+            // just return a bool type value
+            $allow_redirect = true;
             $ret = $this->callInterceptor('redirect', $this);
             if ($ret !== null) {
-                return $ret;
+                if (is_bool($ret)) {
+                    $allow_redirect = $ret;
+                } else {
+                    return $ret;
+                }
             }
 
-            $this->_form_redirect = true;
-            $this->exec();
-            $this->_redirect_times++;
+            if ($allow_redirect) {
+                $this->_form_redirect = true;
+                $this->exec();
+                $this->_redirect_times++;
 
-            if ($this->getRedirectWait()) {
-                return $this;
+                if ($this->getRedirectWait()) {
+                    return $this;
+                }
+
+                return $this->recv();
             }
-
-            return $this->recv();
         }
 
         /** 创建响应对象 */
