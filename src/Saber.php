@@ -8,6 +8,8 @@
 namespace Swlib;
 
 use Swlib\Saber\Client;
+use Swlib\Saber\Request;
+use Swlib\Saber\ResponseMap;
 
 class Saber
 {
@@ -28,15 +30,15 @@ class Saber
         return Client::session($options);
     }
 
-    public static function psr(array $options = [])
+    public static function psr(array $options = []): Request
     {
-        return self::getDefaultClient()->request(['psr' => true] + $options);
+        return self::getDefaultClient()->psr($options);
     }
 
     /** @return \Swlib\Saber\Client */
-    public static function wait(array $options = [])
+    public static function wait(array $options = []): Client
     {
-        return self::create($options)->wait();
+        return self::getDefaultClient()->wait();
     }
 
     public static function request(array $options = [])
@@ -44,7 +46,7 @@ class Saber
         return self::getDefaultClient()->request($options);
     }
 
-    public static function requests(array $requests, array $default_options = [])
+    public static function requests(array $requests, array $default_options = []): ResponseMap
     {
         return self::getDefaultClient()->requests($requests, $default_options);
     }

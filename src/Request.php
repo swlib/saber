@@ -22,13 +22,18 @@ class Request extends \Swlib\Http\Request
     public $name;
     /** @var \Swoole\Coroutine\Http\Client */
     public $client;
-    /** @var bool 是否使用SSL连接 */
-    public $ssl = null;
+
+    const SSL_OFF = 0;
+    const SSL_ON = 1;
+    const SSL_AUTO = 2;
+    /** @var int 是否使用SSL连接 */
+    public $ssl = self::SSL_AUTO;
     /** @var string CA证书目录 */
     public $ca_file = '';
     public $ssl_verify_peer = false;
     public $ssl_host_name = '';
     public $ssl_allow_self_signed = true;
+
     /** @var array 代理配置 */
     public $proxy = [];
     /** @var int IO超时时间 */
@@ -77,7 +82,7 @@ class Request extends \Swlib\Http\Request
      *
      * @return null|bool
      */
-    public function isSSL(): ?bool
+    public function getSSL(): int
     {
         return $this->ssl;
     }
@@ -85,13 +90,13 @@ class Request extends \Swlib\Http\Request
     /**
      * enable/disable ssl and set a ca file.
      *
-     * @param null|bool $enable
+     * @param bool $mode
      * @param string $ca_file
      * @return $this
      */
-    public function withSSL(?bool $enable = true): self
+    public function withSSL(int $mode = self::SSL_AUTO): self
     {
-        $this->ssl = $enable;
+        $this->ssl = $mode;
 
         return $this;
     }
@@ -324,10 +329,8 @@ class Request extends \Swlib\Http\Request
             throw new ConnectException($this, 0, 'Get ip failed!');
         }
         $port = $this->uri->getPort();
-        $is_ssl = $this->isSSL();
-        if ($is_ssl === null) {
-            $is_ssl = ($port === 443);
-        }
+        $is_ssl = $this->getSSL();
+        $is_ssl = ($is_ssl === self::SSL_AUTO) ? $port === 443 : (bool)$is_ssl;
 
         /** 新建协程HTTP客户端 */
         /** @noinspection PhpUndefinedFieldInspection */
@@ -352,9 +355,7 @@ class Request extends \Swlib\Http\Request
         $this->client->cookies = null;
 
         /** 设置请求头 */
-        $cookie =
-            $this->cookies->toRequestString($this->uri) .
-            $this->incremental_cookies->toRequestString($this->uri);
+        $cookie = $this->cookies->toRequestString($this->uri);
 
         $headers = ['Host' => $this->uri->getHost()] + $this->getHeaders(true, true);
         if (!empty($cookie) && empty($headers['Cookie'])) {
@@ -421,6 +422,7 @@ class Request extends \Swlib\Http\Request
                 'domain' => $domain,
                 'path' => $path,
             ]);
+            $this->cookies->adds($this->incremental_cookies); //TODO: optimize
         }
 
         /** 处理重定向 */
@@ -437,7 +439,7 @@ class Request extends \Swlib\Http\Request
                 ->withHeader('referer', $current_uri)
                 ->removeInterceptor('request');
 
-            $ret = $this->callInterceptor('redirect', $response);
+            $ret = $this->callInterceptor('redirect', $this);
             if ($ret !== null) {
                 return $ret;
             }

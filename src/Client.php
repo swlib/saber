@@ -25,7 +25,7 @@ class Client
     private static $default_options = [
         'timeout' => 5.000,
         'proxy' => null,
-        'ssl' => null,
+        'ssl' => Request::SSL_AUTO,
         'cafile' => __DIR__ . '/cacert.pem',
         'ssl_verify_peer' => false,
         'ssl_host_name' => null,
@@ -36,16 +36,17 @@ class Client
         'uri' => null,
         'headers' => [
             'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-            'Accept-Encoding' => 'gzip',
+            'Accept-Encoding' => 'gzip'
         ],
         'cookies' => false,
         'useragent' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36',
         'content_type' => ContentType::URLENCODE,
-        'redirect' => 5,
+        'redirect' => 3,
         'keep_alive' => true,
+        'form_data' => null,
         'data' => null,
-        'before' => null,
-        'callback' => null
+        'before' => [],
+        'after' => []
     ];
 
     private static $default_template_request;
@@ -68,10 +69,77 @@ class Client
         return new static($options);
     }
 
-    public $raw;
-    public $options = [];
+    public static function session(array $options = []): self
+    {
+        $client = new static();
+        $client->session = true;
+        $options = self::mergeOptions($options, [
+            'before' => [
+                function (Request $request) use ($client) {
+                    $request->cookies->adds($client->raw->cookies);
+                }
+            ],
+            'after' => [
+                function (Response $response) use ($client) {
+                    $client->raw->cookies->adds($response->cookies);
+                    $client->raw->incremental_cookies->adds($response->cookies);
+                }
+            ]
+        ]);
 
-    private function __construct(array $options)
+        return $client->setOptions($options);
+    }
+
+    private static function mergeOptions(array $options, array $default)
+    {
+        static $special_fields;
+        static $special_fields_length;
+        if (!isset($special_fields)) {
+            $special_fields = [];
+            foreach (self::$default_options as $key => $val) {
+                if (is_array($val)) {
+                    $special_fields[$key] = $key;
+                }
+            }
+            $special_fields_length = count($special_fields);
+        }
+        if (count($options) > $special_fields_length) {
+            foreach ($special_fields as $field) {
+                if (isset($options[$field])) {
+                    $options[$field] = array_merge($default[$field] ?? [], $options[$field]);
+                }
+            }
+        } else {
+            foreach ($options as $key => $val) {
+                if (isset($special_fields[$key])) {
+                    $options[$key] = array_merge($default[$key] ?? [], $options[$key]);
+                }
+            }
+        }
+
+        return $options + $default;
+    }
+
+    public static function mergeData($default, $add): array
+    {
+        if (is_string($default)) {
+            parse_str($default, $default);
+        }
+        if (is_string($add)) {
+            parse_str($add, $add);
+        }
+
+        /** @var $add array */
+        /** @var $default array */
+        return $add + $default;
+    }
+
+    private $raw;
+    private $options = [];
+    private $session = false;
+    private $_wait = false;
+
+    private function __construct(array $options = [])
     {
         $this->setOptions(
             $this->options = $options,
@@ -130,7 +198,8 @@ class Client
 
         $request->exec();
 
-        if ($options['wait'] ?? false) {
+        if ($options['wait'] ?? false || $this->_wait) {
+            $this->_wait = false;
             return $request;
         }
 
@@ -144,14 +213,20 @@ class Client
      */
     public function setOptions(array $options = [], ?Request $request = null): self
     {
-        if ($request === null) {
+        if (empty($options)) {
+            return $this;
+        }
+        if ($request === null || $request === $this->raw) {
             $request = $this->raw;
-            $this->options = $options + $this->options;
+            $this->options += self::mergeOptions($options, $this->options);
         }
         $options += [
             'base_uri' => $this->options['base_uri'] ?? null,
             'uri' => $this->options['uri'] ?? null
         ];
+        if ($this->session) {
+            $options['session'] = $this->raw->cookies;
+        }
         self::transOptionsToRequest($options, $request);
 
         return $this;
@@ -165,7 +240,7 @@ class Client
             2 => 'data',
             'base_url' => 'base_uri',
             'url' => 'uri',
-            'after' => 'callback',
+            'callback' => 'after',
         ];
 
         if (count($options) > count($aliasMap)) {
@@ -194,6 +269,10 @@ class Client
             $request->withUri(
                 Uri::resolve($options['base_uri'] ?? null, $options['uri'] ?? null)
             );
+        }
+
+        if (!empty($options['form_data']) && $uri = $request->getUri()) {
+            $uri->withQuery(http_build_query($options['form_data']));
         }
 
         /** 设置请求方法 */
@@ -252,7 +331,7 @@ class Client
         }
 
         /** 设置请求标头 */
-        if (isset($options['headers'])) {
+        if (!empty($options['headers'])) {
             if (is_array($options['headers'])) {
                 foreach ($options['headers'] as $key => $val) {
                     $request->withHeader($key, $val);
@@ -262,9 +341,10 @@ class Client
 
         /** 设置COOKIE */
         if (!empty($options['cookies'])) {
+            $cookies_instance = $options['session'] ?? $request->cookies;//FIXME
             $cookies_default = ($uri = $request->getUri()) ? ['domain' => $uri->getHost()] : [];
             //everything can be a Cookies object
-            $request->cookies->adds(
+            $cookies_instance->adds(
                 $options['cookies'],
                 $cookies_default,
                 true
@@ -299,41 +379,27 @@ class Client
         }
 
         /** 注册请求前前拦截器 */
-        if (isset($options['before'])) {
+        if (!empty($options['before'])) {
             $request->withAddedInterceptor('request', (array)$options['before']);
         }
 
         /** 注册回调函数 */
-        if (isset($options['callback'])) {
-            $request->withAddedInterceptor('response', (array)$options['callback']);
+        if (!empty($options['after'])) {
+            $request->withAddedInterceptor('response', (array)$options['after']);
         }
+    }
+
+    public function psr(array $options = []): Request
+    {
+        return $this->request(['psr' => true] + $options);
     }
 
     /** @return $this */
     public function wait(): self
     {
-        $this->options['wait'] = true;
+        $this->_wait = true;
 
         return $this;
-    }
-
-    public function psr(array $options)
-    {
-        return $this->request(['psr' => true] + $options);
-    }
-
-    public static function merge_data($default, $add): array
-    {
-        if (is_string($default)) {
-            parse_str($default, $default);
-        }
-        if (is_string($add)) {
-            parse_str($add, $add);
-        }
-
-        /** @var $add array */
-        /** @var $default array */
-        return $add + $default;
     }
 
     /**
@@ -348,10 +414,10 @@ class Client
     public function requests(array $requests, array $default_options = []): ResponseMap
     {
         $req_queue = new RequestQueue(); //生成请求队列
-        foreach ($requests as $index => $request) {
+        foreach ($requests as $index => $request_options) {
             $request_instance = clone $this->raw;
-            $this->setOptions($default_options, $request_instance);
-            $this->setOptions($request, $request_instance);
+            $request_options = self::mergeOptions($request_options, $this->options);
+            $this->setOptions($request_options, $request_instance);
             $req_queue->enqueue($request_instance);
         }
 
