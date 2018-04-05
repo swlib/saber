@@ -88,7 +88,7 @@ $responses = Saber::requests([
     ['uri' => 'http://github.com/'],
     ['uri' => 'https://github.com/']
 ]);
-    echo "multi-requests [ {$responses->success_num} ok, {$responses->error_num} error ]:\n" ."consuming-time: {$responses->time}s\n";
+echo "multi-requests [ {$responses->success_num} ok, {$responses->error_num} error ]:\n" ."consuming-time: {$responses->time}s\n";
 
 // multi-requests [ 3 ok, 0 error ]:
 // consuming-time: 0.79090881347656s
@@ -183,7 +183,7 @@ composer update
 | after                 | `callable` \| `array` | 响应后拦截器       | `function(Response $response){}`                             | 具体参考拦截器一节                                           |
 | timeout               | float                 | 超时时间           | 0.5                                                          | 默认5s, 支持毫秒级超时                                       |
 | proxy                 | string                | 代理               | `http://127.0.0.1:1087` \| `socks5://127.0.0.1:1087`         | 支持http和socks5                                             |
-| ssl                   | int                   | 是否开启ssl连接    | `0=关闭` | `1=开启` | `2=自动`                               | 默认值为自动, 遇到https连接时底层会自动开启                  |
+| ssl                   | int                   | 是否开启ssl连接    | `0=关闭` `1=开启` `2=自动`                                   | 默认自动                                                     |
 | cafile                | string                | ca文件             | `__DIR__ . '/cacert.pem'`                                    | 默认自带                                                     |
 | ssl_verify_peer       | bool                  | 验证服务器端证书   | `false` \| `true`                                            | 默认关闭                                                     |
 | ssl_allow_self_signed | bool                  | 允许自签名证书     | `true` \| `false`                                            | 默认允许                                                     |
@@ -194,9 +194,14 @@ composer update
 
 | key      | alias       |
 | -------- | ----------- |
-| method   | `0`         |
-| uri      | `1` |
-| data     | `2`         |
-| base_uri | base_url    |
-| after | callback    |
-
+|method|0|
+|uri|`1` \| `url`|
+|data|`2` \| `body`|
+|base_uri|base_url|
+|after|callback|
+|content_type|content-type|
+|cookies|cookie|
+|headers|header|
+|redirect|follow|
+|form_data|query|
+|useragent|ua|
