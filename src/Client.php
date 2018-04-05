@@ -11,14 +11,6 @@ use Swlib\Http\BufferStream;
 use Swlib\Http\ContentType;
 use Swlib\Http\Uri;
 
-/**
- * @method Request|Response get(string | string $uri, array $options = [])
- * @method Request|Response head(string | string $uri, array $options = [])
- * @method Request|Response put(string | string $uri, $data = null, array $options = [])
- * @method Request|Response post(string | string $uri, $data = null, array $options = [])
- * @method Request|Response patch(string | string $uri, $data = null, array $options = [])
- * @method Request|Response delete(string | string $uri, array $options = [])
- */
 class Client
 {
 
@@ -62,6 +54,16 @@ class Client
         }
 
         return clone self::$default_template_request;
+    }
+
+    public static function setDefaultOptions(array $options = [])
+    {
+        if (empty($options)) {
+            return;
+        }
+        $options = self::mergeOptions($options, self::$default_options);
+        self::$default_options = $options + self::$default_options;
+        self::$default_template_request = null;
     }
 
     public static function create(array $options = []): self
@@ -145,41 +147,6 @@ class Client
             $this->options = $options,
             $this->raw = $this->getTemplateRequestCopy()
         );
-    }
-
-    public function __call($name, $arguments)
-    {
-        if (empty($arguments[0])) {
-            throw new \InvalidArgumentException('Uri should not be empty!');
-        }
-        $def = [
-            'uri' => $arguments[0],
-            'method' => $name,
-        ];
-        $name = strtoupper($name);
-        switch ($name) {
-            case 'GET':
-            case 'HEAD':
-            case 'DELETE':
-                {
-                    $options = $arguments[1] ?? [];
-
-                    return $this->request($def + $options);
-                }
-            case 'POST':
-            case 'PUT':
-            case 'PATCH':
-                {
-                    if (isset($arguments[1])) {
-                        $def += ['data' => $arguments[1]];
-                    }
-                    $options = $arguments[2] ?? [];
-
-                    return $this->request($def + $options);
-                }
-            default:
-                throw new \BadMethodCallException("Method '{$name}' not exist!");
-        }
     }
 
     /**
@@ -423,5 +390,109 @@ class Client
 
         return $req_queue->recv();
     }
+
+    public function get(string $uri, array $options = [])
+    {
+        $options['uri'] = $uri;
+        $options['method'] = 'GET';
+
+        return $this->request($options);
+    }
+
+    public function delete(string $uri, array $options = [])
+    {
+        $options['uri'] = $uri;
+        $options['method'] = 'DELETE';
+
+        return $this->request($options);
+    }
+
+    public function head(string $uri, array $options = [])
+    {
+        $options['uri'] = $uri;
+        $options['method'] = 'HEAD';
+
+        return $this->request($options);
+    }
+
+    public function post(string $uri, $data = null, array $options = [])
+    {
+        $options['uri'] = $uri;
+        $options['method'] = 'POST';
+        if ($data !== null) {
+            $options['data'] = $data;
+        }
+
+        return $this->request($options);
+    }
+
+    public function put(string $uri, $data = null, array $options = [])
+    {
+        $options['uri'] = $uri;
+        $options['method'] = 'PUT';
+        if ($data !== null) {
+            $options['data'] = $data;
+        }
+
+        return $this->request($options);
+    }
+
+    public function patch(string $uri, $data = null, array $options = [])
+    {
+        $options['uri'] = $uri;
+        $options['method'] = 'PATCH';
+        if ($data !== null) {
+            $options['data'] = $data;
+        }
+
+        return $this->request($options);
+    }
+
+    /**
+     * Note: Swoole doesn't support use coroutine in magic methods now
+     * To be on the safe side, we removed __call and __callStatic instead of handwriting
+     */
+    ///**
+    // * @method Request|Response get(string | string $uri, array $options = [])
+    // * @method Request|Response head(string | string $uri, array $options = [])
+    // * @method Request|Response put(string | string $uri, $data = null, array $options = [])
+    // * @method Request|Response post(string | string $uri, $data = null, array $options = [])
+    // * @method Request|Response patch(string | string $uri, $data = null, array $options = [])
+    // * @method Request|Response delete(string | string $uri, array $options = [])
+    // */
+    //public function __call($name, $arguments)
+    //{
+    //    if (empty($arguments[0])) {
+    //        throw new \InvalidArgumentException('Uri should not be empty!');
+    //    }
+    //    $def = [
+    //        'uri' => $arguments[0],
+    //        'method' => $name,
+    //    ];
+    //    $name = strtoupper($name);
+    //    switch ($name) {
+    //        case 'GET':
+    //        case 'HEAD':
+    //        case 'DELETE':
+    //            {
+    //                $options = $arguments[1] ?? [];
+    //
+    //                return $this->request($def + $options);
+    //            }
+    //        case 'POST':
+    //        case 'PUT':
+    //        case 'PATCH':
+    //            {
+    //                if (isset($arguments[1])) {
+    //                    $def += ['data' => $arguments[1]];
+    //                }
+    //                $options = $arguments[2] ?? [];
+    //
+    //                return $this->request($def + $options);
+    //            }
+    //        default:
+    //            throw new \BadMethodCallException("Method '{$name}' not exist!");
+    //    }
+    //}
 
 }

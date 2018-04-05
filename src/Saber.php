@@ -51,67 +51,38 @@ class Saber
         return self::getDefaultClient()->requests($requests, $default_options);
     }
 
+    /**
+     * Note: Swoole doesn't support use coroutine in magic methods now
+     * To be on the safe side, we removed __call and __callStatic instead of handwriting
+     */
     public static function get(string $uri, array $options = [])
     {
-        $def = [
-            'uri' => $uri,
-            'method' => 'GET',
-        ];
-
-        return self::getDefaultClient()->request($def + $options);
+        return self::getDefaultClient()->get($uri, $options);
     }
 
     public static function delete(string $uri, array $options = [])
     {
-        $def = [
-            'uri' => $uri,
-            'method' => 'DELETE',
-        ];
-
-        return self::getDefaultClient()->request($def + $options);
+        return self::getDefaultClient()->delete($uri, $options);
     }
 
     public static function head(string $uri, array $options = [])
     {
-        $def = [
-            'uri' => $uri,
-            'method' => 'HEAD',
-        ];
-
-        return self::getDefaultClient()->request($def + $options);
+        return self::getDefaultClient()->head($uri, $options);
     }
 
     public static function post(string $uri, $data = null, array $options = [])
     {
-        $def = [
-            'uri' => $uri,
-            'method' => 'POST',
-            'data' => $data,
-        ];
-
-        return self::getDefaultClient()->request($def + $options);
+        return self::getDefaultClient()->post($uri, $data, $options);
     }
 
     public static function put(string $uri, $data = null, array $options = [])
     {
-        $def = [
-            'uri' => $uri,
-            'method' => 'PUT',
-            'data' => $data,
-        ];
-
-        return self::getDefaultClient()->request($def + $options);
+        return self::getDefaultClient()->put($uri, $data, $options);
     }
 
     public static function patch(string $uri, $data = null, array $options = [])
     {
-        $def = [
-            'uri' => $uri,
-            'method' => 'PATCH',
-            'data' => $data,
-        ];
-
-        return self::getDefaultClient()->request($def + $options);
+        return self::getDefaultClient()->patch($uri, $data, $options);
     }
 
 }

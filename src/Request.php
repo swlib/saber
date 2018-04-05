@@ -55,6 +55,8 @@ class Request extends \Swlib\Http\Request
     public $_redirect_times = 0;
     /** @var array 重定向的headers */
     public $_redirect_headers = [];
+    /** @var bool */
+    private $_form_redirect = false;
 
     const NONE = 1;
     const WAITING = 2;
@@ -315,6 +317,11 @@ class Request extends \Swlib\Http\Request
      */
     public function exec()
     {
+        /** 重置临时变量 */
+        if (!$this->_form_redirect) {
+            $this->clear();
+        }
+
         /** 请求前拦截器 */
         $ret = $this->callInterceptor('request', $this);
         if ($ret !== null) {
@@ -357,6 +364,8 @@ class Request extends \Swlib\Http\Request
         /** 设置请求头 */
         $cookie = $this->cookies->toRequestString($this->uri);
 
+        // Ensure Host is the first header.
+        // See: http://tools.ietf.org/html/rfc7230#section-5.4
         $headers = ['Host' => $this->uri->getHost()] + $this->getHeaders(true, true);
         if (!empty($cookie) && empty($headers['Cookie'])) {
             $headers['Cookie'] = $cookie;
@@ -444,6 +453,7 @@ class Request extends \Swlib\Http\Request
                 return $ret;
             }
 
+            $this->_form_redirect = true;
             $this->exec();
             $this->_redirect_times++;
 
@@ -463,9 +473,6 @@ class Request extends \Swlib\Http\Request
             return $ret;
         }
 
-        /** 重置临时变量 */
-        $this->clear();
-
         return $response;
     }
 
@@ -474,6 +481,7 @@ class Request extends \Swlib\Http\Request
      */
     private function clear()
     {
+        $this->_form_redirect = false;
         $this->_redirect_times = 0;
         $this->_redirect_headers = [];
         $this->_start_time = 0;
