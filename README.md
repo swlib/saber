@@ -15,7 +15,7 @@ HTTP军刀, `Swoole人性化组件库`之PHP高性能HTTP客户端, 基于Swoole
 - 基于Swoole协程Client开发
 - 人性化使用风格, ajax.js/axios.js/requests.py用户福音, 同时支持PSR风格操作
 - 浏览器级别完备的Cookie管理机制, 完美适配爬虫/API代理应用
-- 请求/响应拦截器
+- 请求/响应/异常拦截器
 - 多请求并发, 并发重定向优化, 自动化复用长连接
 - 响应报文自动编码转换
 - HTTPS连接, CA证书自动化支持
@@ -44,17 +44,21 @@ composer require swlib/saber
 
 
 
-## 例子
+## 协程调度
 
-### 协程
+Swoole底层实现协程调度, **业务层无需感知**, 开发者可以无感知的**用同步的代码编写方式达到异步IO的效果和超高性能**，避免了传统异步回调所带来的离散的代码逻辑和陷入多层回调中导致代码无法维护.
 
-Swoole底层实现协程调度, 业务层无需感知, 需要在`onRequet`, `onReceive`, `onConnect`等事件回调函数中使用, 或是使用go关键字包裹 (`swoole.use_shortname`默认开启).
+需要在`onRequet`, `onReceive`, `onConnect`等事件回调函数中使用, 或是使用go关键字包裹 (`swoole.use_shortname`默认开启).
 
 ```php
 go(function () {
     echo Saber::get('http://httpbin.org/get');
 })
 ```
+
+
+
+## 例子
 
 ### 简单请求
 
@@ -177,6 +181,8 @@ echo $response->getBody();
 | cafile                | string                | ca文件             | `__DIR__ . '/cacert.pem'`                                    | 默认自带                                                     |
 | ssl_verify_peer       | bool                  | 验证服务器端证书   | `false` \| `true`                                            | 默认关闭                                                     |
 | ssl_allow_self_signed | bool                  | 允许自签名证书     | `true` \| `false`                                            | 默认允许                                                     |
+| exception_report      | int                   | 异常报告级别       | HttpExceptionMask::E_ALL                                     | 默认汇报所有异常                                             |
+| exception_handle      | callable\|array       | 异常自定义处理函数 | `function(Exception $e){}`                                   | 函数返回true时可忽略错误                                     |
 
 ### 配置参数别名
 
@@ -196,9 +202,11 @@ echo $response->getBody();
 |form_data|query|
 |useragent|ua|
 
-## 异常处理
+## 异常机制
 
-Saber遵循将业务与错误分离的守则, 默认当请求任意环节失败时, 都将会抛出异常:
+Saber遵循将**业务与错误**分离的守则, 当请求任意环节失败时, **默认都将会抛出异常**.
+
+强大的是, Saber的异常处理也是多样化的, 且和PHP的原生的异常处理一样完善.
 
 异常的命名空间位于`Swlib\Http\Exception`
 
@@ -211,7 +219,7 @@ Saber遵循将业务与错误分离的守则, 默认当请求任意环节失败�
 | ServerException           | 服务器异常         | 服务器返回了5xx错误码                                        |
 | BadResponseException      | 未知的获取响应失败 | 服务器无响应或返回了无法识别的错误码                         |
 
-除一般异常方法外, 所有HTTP异常还拥有以下方法 :
+除一般异常方法外, 所有HTTP异常类还拥有以下方法 :
 
 | Method                 | Intro                  |
 | ---------------------- | ---------------------- |
@@ -239,7 +247,7 @@ try {
 #2 http://httpbin.org/relative-redirect/8
 ```
 
-### 异常控制
+### 异常报告级别控制
 
 同时, Saber亦支持以温和的方式来对待异常, 以免使用者陷入在不稳定的网络环境下, 必须在每一步都使用try包裹代码的恐慌中:
 
@@ -247,12 +255,14 @@ try {
 
 ```php
 // 启用所有异常但忽略重定向次数过多异常
-Saber::errorReport(
+Saber::exceptionReport(
     HttpExceptionMask::E_ALL ^ HttpExceptionMask::E_REDIRECT
 );
 ```
 
 #### 掩码表
+
+下面的值（数值或者符号）用于建立一个二进制位掩码，来制定要报告的错误信息。可以使用按位运算符来组合这些值或者屏蔽某些类型的错误。[标志位与掩码](http://twosee.cn/2018/04/06/mask-code/)
 
 | Mask           | Value | Intro                |
 | -------------- | ----- | -------------------- |
@@ -265,4 +275,27 @@ Saber::errorReport(
 | E_SERVER       | 32    | 对应ServerException  |
 | E_ALL          | 63    | 所有异常             |
 
+### 异常自定义处理函数
 
+本函数可以用你自己定义的方式来处理HTTP请求中产生的错误, 可以更加随心所欲地定义你想要捕获/忽略的异常.
+
+注意: 除非函数返回 **TRUE** (或其它真值)，否则异常会继续抛出而不是被自定义函数捕获.
+
+```php
+Saber::exceptionHandle(function (\Exception $e) {
+    echo get_class($e) . " is caught!";
+    return true;
+});
+Saber::get('http://httpbin.org/redirect/10');
+//output: Swlib\Http\Exception\TooManyRedirectsException is caught!
+```
+
+
+
+## IDE提示
+
+将本项目源文件加入到IDE的 `Include Path` 中. (使用composer安装,则可以包含整个vendor文件夹)
+
+良好的注释书写使得Saber完美支持IDE自动提示, 只要在对象后书写箭头符号即可查看所有对象方法名称, 名称都十分通俗易懂, 大量方法都遵循PSR规范或是参考[Guzzle](https://github.com/guzzle/guzzle)项目而实现.
+
+对于底层Swoole相关类的IDE提示则需要引入[swoole-ide-helper](https://github.com/eaglewu/swoole-ide-helper)(composer在dev环境下会默认安装), 该项目会由我持续维护并推送最新代码到eaglewu持有的主仓库中.
