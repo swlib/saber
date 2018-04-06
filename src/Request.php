@@ -508,6 +508,10 @@ class Request extends \Swlib\Http\Request
                 }
 
                 return $this->recv();
+            } else {
+                $this->setExceptionReport(
+                    $this->getExceptionReport() ^ HttpExceptionMask::E_REDIRECT
+                );
             }
         }
 
