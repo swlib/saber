@@ -275,11 +275,11 @@ class Client
 
         /** 设置请求的数据 */
         if (isset($options['content_type'])) {
-            $request->withHeader('Content-type', $options['content_type']);
+            $request->withHeader('Content-Type', $options['content_type']);
         }
         if (!empty($options['data'])) {
             if (!is_string($options['data'])) {
-                switch ($options['content_type']) {
+                switch ($request->getHeaderLine('Content-Type')) {
                     case ContentType::JSON:
                         $options['data'] = json_encode($options['data']);
                         break;
@@ -446,6 +446,14 @@ class Client
     {
         $options['uri'] = $uri;
         $options['method'] = 'HEAD';
+
+        return $this->request($options);
+    }
+
+    public function options(string $uri, array $options = [])
+    {
+        $options['uri'] = $uri;
+        $options['method'] = 'OPTIONS';
 
         return $this->request($options);
     }

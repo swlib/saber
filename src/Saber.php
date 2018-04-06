@@ -70,6 +70,11 @@ class Saber
         return self::getDefaultClient()->head($uri, $options);
     }
 
+    public static function options(string $uri, array $options = [])
+    {
+        return self::getDefaultClient()->options($uri, $options);
+    }
+
     public static function post(string $uri, $data = null, array $options = [])
     {
         return self::getDefaultClient()->post($uri, $data, $options);

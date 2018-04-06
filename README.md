@@ -63,16 +63,40 @@ go(function () {
 
 ------
 
+## Saber API
+
+为了使用方便，已为所有支持的请求方法提供了别名。
+
+**\$saber->request(\$options)**
+
+**\$saber->get(\$url[, \$options])**
+
+**\$saber->delete(\$url[, \$options])**
+
+**\$saber->head(\$url[, \$options])**
+
+**\$saber->options(\$url[, \$options])**
+
+**\$saber->post(\$url[, \$data[, \$options]])**
+
+**\$saber->put(\$url[, \$data[, \$options]])**
+
+**\$saber->patch(\$url[, \$data[, \$options]])**
+
+<br>
+
+------
+
 ## 例子
 
-### 简单请求
+### 静态方法
 
 ```php
 Saber::get('http://httpbin.org/get');
-Saber::post('http://httpbin.org/post');
-Saber::put('http://httpbin.org/put');
-Saber::patch('http://httpbin.org/patch');
 Saber::delete('http://httpbin.org/delete');
+Saber::post('http://httpbin.org/post', ['foo' => 'bar']);
+Saber::put('http://httpbin.org/put', ['foo' => 'bar']);
+Saber::patch('http://httpbin.org/patch', ['foo' => 'bar']);
 ```
 
 ### 生成实例
@@ -83,16 +107,17 @@ Saber::delete('http://httpbin.org/delete');
 $saber = Saber::create([
     'base_uri' => 'http://httpbin.org',
     'headers' => [
-        'User-Agent' => null,
         'Accept-Language' => 'en,zh-CN;q=0.9,zh;q=0.8',
-        'DNT' => '1'
-    ],
+        'Content-Type' => ContentType::JSON,
+        'DNT' => '1',
+        'User-Agent' => null
+    ]
 ]);
 echo $saber->get('/get');
-echo $saber->post('/post');
-echo $saber->patch('/patch');
-echo $saber->put('/put');
 echo $saber->delete('/delete');
+echo $saber->post('/post', ['foo' => 'bar']);
+echo $saber->patch('/patch', ['foo' => 'bar']);
+echo $saber->put('/put', ['foo' => 'bar']);
 ```
 
 ### 生成会话

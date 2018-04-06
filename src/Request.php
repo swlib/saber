@@ -297,6 +297,12 @@ class Request extends \Swlib\Http\Request
         return $this;
     }
 
+    /** @return bool */
+    public function getRedirectWait(): bool
+    {
+        return $this->redirect_wait;
+    }
+
     /**
      * @param bool $enable
      * @return $this
@@ -306,12 +312,6 @@ class Request extends \Swlib\Http\Request
         $this->redirect_wait = $enable;
 
         return $this;
-    }
-
-    /** @return bool */
-    public function getRedirectWait(): bool
-    {
-        return $this->redirect_wait;
     }
 
     /**
