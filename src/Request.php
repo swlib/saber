@@ -10,10 +10,10 @@ namespace Swlib\Saber;
 use Swlib\Http\Cookies;
 use Swlib\Http\CookiesManagerTrait;
 use Swlib\Http\Exception\ConnectException;
+use Swlib\Http\Exception\HttpExceptionMask;
 use Swlib\Http\StreamInterface;
 use Swlib\Http\Uri;
 use Swlib\Util\InterceptorTrait;
-use Swoole\Coroutine;
 use Swoole\Coroutine\Http\Client;
 
 class Request extends \Swlib\Http\Request
@@ -22,6 +22,8 @@ class Request extends \Swlib\Http\Request
     public $name;
     /** @var \Swoole\Coroutine\Http\Client */
     public $client;
+
+    public $error_report = HttpExceptionMask::E_ALL;
 
     const SSL_OFF = 0;
     const SSL_ON = 1;
@@ -72,6 +74,18 @@ class Request extends \Swlib\Http\Request
     {
         parent::__construct($uri, $method, $headers, $body);
         $this->__cookiesInitialization(true);
+    }
+
+    public function getErrorReport(): int
+    {
+        return $this->error_report;
+    }
+
+    public function setErrorReport(int $level): self
+    {
+        $this->error_report = $level;
+
+        return $this;
     }
 
     public function isWaiting(): bool
@@ -330,19 +344,20 @@ class Request extends \Swlib\Http\Request
 
         /** 获取IP地址 */
         $host = $this->uri->getHost();
-        //TODO: get ip error / ip cache
-        $ip = Coroutine::getHostByName($host);
-        if (empty($ip)) {
-            throw new ConnectException($this, 0, 'Get ip failed!');
-        }
         $port = $this->uri->getPort();
         $is_ssl = $this->getSSL();
         $is_ssl = ($is_ssl === self::SSL_AUTO) ? $port === 443 : (bool)$is_ssl;
 
         /** 新建协程HTTP客户端 */
         /** @noinspection PhpUndefinedFieldInspection */
-        if (!$this->client || $this->client->host !== $ip || $this->client->port !== $port || $this->client->isSSL !== $is_ssl) {
-            $this->client = new Client($ip, $port, $is_ssl);
+        if (!$this->client || $this->client->host !== $host || $this->client->port !== $port || $this->client->isSSL !== $is_ssl) {
+            if (\Swoole\Coroutine::getuid() < 0) {
+                throw  new \BadMethodCallException(
+                    'You can only use coroutine client in `go` function or some Event callback functions.' .
+                    "\n Please check https://wiki.swoole.com/wiki/page/696.html"
+                );
+            }
+            $this->client = new Client($host, $port, $is_ssl);
             $this->client->isSSL = $is_ssl;
         }
 
@@ -417,8 +432,27 @@ class Request extends \Swlib\Http\Request
         $this->client->recv($this->_timeout);
         $this->_status = self::NONE;
         $this->_time = microtime(true) - $this->_start_time;
-        if ($this->client->errCode) {
-            throw new ConnectException($this, $this->client->errCode, socket_strerror($this->client->errCode));
+
+        $is_report = $this->getErrorReport() & HttpExceptionMask::E_CONNECT;
+        $statusCode = $this->client->statusCode;
+        $errCode = $this->client->errCode;
+        if ($statusCode < 0 || $errCode !== 0) {
+            if ($is_report) {
+                if ($statusCode === -1) {
+                    $message = 'Connect timeout! the server is not listening on the port or the network is missing!';
+                } elseif ($statusCode === -2) {
+                    $timeout = $this->getTimeout();
+                    $message = "Request timeout! the server hasn't responded over the timeout setting({$timeout}s)!";
+                } elseif ($statusCode === 3) {
+                    $message = 'Connection is forcibly cut off by the remote server';
+                } else {
+                    $message = "Linux Code $errCode: " . socket_strerror($errCode);
+                }
+                throw new ConnectException($this, $statusCode, $message);
+            } else {
+                // Exception is no longer triggered after an exception is ignored
+                $this->setErrorReport(HttpExceptionMask::E_NONE);
+            }
         }
 
         //将服务器cookie添加到客户端cookie列表中去

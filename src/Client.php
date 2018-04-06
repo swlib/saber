@@ -9,6 +9,7 @@ namespace Swlib\Saber;
 
 use Swlib\Http\BufferStream;
 use Swlib\Http\ContentType;
+use Swlib\Http\Exception\HttpExceptionMask;
 use Swlib\Http\Uri;
 
 class Client
@@ -39,7 +40,9 @@ class Client
         'data' => null,
         'before' => [],
         'after' => [],
-        'before_redirect' => []
+        'before_redirect' => [],
+        'error_report' => HttpExceptionMask::E_ALL,
+        'error_handle' => []
     ];
 
     private static $aliasMapLength;
@@ -249,6 +252,10 @@ class Client
             return;
         }
         self::transAlias($options);
+
+        if (isset($options['error_report'])) {
+            $request->setErrorReport($options['error_report']);
+        }
 
         if (isset($options['base_uri']) || isset($options['uri'])) {
             $request->withUri(

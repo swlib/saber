@@ -9,12 +9,24 @@ namespace Swlib\Saber;
 
 use Swlib\Http\BufferStream;
 use Swlib\Http\CookiesManagerTrait;
+use Swlib\Http\Exception\BadResponseException;
+use Swlib\Http\Exception\ClientException;
+use Swlib\Http\Exception\HttpExceptionMask;
+use Swlib\Http\Exception\ServerException;
+use Swlib\Http\Exception\TooManyRedirectsException;
 
 class Response extends \Swlib\Http\Response
 {
 
     public $redirect_headers = [];
     public $success = false;
+    /**
+     * @var int $statusCode
+     * Http status code, such as 200, 404 and so on. If the status code is negative, there is a problem with the connection.
+     * -1: When the connection times out, the server is not listening on the port or the network is lost. You can read $errCode to obtain the specific network error code.
+     * -2: The request timed out and the server did not return the response within the specified timeout time
+     * -3: After the client sends a request, the server forcibly cuts off the connection
+     */
     public $statusCode = 0;
     public $reasonPhrase = 'Failed';
     public $uri;
@@ -29,12 +41,8 @@ class Response extends \Swlib\Http\Response
     {
         /** consuming time */
         $this->time = $request->_time;
-
-        /** 判定响应是否成功 */
+        /** status code */
         $this->withStatus($request->client->statusCode);
-        if ($request->client->statusCode >= 200 && $request->client->statusCode < 300) {
-            $this->success = true;
-        }
         /** 设定uri */
         $this->uri = $request->getUri();
 
@@ -60,6 +68,27 @@ class Response extends \Swlib\Http\Response
         }
 
         $this->withBody(new BufferStream($body));
+
+        $e_level = $request->getErrorReport();
+        if ($this->statusCode >= 200 && $this->statusCode < 300) {
+            $this->success = true;
+        } else {
+            if ($this->statusCode >= 300 && $this->statusCode < 400) {
+                if ($e_level & HttpExceptionMask::E_REDIRECT) {
+                    throw new TooManyRedirectsException($request, $this, $this->statusCode, $this->redirect_headers);
+                }
+            } elseif ($this->statusCode >= 400 && $this->statusCode < 500) {
+                if ($e_level & HttpExceptionMask::E_CLIENT) {
+                    throw new ClientException($request, $this, $this->statusCode);
+                }
+            } elseif ($this->statusCode >= 500) {
+                if ($e_level & HttpExceptionMask::E_SERVER) {
+                    throw new ServerException($request, $this, $this->statusCode);
+                }
+            } elseif ($e_level & HttpExceptionMask::E_BAD_RESPONSE) {
+                throw new BadResponseException($request, $this, $this->statusCode);
+            }
+        }
     }
 
 }
