@@ -15,8 +15,8 @@ class RequestQueue extends \SplQueue
         if (!($request instanceof Request)) {
             throw new \InvalidArgumentException('Value must be instance of ' . Request::class);
         }
-        if ($request->isWaiting()) {
-            throw new \InvalidArgumentException('You can\'t send a request which is waiting to the queue.');
+        if (!$request->isWaiting()) {
+            $request->exec();
         }
         /**
          * 注意! `withRedirectWait`是并发重定向优化
@@ -30,7 +30,7 @@ class RequestQueue extends \SplQueue
          * After all the original concurrent requests in the queue for the first time are recved, the redirect requests recv again.
          * Otherwise, the concurrent request can be degraded to a queue request due to redirection, you can be tested and verified.
          */
-        parent::enqueue($request->exec()->withRedirectWait(true));
+        parent::enqueue($request->withRedirectWait(true));
     }
 
     public function recv(): ResponseMap
