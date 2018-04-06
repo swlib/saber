@@ -202,6 +202,71 @@ echo $response->getBody();
 |form_data|query|
 |useragent|ua|
 
+## 拦截器
+
+拦截器是Saber的一个**非常强大的特性**, 它可以让你非常方便地处理各种事情, 比如打印dev日志:
+
+```php
+Saber::get('http://twosee.cn/', [
+    'before' => function (Saber\Request $request) {
+        $uri = $request->getUri();
+        echo "log: request $uri now...\n";
+    },
+    'after' => function (Saber\Response $response) {
+        if ($response->success) {
+            echo "log: success!\n";
+        } else {
+            echo "log: failed\n";
+        }
+        echo "use {$response->time}s";
+    }
+]);
+// log: request http://twosee.cn/ now...
+// log: success!
+// use 0.52036285400391s
+```
+
+甚至连`异常自定义处理函数`,`会话`都是通过拦截器来实现的.
+
+拦截器可以有多个, 会依照注册顺序执行, 并且你可以**为拦截器命名**, 只需要使用数组包裹并指定key值, 如果你要删除这个拦截器, 给它覆盖一个null值即可.
+
+```php
+[
+    'after' => [
+        'interceptor_new' => function(){},
+        'interceptor_old' => null
+    ]
+]
+```
+
+
+
+## Cookies
+
+Cookie的实现是**浏览器级别完备**的, 它具体参考了Chrome浏览器的实现, 并遵循其相关规则.
+
+#### 属性
+
+Cookies是一堆Cookie的集合, 而每个Cookie具有以下属性: `name`,`value`,`expires`,`path`,`session`,`secure`,`httponly`,`hostonly`.
+
+#### 任意格式互转
+
+并且Cookies类支持多种格式互转, 如`foo=bar; apple=banana`,`Set-Cookie: logged_in=no; domain=.github.com; path=/; expires=Tue, 06 Apr 2038 00:00:00 -0000; secure; HttpOnly`,`['foo'=>'bar']`等格式转到Cookie类, 或是Cookie类到该几种格式的序列化.
+
+#### 域名和过期时限校验
+
+Cookie也支持域名和时限校验, 不会丢失任何信息, 如domain是`github.com`cookie, 不会出现在`help.github.com`, 除非domain不是hostonly的(`.github.com`通配).
+
+如果是session-cookie(没有过期时间,浏览器关闭则过期的), expires属性会设置为当前时间, 你可以通过**拦截器**来对其设置具体的时间.
+
+#### 持久化
+
+通过读取Cookies的raw属性, 可以轻松地将其**持久化到数据库中**, 非常适合登录类爬虫应用.
+
+> 更多详情具体请参考[Swlib/Http](https://github.com/swlib/http/)库文档和例子.
+
+
+
 ## 异常机制
 
 Saber遵循将**业务与错误**分离的守则, 当请求任意环节失败时, **默认都将会抛出异常**.
