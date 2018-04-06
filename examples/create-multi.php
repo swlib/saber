@@ -12,10 +12,10 @@ require __DIR__ . '/../vendor/autoload.php';
 go(function () {
     $saber = Saber::create(['base_uri' => 'http://httpbin.org']);
     echo $saber->requests([
-        ['get','/get'],
-        ['post','/post'],
-        ['patch','/patch'],
-        ['put','/put'],
-        ['delete','/delete']
+        ['get', '/get'],
+        ['delete', '/delete'],
+        ['post', '/post', ['foo' => 'bar']],
+        ['patch', '/patch', ['foo' => 'bar']],
+        ['put', '/put', ['foo' => 'bar']],
     ]);
 });
