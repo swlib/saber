@@ -25,6 +25,9 @@ HTTP军刀, `Swoole人性化组件库`之PHP高性能HTTP客户端, 基于Swoole
 - 毫秒超时定时器
 - 随机UA生成器
 
+<br>
+
+------
 
 ## 安装
 
@@ -34,15 +37,15 @@ HTTP军刀, `Swoole人性化组件库`之PHP高性能HTTP客户端, 基于Swoole
 composer require swlib/saber
 ```
 
-
+------
 
 ## 依赖
 
 - PHP7 or later
 - Swoole **2.1.2** or later
 
-
-
+------
+<br>
 
 ## 协程调度
 
@@ -56,7 +59,9 @@ go(function () {
 })
 ```
 
+<br>
 
+------
 
 ## 例子
 
@@ -154,7 +159,9 @@ $response = Saber::psr()
 echo $response->getBody();
 ```
 
+<br>
 
+------
 
 ## 配置参数表
 
@@ -202,6 +209,10 @@ echo $response->getBody();
 |form_data|query|
 |useragent|ua|
 
+<br>
+
+------
+
 ## 拦截器
 
 拦截器是Saber的一个**非常强大的特性**, 它可以让你非常方便地处理各种事情, 比如打印dev日志:
@@ -239,7 +250,9 @@ Saber::get('http://twosee.cn/', [
 ]
 ```
 
+<br>
 
+------
 
 ## Cookies
 
@@ -265,7 +278,9 @@ Cookie也支持域名和时限校验, 不会丢失任何信息, 如domain是`git
 
 > 更多详情具体请参考[Swlib/Http](https://github.com/swlib/http/)库文档和例子.
 
+<br>
 
+------
 
 ## 异常机制
 
@@ -355,7 +370,9 @@ Saber::get('http://httpbin.org/redirect/10');
 //output: Swlib\Http\Exception\TooManyRedirectsException is caught!
 ```
 
+<br>
 
+------
 
 ## IDE提示
 
