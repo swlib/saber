@@ -97,7 +97,7 @@ echo $saber->delete('/delete');
 
 ### 生成会话
 
-Session会自动保存cookie信息, 其实现是**浏览器级别完备**的.
+Session会自动保存cookie信息, 其实现是[**浏览器级别完备**](#cookies)的.
 
 ```php
 $session = Saber::session([
@@ -174,14 +174,14 @@ echo $response->getBody();
 | uri                   | string                | 资源标识符         | `http://httpbin.org/get` \| `/get` \| `get`                  | 可以使用绝对路径和相对路径                                   |
 | method                | string                | 请求方法           | `get` \| `post` \| `head` \| `patch` \| `put` \| `delete`    | 底层自动转换为大写                                           |
 | headers               | array                 | 请求报头           | `['DNT' => '1']` \| `['accept' => ['text/html'], ['application/xml']]` | 字段名不区分大小写, 但会保留设定时的原始大小写规则, 底层每个字段值会根据PSR-7自动分割为数组 |
-| cookies               | `array`\|`string`     |                    | `['foo '=> 'bar']` \| `'foo=bar; foz=baz'`                   | 底层自动转化为Cookies对象, 并设置其domain为当前的uri, 具有浏览器级别的完备属性. |
+| cookies               | `array`\|`string`     |                    | `['foo '=> 'bar']` \| `'foo=bar; foz=baz'`                   | 底层自动转化为Cookies对象, 并设置其domain为当前的uri, 具有[浏览器级别的完备属性](#cookies). |
 | useragent             | string                | 用户代理           |                                                              | 默认为macos平台的chrome                                      |
 | redirect              | int                   | 最大重定向次数     | 5                                                            | 默认为3, 为0时不重定向.                                      |
 | keep_alive            | bool                  | 是否保持连接       | `true` \| `false`                                            | 默认为true, 重定向时会自动复用连接                           |
 | content_type          | string                | 发送的内容编码类型 | `text/plain` \| `Swlib\Http\ContentType::JSON`               | 默认为application/x-www-form-urlencoded                      |
 | data                  | `array` \| `string`   | 发送的数据         | `'foo=bar&dog=cat'` \|` ['foo' => 'bar']`                    | 会根据content_type自动编码数据                               |
-| before                | `callable` \| `array` | 请求前拦截器       | `function(Request $request){}`                               | 具体参考拦截器一节                                           |
-| after                 | `callable` \| `array` | 响应后拦截器       | `function(Response $response){}`                             | 具体参考拦截器一节                                           |
+| before                | `callable` \| `array` | 请求前拦截器       | `function(Request $request){}`                               | [具体参考拦截器一节](#拦截器)                                |
+| after                 | `callable` \| `array` | 响应后拦截器       | `function(Response $response){}`                             | [具体参考拦截器一节](#拦截器)                                |
 | timeout               | float                 | 超时时间           | 0.5                                                          | 默认5s, 支持毫秒级超时                                       |
 | proxy                 | string                | 代理               | `http://127.0.0.1:1087` \| `socks5://127.0.0.1:1087`         | 支持http和socks5                                             |
 | ssl                   | int                   | 是否开启ssl连接    | `0=关闭` `1=开启` `2=自动`                                   | 默认自动                                                     |
