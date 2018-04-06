@@ -13,14 +13,11 @@ use Swlib\Saber\ResponseMap;
 
 class Saber
 {
-    private static function getDefaultClient(bool $renew = false)
-    {
-        static $defaultClient;
-        if ($renew && isset($defaultClient)) {
-            unset($defaultClient);
-        }
+    private static $defaultClient;
 
-        return $defaultClient ?? $defaultClient = Client::create();
+    private static function getDefaultClient()
+    {
+        return self::$defaultClient ?? self::$defaultClient = Client::create();
     }
 
     public static function create(array $options = [])
@@ -88,15 +85,20 @@ class Saber
         return self::getDefaultClient()->patch($uri, $data, $options);
     }
 
-    public static function default(array $options)
+    public static function default(array $options): void
     {
         Client::setDefaultOptions($options);
-        self::getDefaultClient(true);
+        self::$defaultClient = null;
     }
 
-    public static function errorReport(int $level)
+    public static function exceptionReport(int $level): void
     {
-        self::default(['error_report' => $level]);
+        self::default(['exception_report' => $level]);
+    }
+
+    public static function exceptionHandle(callable $handle): void
+    {
+        self::default(['exception_handle' => $handle]);
     }
 
 }

@@ -23,7 +23,7 @@ class Request extends \Swlib\Http\Request
     /** @var \Swoole\Coroutine\Http\Client */
     public $client;
 
-    public $error_report = HttpExceptionMask::E_ALL;
+    public $exception_report = HttpExceptionMask::E_ALL;
 
     const SSL_OFF = 0;
     const SSL_ON = 1;
@@ -76,14 +76,14 @@ class Request extends \Swlib\Http\Request
         $this->__cookiesInitialization(true);
     }
 
-    public function getErrorReport(): int
+    public function getExceptionReport(): int
     {
-        return $this->error_report;
+        return $this->exception_report;
     }
 
-    public function setErrorReport(int $level): self
+    public function setExceptionReport(int $level): self
     {
-        $this->error_report = $level;
+        $this->exception_report = $level;
 
         return $this;
     }
@@ -433,7 +433,7 @@ class Request extends \Swlib\Http\Request
         $this->_status = self::NONE;
         $this->_time = microtime(true) - $this->_start_time;
 
-        $is_report = $this->getErrorReport() & HttpExceptionMask::E_CONNECT;
+        $is_report = $this->getExceptionReport() & HttpExceptionMask::E_CONNECT;
         $statusCode = $this->client->statusCode;
         $errCode = $this->client->errCode;
         if ($statusCode < 0 || $errCode !== 0) {
@@ -448,10 +448,14 @@ class Request extends \Swlib\Http\Request
                 } else {
                     $message = "Linux Code $errCode: " . socket_strerror($errCode);
                 }
-                throw new ConnectException($this, $statusCode, $message);
+                $exception = new ConnectException($this, $statusCode, $message);
+                $ret = $this->callInterceptor('exception', $exception);
+                if (!$ret) {
+                    throw $exception;
+                }
             } else {
                 // Exception is no longer triggered after an exception is ignored
-                $this->setErrorReport(HttpExceptionMask::E_NONE);
+                $this->setExceptionReport(HttpExceptionMask::E_NONE);
             }
         }
 

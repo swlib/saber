@@ -69,24 +69,32 @@ class Response extends \Swlib\Http\Response
 
         $this->withBody(new BufferStream($body));
 
-        $e_level = $request->getErrorReport();
+        $e_level = $request->getExceptionReport();
         if ($this->statusCode >= 200 && $this->statusCode < 300) {
             $this->success = true;
         } else {
+            $exception = null;
             if ($this->statusCode >= 300 && $this->statusCode < 400) {
                 if ($e_level & HttpExceptionMask::E_REDIRECT) {
-                    throw new TooManyRedirectsException($request, $this, $this->statusCode, $this->redirect_headers);
+                    $exception = new TooManyRedirectsException($request, $this, $this->statusCode,
+                        $this->redirect_headers);
                 }
             } elseif ($this->statusCode >= 400 && $this->statusCode < 500) {
                 if ($e_level & HttpExceptionMask::E_CLIENT) {
-                    throw new ClientException($request, $this, $this->statusCode);
+                    $exception = new ClientException($request, $this, $this->statusCode);
                 }
             } elseif ($this->statusCode >= 500) {
                 if ($e_level & HttpExceptionMask::E_SERVER) {
-                    throw new ServerException($request, $this, $this->statusCode);
+                    $exception = new ServerException($request, $this, $this->statusCode);
                 }
             } elseif ($e_level & HttpExceptionMask::E_BAD_RESPONSE) {
-                throw new BadResponseException($request, $this, $this->statusCode);
+                $exception = new BadResponseException($request, $this, $this->statusCode);
+            }
+            if ($exception) {
+                $ret = $request->callInterceptor('exception', $exception);
+                if (!$ret) {
+                    throw $exception;
+                }
             }
         }
     }

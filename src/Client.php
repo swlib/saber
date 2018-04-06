@@ -41,8 +41,8 @@ class Client
         'before' => [],
         'after' => [],
         'before_redirect' => [],
-        'error_report' => HttpExceptionMask::E_ALL,
-        'error_handle' => []
+        'exception_report' => HttpExceptionMask::E_ALL,
+        'exception_handle' => []
     ];
 
     private static $aliasMapLength;
@@ -129,16 +129,17 @@ class Client
         if (count($options) > $special_fields_length) {
             foreach ($special_fields as $field) {
                 if (isset($options[$field])) {
-                    $options[$field] = array_merge($default[$field] ?? [], $options[$field]);
+                    $options[$field] = array_merge($default[$field] ?? [], (array)$options[$field]);
                 }
             }
         } else {
             foreach ($options as $key => $val) {
                 if (isset($special_fields[$key])) {
-                    $options[$key] = array_merge($default[$key] ?? [], $options[$key]);
+                    $options[$key] = array_merge($default[$key] ?? [], (array)$options[$key]);
                 }
             }
         }
+        //FIXME: if get string header, we must trans it to array, but it's too difficult.
 
         return $options + $default;
     }
@@ -253,8 +254,8 @@ class Client
         }
         self::transAlias($options);
 
-        if (isset($options['error_report'])) {
-            $request->setErrorReport($options['error_report']);
+        if (isset($options['exception_report'])) {
+            $request->setExceptionReport($options['exception_report']);
         }
 
         if (isset($options['base_uri']) || isset($options['uri'])) {
@@ -383,6 +384,10 @@ class Client
         /** register interceptor before every redirects */
         if (!empty($options['before_redirect'])) {
             $request->withAddedInterceptor('redirect', (array)$options['before_redirect']);
+        }
+
+        if (!empty($options['exception_handle'])) {
+            $request->withAddedInterceptor('exception', (array)$options['exception_handle']);
         }
     }
 
