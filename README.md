@@ -26,6 +26,14 @@ HTTP军刀, `Swoole人性化组件库`之PHP高性能HTTP客户端, 基于Swoole
 - 随机UA生成器
 
 
+## 安装
+
+最好的安装方法是通过 [Composer](http://getcomposer.org/) 包管理器 :
+
+```shell
+composer require swlib/saber
+```
+
 
 
 ## 依赖
@@ -37,8 +45,6 @@ HTTP军刀, `Swoole人性化组件库`之PHP高性能HTTP客户端, 基于Swoole
 
 
 ## 例子
-
-Saber的所有静态方法在实例中都有对应的方法存在, 静态方法是基于一个默认的客户端实例实现的.
 
 ### 协程
 
@@ -146,37 +152,6 @@ echo $response->getBody();
 
 
 
-## 安装
-
-最好的安装方法是通过 [Composer](http://getcomposer.org/) 包管理器 :
-
-```bash
-# Install Composer
-curl -sS https://getcomposer.org/installer | php
-# Global install
-mv composer.phar /usr/local/bin/composer
-```
-
-**安装Saber :**
-
-```shell
-composer require swlib/saber
-```
-
-安装后,你需要在项目中引入自动加载器 :
-
-```php
-require 'vendor/autoload.php';
-```
-
-你可以通过该命令更新 :
-
-```
-composer update
-```
-
-
-
 ## 配置参数表
 
 `|`符号分割多种可选值
@@ -203,7 +178,7 @@ composer update
 | ssl_verify_peer       | bool                  | 验证服务器端证书   | `false` \| `true`                                            | 默认关闭                                                     |
 | ssl_allow_self_signed | bool                  | 允许自签名证书     | `true` \| `false`                                            | 默认允许                                                     |
 
-### 别名
+### 配置参数别名
 
 为了使用方便与容错, 配置项的键值具有别名机制, 建议尽量使用本名: 
 
@@ -220,3 +195,74 @@ composer update
 |redirect|follow|
 |form_data|query|
 |useragent|ua|
+
+## 异常处理
+
+Saber遵循将业务与错误分离的守则, 默认当请求任意环节失败时, 都将会抛出异常:
+
+异常的命名空间位于`Swlib\Http\Exception`
+
+| Exception                 | Intro              | scene                                                        |
+| ------------------------- | ------------------ | ------------------------------------------------------------ |
+| RequestException          | 请求失败           | 请求配置错误                                                 |
+| ConnectException          | 连接失败           | 如无网络连接, DNS查询失败, 超时等,  errno的值等于Linux errno。可使用socket_strerror将错误码转为错误信息。 |
+| TooManyRedirectsException | 重定向次数超限     | 重定向的次数超过了设定的限制, 抛出的异常将会打印重定向追踪信息 |
+| ClientException           | 客户端异常         | 服务器返回了4xx错误码                                        |
+| ServerException           | 服务器异常         | 服务器返回了5xx错误码                                        |
+| BadResponseException      | 未知的获取响应失败 | 服务器无响应或返回了无法识别的错误码                         |
+
+除一般异常方法外, 所有HTTP异常还拥有以下方法 :
+
+| Method                 | Intro                  |
+| ---------------------- | ---------------------- |
+| getRequest             | 获取请求实例           |
+| hasResponse            | 是否获得响应           |
+| getResponse            | 获取响应实例           |
+| getResponseBodySummary | 获取响应主体的摘要内容 |
+
+#### 捕获例子
+
+```php
+try {
+    echo Saber::get('http://httpbin.org/redirect/10');
+} catch (TooManyRedirectsException $e) {
+    var_dump($e->getCode());
+    var_dump($e->getMessage());
+    var_dump($e->hasResponse());
+    echo $e->getRedirectsTrace();
+}
+// int(302)
+// string(28) "Too many redirects occurred!"
+// bool(true)
+#0 http://httpbin.org/redirect/10
+#1 http://httpbin.org/relative-redirect/9
+#2 http://httpbin.org/relative-redirect/8
+```
+
+### 异常控制
+
+同时, Saber亦支持以温和的方式来对待异常, 以免使用者陷入在不稳定的网络环境下, 必须在每一步都使用try包裹代码的恐慌中:
+
+设定errorReport级别, 它是**全局生效**的, 对**已创建的实例不会生效**.
+
+```php
+// 启用所有异常但忽略重定向次数过多异常
+Saber::errorReport(
+    HttpExceptionMask::E_ALL ^ HttpExceptionMask::E_REDIRECT
+);
+```
+
+#### 掩码表
+
+| Mask           | Value | Intro                |
+| -------------- | ----- | -------------------- |
+| E_NONE         | 0     | 忽略所有异常         |
+| E_REQUEST      | 1     | 对应RequestException |
+| E_CONNECT      | 2     | 对应RequestException |
+| E_REDIRECT     | 4     | 对应RequestException |
+| E_BAD_RESPONSE | 8     | 对应BadRException    |
+| E_CLIENT       | 16    | 对应ClientException  |
+| E_SERVER       | 32    | 对应ServerException  |
+| E_ALL          | 63    | 所有异常             |
+
+
