@@ -20,12 +20,12 @@ class Saber
         return self::$defaultClient ?? self::$defaultClient = Client::create();
     }
 
-    public static function create(array $options = [])
+    public static function create(array $options = []): Client
     {
         return Client::create($options);
     }
 
-    public static function session(array $options = [])
+    public static function session(array $options = []): Client
     {
         return Client::session($options);
     }

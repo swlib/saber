@@ -23,17 +23,18 @@
   ],
   "require": {
     "php": ">=7.0",
-    "psr/http-message": "~1.0",
     "swlib/http": "dev-master",
     "swlib/util": "dev-master"
   },
   "autoload": {
+    "classmap": [
+      "src/Saber.php"
+    ],
     "psr-4": {
-      "Swlib\\": "src",
       "Swlib\\Saber\\": "src"
     }
   },
-  "repositories":  {
+  "repositories": {
     "packagist": {
       "type": "composer",
       "url": "https://packagist.phpcomposer.com"
@@ -41,7 +42,7 @@
   },
   "require-dev": {
     "eaglewu/swoole-ide-helper": "dev-master",
-    "phpunit/phpunit": "^5.7"
+    "phpunit/phpunit": "~7"
   },
   "scripts": {
     "test": "./vendor/bin/phpunit -c phpunit.xml"

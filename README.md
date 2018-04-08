@@ -8,7 +8,7 @@
 
 ## 简介
 
-HTTP军刀, `Swoole人性化组件库`之PHP高性能HTTP客户端, 基于Swoole原生协程, 支持多种风格操作, 底层提供高性能解决方案, 让开发者专注于功能开发, 从传统同步阻塞且配置繁琐的Curl中解放.
+HTTP军刀(呆毛王), `Swoole人性化组件库`之PHP高性能HTTP客户端, 基于Swoole原生协程, 支持多种风格操作, 底层提供高性能解决方案, 让开发者专注于功能开发, 从传统同步阻塞且配置繁琐的Curl中解放.
 
 >  **[English Document](./README-en.md)**
 
@@ -58,30 +58,6 @@ go(function () {
     echo Saber::get('http://httpbin.org/get');
 })
 ```
-
-<br>
-
-------
-
-## Saber API
-
-为了使用方便，已为所有支持的请求方法提供了别名。
-
-**\$saber->request(\$options)**
-
-**\$saber->get(\$url[, \$options])**
-
-**\$saber->delete(\$url[, \$options])**
-
-**\$saber->head(\$url[, \$options])**
-
-**\$saber->options(\$url[, \$options])**
-
-**\$saber->post(\$url[, \$data[, \$options]])**
-
-**\$saber->put(\$url[, \$data[, \$options]])**
-
-**\$saber->patch(\$url[, \$data[, \$options]])**
 
 <br>
 
@@ -399,10 +375,167 @@ Saber::get('http://httpbin.org/redirect/10');
 
 ------
 
-## IDE提示
+## Saber API
+
+> 由于无法在魔术方法中使用协程(\_\_call, \_\_callStatic), 源码中的方法都是手动定义.
+
+为了使用方便，已为所有支持的请求方法提供了别名。
+
+#### Swlib\Saber
+```php
+public static function create(array $options): Client { }
+public static function session(array $options): Client { }
+public static function psr(array $options): Request { }
+public static function wait(array $options): Client { }
+public static function request(array $options) { }
+public static function requests(array $requests, array $default_options): ResponseMap { }
+public static function get(string $uri, array $options) { }
+public static function delete(string $uri, array $options) { }
+public static function head(string $uri, array $options) { }
+public static function options(string $uri, array $options) { }
+public static function post(string $uri, $data, array $options) { }
+public static function put(string $uri, $data, array $options) { }
+public static function patch(string $uri, $data, array $options) { }
+public static function default(array $options): void { }
+public static function exceptionReport(int $level): void { }
+public static function exceptionHandle(callable $handle): void { }
+```
+#### Swlib\Saber\Request
+```php
+public function getExceptionReport(): int { }
+public function setExceptionReport(int $level): self { }
+public function isWaiting(): bool { }
+public function getSSL(): int { }
+public function withSSL(int $mode): self { }
+public function getCAFile(): string { }
+public function withCAFile(string $ca_file): self { }
+public function withSSLVerifyPeer(bool $verify_peer, string $ssl_host_name): self { }
+public function withSSLAllowSelfSigned(bool $allow): self { }
+public function getSSLConf() { }
+public function getKeepAlive() { }
+public function withKeepAlive(bool $enable): self { }
+public function getProxy(): array { }
+public function withProxy(string $host, int $port): self { }
+public function withSocks5(string $host, int $port, string $username, string $password): self { }
+public function withoutProxy(): self { }
+public function getTimeout(): float { }
+public function withTimeout(float $timeout): self { }
+public function getRedirect(): int { }
+public function getName() { }
+public function withName($name): self { }
+public function withRedirect(int $time): self { }
+public function getRedirectWait(): bool { }
+public function withRedirectWait(bool $enable): self { }
+public function resetClient($client) { }
+public function exec() { }
+public function recv() { }
+public function getRequestTarget(): string { }
+public function withRequestTarget($requestTarget): self { }
+public function getMethod(): string { }
+public function withMethod($method): self { }
+public function getUri(): Psr\Http\Message\UriInterface { }
+public function withUri(Psr\Http\Message\UriInterface $uri, $preserveHost): self { }
+public function getCookieParams(): array { }
+public function getCookieParam(string $name): string { }
+public function withCookieParam(string $name, string $value): self { }
+public function withCookieParams(array $cookies): self { }
+public function getQueryParam(string $name): string { }
+public function getQueryParams(): array { }
+public function withQueryParam(string $name, string $value): self { }
+public function withQueryParams(array $query): self { }
+public function getParsedBody(string $name) { }
+public function withParsedBody($data): self { }
+public function getUploadFile(string $name): Swlib\Http\UploadFile { }
+public function getUploadFiles(): array { }
+public function withUploadFile(Swlib\Http\UploadFile $uploadFile): self { }
+public function withUploadFiles(array $uploadFiles): self { }
+public function getProtocolVersion(): string { }
+public function withProtocolVersion($version): self { }
+public function hasHeader($name): bool { }
+public function getHeader($name): array { }
+public function getHeaderLine($name): string { }
+public function getHeaders(bool $implode, bool $ucwords): array { }
+public function withHeader($raw_name, $value): self { }
+public function withHeaders(array $headers): self { }
+public function withAddedHeader($raw_name, $value): self { }
+public function withoutHeader($name): self { }
+public function getBody(): Swlib\Http\StreamInterface { }
+public function withBody($body): self { }
+public function initialization(bool $incremental) { }
+public function getCookies() { }
+public function setCookie(array $options): self { }
+public function unsetCookie(string $name, string $path, string $domain): self { }
+public function withInterceptor(string $name, array $interceptor) { }
+public function withAddedInterceptor(string $name, array $functions): self { }
+public function removeInterceptor(string $name): self { }
+public function callInterceptor(string $name, $arguments) { }
+```
+#### Swlib\Saber\Response
+```php
+public function getStatusCode() { }
+public function withStatus($code, $reasonPhrase) { }
+public function getReasonPhrase() { }
+public function __toString() { }
+public function getProtocolVersion(): string { }
+public function withProtocolVersion($version): self { }
+public function hasHeader($name): bool { }
+public function getHeader($name): array { }
+public function getHeaderLine($name): string { }
+public function getHeaders(bool $implode, bool $ucwords): array { }
+public function withHeader($raw_name, $value): self { }
+public function withHeaders(array $headers): self { }
+public function withAddedHeader($raw_name, $value): self { }
+public function withoutHeader($name): self { }
+public function getBody(): Swlib\Http\StreamInterface { }
+public function withBody($body): self { }
+public function initialization(bool $incremental) { }
+public function getCookies() { }
+public function setCookie(array $options): self { }
+public function unsetCookie(string $name, string $path, string $domain): self { }
+```
+#### Swlib\Saber\RequestQueue
+```php
+public function enqueue($request) { }
+public function recv(): Swlib\Saber\ResponseMap { }
+```
+#### Swlib\Saber\ResponseMap
+```php
+public $time = 0.0;
+public $status_map = [];
+public $success_map = [];
+public $success_num = 0;
+public $error_num = 0;
+public function offsetSet($index, $response) { }
+public function __toString() { }
+```
+<br>
+
+------
+
+## Road Map
+
+| File Upload       | Random UserAgent | Http2 | ...  |
+| ----------------- | ---------------- | ----- | ---- |
+| 4 (High-priority) | 3                | 2     |      |
+
+#### Why not Http2 ?
+
+As the main HTTP/2 benefit is that it allows multiplexing many requests within a single connection, thus [almost] removing the limit on number of simultaneous requests - and there is no such limit when talking to your own backends. Moreover, things may even become worse when using HTTP/2 to backends, due to single TCP connection being used instead of multiple ones, so Http2 Will not be a priority. ([\#ref](https://www.zhihu.com/question/268666424/answer/347026835))
+
+------
+
+## IDE Helper
 
 将本项目源文件加入到IDE的 `Include Path` 中. (使用composer安装,则可以包含整个vendor文件夹)
 
 良好的注释书写使得Saber完美支持IDE自动提示, 只要在对象后书写箭头符号即可查看所有对象方法名称, 名称都十分通俗易懂, 大量方法都遵循PSR规范或是参考[Guzzle](https://github.com/guzzle/guzzle)项目而实现.
 
 对于底层Swoole相关类的IDE提示则需要引入[swoole-ide-helper](https://github.com/eaglewu/swoole-ide-helper)(composer在dev环境下会默认安装), 该项目会由我持续维护并推送最新代码到eaglewu持有的主仓库中.
+
+<br>
+
+------
+
+## 重中之重
+
+**欢迎提交issue和PR.**
