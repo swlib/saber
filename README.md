@@ -160,6 +160,28 @@ $response = Saber::psr()
 echo $response->getBody();
 ```
 
+### 压力测试
+
+> 测试机器为最低配MacBookPro, 请求服务器为本地echo服务器.
+
+0.9秒完成6666个请求, 成功率100%.
+
+```php
+co::set(['max_coroutine' => 8191]);
+go(function () {
+    $requests = [];
+    for ($i = 6666; $i--;) {
+        $requests[] = ['uri' => 'http://127.0.0.1'];
+    }
+    $res = Saber::requests($requests);
+    echo "use {$res->time}s\n";
+    echo "success: $res->success_num, error: $res->error_num";
+});
+// on MacOS
+// use 0.91531705856323s
+// success: 6666, error: 0
+```
+
 <br>
 
 ------
