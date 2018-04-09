@@ -146,6 +146,37 @@ echo Saber::get($uri, ['proxy' => 'http://127.0.0.1:1087'])->body;
 echo Saber::get($uri, ['proxy' => 'socks5://127.0.0.1:1086'])->body;
 ```
 
+### 文件上传
+
+底层自动协程调度, 可支持异步发送超大文件, 断点续传。
+
+>同时上传三个文件(三种参数风格`string`| `array` |`object`)
+
+```php
+$file1 = __DIR__ . '/black.png';
+$file2 = [
+    'path' => __DIR__ . '/black.png',
+    'name' => 'white.png',
+    'type' => ContentType::$Map['png'],
+    'offset' => null, //re-upload from break
+    'size' => null //upload a part of the file
+];
+$file3 = new SwUploadFile(
+    __DIR__ . '/black.png',
+    'white.png',
+    ContentType::$Map['png']
+);
+
+echo Saber::post('http://httpbin.org/post', null, [
+        'files' => [
+            'image1' => $file1,
+            'image2' => $file2,
+            'image3' => $file3
+        ]
+    ]
+);
+```
+
 ### PSR风格
 
 ```php

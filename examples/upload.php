@@ -11,22 +11,25 @@ use Swlib\Saber;
 
 require __DIR__ . '/../vendor/autoload.php';
 go(function () {
+    $file1 = __DIR__ . '/black.png';
+    $file2 = [
+        'path' => __DIR__ . '/black.png',
+        'name' => 'white.png',
+        'type' => ContentType::$Map['png'],
+        'offset' => null, //re-upload from break
+        'size' => null //upload a part of the file
+    ];
+    $file3 = new SwUploadFile(
+        __DIR__ . '/black.png',
+        'white.png',
+        ContentType::$Map['png']
+    );
+
     echo Saber::post('http://httpbin.org/post', null, [
             'files' => [
-                //string
-                'image1' => __DIR__ . '/black.png',
-                //array
-                'image2' => [
-                    'path' => __DIR__ . '/black.png',
-                    'name' => 'white.png',
-                    'type' => ContentType::$Map['png']
-                ],
-                //object
-                'image3' => new SwUploadFile(
-                    __DIR__ . '/black.png',
-                    'white.png',
-                    ContentType::$Map['png']
-                )
+                'image1' => $file1,
+                'image2' => $file2,
+                'image3' => $file3
             ]
         ]
     );
