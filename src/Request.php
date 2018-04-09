@@ -12,6 +12,7 @@ use Swlib\Http\CookiesManagerTrait;
 use Swlib\Http\Exception\ConnectException;
 use Swlib\Http\Exception\HttpExceptionMask;
 use Swlib\Http\StreamInterface;
+use Swlib\Http\SwUploadFile;
 use Swlib\Http\Uri;
 use Swlib\Util\InterceptorTrait;
 use Swoole\Coroutine\Http\Client;
@@ -60,9 +61,10 @@ class Request extends \Swlib\Http\Request
     /** @var bool */
     private $_form_redirect = false;
 
-    const NONE = 1;
-    const WAITING = 2;
-    public $_status = self::NONE;
+    const STATUS_NONE = 1;
+    const STATUS_WAITING = 2;
+
+    public $_status = self::STATUS_NONE;
 
     use CookiesManagerTrait {
         CookiesManagerTrait::initialization as private __cookiesInitialization;
@@ -90,7 +92,7 @@ class Request extends \Swlib\Http\Request
 
     public function isWaiting(): bool
     {
-        return $this->_status === self::WAITING;
+        return $this->_status === self::STATUS_WAITING;
     }
 
     /**
@@ -361,18 +363,6 @@ class Request extends \Swlib\Http\Request
             $this->client->isSSL = $is_ssl;
         }
 
-        /** 设定配置项 */
-        $settings = [
-            'timeout' => $this->getTimeout(),
-            'keep_alive' => $this->getKeepAlive(),
-        ];
-        $settings += $this->getProxy();
-
-        if (!empty($ca_file = $this->getCAFile())) {
-            $settings += $this->getSSLConf();
-        }
-        $this->client->set($settings);
-
         /** 清空client自带的不靠谱的cookie */
         $this->client->cookies = null;
 
@@ -389,6 +379,30 @@ class Request extends \Swlib\Http\Request
 
         /** 设置请求方法 */
         $this->client->setMethod($this->getMethod());
+        /** Set Upload file */
+        $files = $this->getUploadedFiles();
+        if (!empty($files)) {
+            /** @var $file SwUploadFile */
+            foreach ($files as $key => $file) {
+                $file_options = [
+                    $file->getFilePath(),
+                    $key
+                ];
+                if ($file_type = $file->getClientMediaType()) {
+                    $file_options[] = $file_type;
+                }
+                if ($filename = $file->getClientFilename()) {
+                    $file_options[] = $filename;
+                }
+                if ($file_offset = $file->getOffset()) {
+                    $file_options[] = $file_offset;
+                }
+                if ($file_size = $file->getSize()) {
+                    $file_options[] = $file_size;
+                }
+                $this->client->addFile(...$file_options);
+            }
+        }
         /** 设置请求主体 */
         $body = (string)($this->getBody() ?? '');
         if (!empty($body)) {
@@ -402,6 +416,9 @@ class Request extends \Swlib\Http\Request
         $path = $this->uri->getPath() ?: '/';
         $path = empty($query) ? $path : $path . '?' . $query;
 
+        /** Set defer and timeout */
+        $this->client->setDefer(); //总是延迟回包以使用timeout定时器特性
+
         /** calc timeout value */
         if ($this->_redirect_times > 0) {
             $timeout = $this->getTimeout() - (microtime(true) - $this->_start_time);
@@ -412,9 +429,20 @@ class Request extends \Swlib\Http\Request
         }
         $this->_timeout = max($timeout, 0.001); //swoole support min 1ms
 
-        $this->client->setDefer(); //总是延迟回包以使用timeout定时器特性
+        /** 设定配置项 */
+        $settings = [
+            'timeout' => $this->_form_redirect && $this->_timeout ? $this->_timeout : $this->getTimeout(),
+            'keep_alive' => $this->getKeepAlive(),
+        ];
+        $settings += $this->getProxy();
+
+        if (!empty($ca_file = $this->getCAFile())) {
+            $settings += $this->getSSLConf();
+        }
+        $this->client->set($settings);
+
         $this->client->execute($path);
-        $this->_status = self::WAITING;
+        $this->_status = self::STATUS_WAITING;
 
         return $this;
     }
@@ -426,11 +454,11 @@ class Request extends \Swlib\Http\Request
      */
     public function recv()
     {
-        if (self::WAITING !== $this->_status) {
+        if (self::STATUS_WAITING !== $this->_status) {
             throw new \BadMethodCallException('You can\'t recv because client is not in waiting stat.');
         }
-        $this->client->recv($this->_timeout);
-        $this->_status = self::NONE;
+        $this->client->recv($this->getTimeout());
+        $this->_status = self::STATUS_NONE;
         $this->_time = microtime(true) - $this->_start_time;
 
         $is_report = $this->getExceptionReport() & HttpExceptionMask::E_CONNECT;
@@ -546,6 +574,9 @@ class Request extends \Swlib\Http\Request
     public function __clone()
     {
         $this->client = null;
+        if ($this->_status === self::STATUS_WAITING) {
+            $this->exec(); // recover client
+        }
         $this->cookies = clone $this->cookies;
         $this->incremental_cookies = new Cookies();
     }

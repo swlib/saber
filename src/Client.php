@@ -10,6 +10,7 @@ namespace Swlib\Saber;
 use Swlib\Http\BufferStream;
 use Swlib\Http\ContentType;
 use Swlib\Http\Exception\HttpExceptionMask;
+use Swlib\Http\SwUploadFile;
 use Swlib\Http\Uri;
 
 class Client
@@ -38,6 +39,7 @@ class Client
         'keep_alive' => true,
         'form_data' => null,
         'data' => null,
+        'files' => [],
         'before' => [],
         'after' => [],
         'before_redirect' => [],
@@ -299,6 +301,15 @@ class Client
             $request->withBody($buffer);
         }
 
+        if (!empty($options['files'])) {
+            if (key($options['files']) === 0) {
+                throw new \BadMethodCallException('File must has it\'s form field name! Such as {"file1": "~/foo.png"}}.');
+            }
+            foreach ($options['files'] as $form_field_name => $file) {
+                $request->withUploadedFile($form_field_name, SwUploadFile::create($file));
+            }
+        }
+
         /** （可能的）HTTPS 连接证书 */
         if (isset($options['ssl'])) {
             $request->withSSL($options['ssl']);
@@ -489,6 +500,23 @@ class Client
         }
 
         return $this->request($options);
+    }
+
+    private static $ws_def_template;
+
+    private static function getWebsocketTemplate(): Request
+    {
+        if (!isset(self::$ws_def_template)) {
+            self::$ws_def_template = new Request();
+            self::$ws_def_template;//TODO
+        }
+
+        return clone self::$ws_def_template;
+    }
+
+    public function websocket(string $uri): Request
+    {
+
     }
 
     /**
