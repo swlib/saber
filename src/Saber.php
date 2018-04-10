@@ -90,6 +90,11 @@ class Saber
         return self::getDefaultClient()->patch($uri, $data, $options);
     }
 
+    public static function websocket(string $uri)
+    {
+        return self::getDefaultClient()->websocket($uri);
+    }
+
     public static function default(array $options): void
     {
         Client::setDefaultOptions($options);

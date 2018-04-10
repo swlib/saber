@@ -514,9 +514,10 @@ class Client
         return clone self::$ws_def_template;
     }
 
-    public function websocket(string $uri): Request
+    public function websocket(string $uri): WebSocket
     {
-
+        $uri = Uri::resolve($this->options['base_uri'] ?? null, $uri);
+        return $websocket = new WebSocket($uri);
     }
 
     /**

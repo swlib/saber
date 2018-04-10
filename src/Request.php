@@ -416,9 +416,6 @@ class Request extends \Swlib\Http\Request
         $path = $this->uri->getPath() ?: '/';
         $path = empty($query) ? $path : $path . '?' . $query;
 
-        /** Set defer and timeout */
-        $this->client->setDefer(); //总是延迟回包以使用timeout定时器特性
-
         /** calc timeout value */
         if ($this->_redirect_times > 0) {
             $timeout = $this->getTimeout() - (microtime(true) - $this->_start_time);
@@ -441,6 +438,8 @@ class Request extends \Swlib\Http\Request
         }
         $this->client->set($settings);
 
+        /** Set defer and timeout */
+        $this->client->setDefer(); //总是延迟回包以使用timeout定时器特性
         $this->client->execute($path);
         $this->_status = self::STATUS_WAITING;
 

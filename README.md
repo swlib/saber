@@ -23,6 +23,8 @@ HTTP军刀(呆毛王), `Swoole人性化组件库`之PHP高性能HTTP客户端, �
 - 重定向控制, 自动化长连接复用
 - 自动化 编码请求/解析响应 数据
 - 毫秒超时定时器
+- 超大文件上传, 断点重传
+- W​ebSocket连接
 - 随机UA生成器
 
 <br>
@@ -58,8 +60,6 @@ go(function () {
     echo Saber::get('http://httpbin.org/get');
 })
 ```
-
-<br>
 
 ------
 
@@ -189,6 +189,19 @@ $response = Saber::psr()
     ->exec()->recv();
 
 echo $response->getBody();
+```
+
+#### WebSocket
+
+> 可以通过websocketFrame数据帧的__toString方法直接打印返回数据字符串
+
+```php
+$websocket = Saber::websocket('ws://127.0.0.1:9999');
+while (true) {
+    echo $websocket->recv(1) . "\n";
+    $websocket->push("hello");
+    co::sleep(1);
+}
 ```
 
 ### 压力测试
@@ -567,9 +580,9 @@ public function __toString() { }
 
 ## Road Map
 
-| File Upload  ✔    | WebSocket | ResponseParser | Random UserAgent | Http2 |
-| ----------------- | --------- | -------------- | ---------------- | ----- |
-| 4 (High-priority) | 3         | 2              | 1                | .5    |
+| File Upload  ✔    | WebSocket ✔ | ResponseParser | Random UserAgent | Http2 |
+| ----------------- | ----------- | -------------- | ---------------- | ----- |
+| 4 (High-priority) | 3           | 2              | 1                | .5    |
 
 #### Why not Http2 ?
 
