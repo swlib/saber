@@ -15,6 +15,7 @@ use Swlib\Http\StreamInterface;
 use Swlib\Http\SwUploadFile;
 use Swlib\Http\Uri;
 use Swlib\Util\InterceptorTrait;
+use Swlib\Util\SpecialMarkTrait;
 use Swoole\Coroutine\Http\Client;
 
 class Request extends \Swlib\Http\Request
@@ -71,6 +72,8 @@ class Request extends \Swlib\Http\Request
     }
 
     use InterceptorTrait;
+
+    use SpecialMarkTrait;
 
     function __construct(?Uri $uri = null, string $method = 'GET', array $headers = [], ?StreamInterface $body = null)
     {

@@ -33,6 +33,9 @@ class RequestQueue extends \SplQueue
         parent::enqueue($request->withRedirectWait(true));
     }
 
+    /**
+     * @return ResponseMap|Response[]
+     */
     public function recv(): ResponseMap
     {
         $start_time = microtime(true);

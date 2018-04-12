@@ -369,6 +369,11 @@ class Client
             $request->withKeepAlive($options['keep_alive']);
         }
 
+        /** Set special mark */
+        if (isset($options['mark'])) {
+            $request->withSpecialMark($options['mark']);
+        }
+
         /** proxy 是否启用代理 */
         if (isset($options['proxy'])) {
             $parse = parse_url($options['proxy']);
@@ -422,7 +427,7 @@ class Client
      * @param array $_options
      * @param array $data
      *
-     * @return ResponseMap
+     * @return ResponseMap|Response[]
      */
     public function requests(array $requests, array $default_options = []): ResponseMap
     {
@@ -500,18 +505,6 @@ class Client
         }
 
         return $this->request($options);
-    }
-
-    private static $ws_def_template;
-
-    private static function getWebsocketTemplate(): Request
-    {
-        if (!isset(self::$ws_def_template)) {
-            self::$ws_def_template = new Request();
-            self::$ws_def_template;//TODO
-        }
-
-        return clone self::$ws_def_template;
     }
 
     public function websocket(string $uri): WebSocket

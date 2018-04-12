@@ -14,6 +14,7 @@ use Swlib\Http\Exception\ClientException;
 use Swlib\Http\Exception\HttpExceptionMask;
 use Swlib\Http\Exception\ServerException;
 use Swlib\Http\Exception\TooManyRedirectsException;
+use Swlib\Util\SpecialMarkTrait;
 
 class Response extends \Swlib\Http\Response
 {
@@ -35,6 +36,8 @@ class Response extends \Swlib\Http\Response
     public $body;
 
     use CookiesManagerTrait;
+
+    use SpecialMarkTrait;
 
     /** @noinspection PhpMissingParentConstructorInspection */
     function __construct(Request $request)
@@ -97,6 +100,8 @@ class Response extends \Swlib\Http\Response
                 }
             }
         }
+
+        $this->special_marks = $request->special_marks;
     }
 
 }

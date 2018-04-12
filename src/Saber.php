@@ -46,6 +46,7 @@ class Saber
         return self::getDefaultClient()->request($options);
     }
 
+    /** @return Saber\Response[]|ResponseMap */
     public static function requests(array $requests, array $default_options = []): ResponseMap
     {
         return self::getDefaultClient()->requests($requests, $default_options);
