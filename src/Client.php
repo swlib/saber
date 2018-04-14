@@ -228,22 +228,22 @@ class Client
         return self::$aliasMap;
     }
 
-    public static function transAlias(array &$options)
+    public static function transAlias(array &$options, array $aliasMap, int $aliasMapLength = 0)
     {
-        if (!isset(self::$aliasMapLength)) {
-            self::$aliasMapLength = count(self::$aliasMap);
+        if (!$aliasMapLength) {
+            $aliasMapLength = count($aliasMap);
         }
 
-        if (count($options) > self::$aliasMapLength) {
-            foreach (self::$aliasMap as $alias => $raw_key) {
+        if (count($options) > $aliasMapLength) {
+            foreach ($aliasMap as $alias => $raw_key) {
                 if (isset($options[$alias]) && !isset($options[$raw_key])) {
                     $options[$raw_key] = &$options[$alias];
                 }
             }
         } else {
             foreach ($options as $key => &$val) {
-                if (isset(self::$aliasMap[$key]) && !isset($options[self::$aliasMap[$key]])) {
-                    $options[self::$aliasMap[$key]] = &$val;
+                if (isset($aliasMap[$key]) && !isset($options[$aliasMap[$key]])) {
+                    $options[$aliasMap[$key]] = &$val;
                 }
             }
         }
@@ -254,7 +254,11 @@ class Client
         if (empty($options)) {
             return;
         }
-        self::transAlias($options);
+        self::transAlias(
+            $options,
+            self::$aliasMap,
+            self::$aliasMapLength ?? self::$aliasMapLength = count(self::$aliasMap)
+        );
 
         if (isset($options['exception_report'])) {
             $request->setExceptionReport($options['exception_report']);
@@ -420,6 +424,11 @@ class Client
         return $this;
     }
 
+    private static $aliasMapOfRequestsLength;
+    private static $aliasMapOfRequests = [
+        'concurrency' => 'max_co'
+    ];
+
     /**
      * 并发请求
      *
@@ -432,6 +441,14 @@ class Client
     public function requests(array $requests, array $default_options = []): ResponseMap
     {
         $req_queue = new RequestQueue(); //生成请求队列
+        self::transAlias(
+            $default_options,
+            self::$aliasMapOfRequests,
+            self::$aliasMapOfRequestsLength ?? self::$aliasMapOfRequestsLength = count(self::$aliasMapOfRequests)
+        );
+        if (isset($default_options['max_co'])) {
+            $req_queue->withMaxConcurrency($default_options['max_co']);
+        }
         foreach ($requests as $index => $request_options) {
             $request_instance = clone $this->raw;
             $request_options = self::mergeOptions($request_options, $this->options);
@@ -440,6 +457,25 @@ class Client
         }
 
         return $req_queue->recv();
+    }
+
+    /**
+     * 列配置项请求
+     *
+     * @param array $options
+     * @param array $default_options
+     * @return ResponseMap|Response[]
+     */
+    public function list(array $options, array $default_options = []): ResponseMap
+    {
+        $new = [];
+        foreach ($options as $name => $option) {
+            foreach ($option as $index => $value) {
+                $new[$index][$name] = $value;
+            }
+        }
+
+        return $this->requests($new, $default_options);
     }
 
     public function get(string $uri, array $options = [])

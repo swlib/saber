@@ -52,6 +52,12 @@ class Saber
         return self::getDefaultClient()->requests($requests, $default_options);
     }
 
+    /** @return Saber\Response[]|ResponseMap */
+    public static function list(array $options, array $default_options = []): ResponseMap
+    {
+        return self::getDefaultClient()->list($options, $default_options);
+    }
+
     /**
      * Note: Swoole doesn't support use coroutine in magic methods now
      * To be on the safe side, we removed __call and __callStatic instead of handwriting
