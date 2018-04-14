@@ -21,7 +21,7 @@ class WebSocket extends \Swlib\Http\Request
         $this->client = new \Swoole\Coroutine\Http\Client(
             $uri->getHost(),
             $uri->getPort(),
-            $uri->getScheme() === 'wss'
+            $uri->getScheme() == 'wss'
         );
         $ret = $this->client->upgrade($uri->getPath() ?: '/');
         if (!$ret) {

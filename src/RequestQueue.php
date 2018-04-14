@@ -97,6 +97,7 @@ class RequestQueue extends \SplQueue
             foreach ($this as $req) {
                 $req->exec();
             }
+            $req = null;
             while (!$this->isEmpty()) {
                 $req = $this->dequeue();
                 /** @var $req Request */

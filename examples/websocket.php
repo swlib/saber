@@ -4,16 +4,12 @@ use Swlib\Saber;
 
 require __DIR__ . '/../vendor/autoload.php';
 
-$ws = new swoole_websocket_server('0.0.0.0', 9999);
-$ws->set([
-    'reactor_num' => 1,
-    'worker_num' => 1,
-    'dispatch_mode' => 1
-]);
+$ws = new swoole_websocket_server('127.0.0.1', 9999);
+$ws->set(['worker_num' => 1]);
 $ws->on('workerStart', function () {
     $websocket = Saber::websocket('ws://127.0.0.1:9999');
     while (true) {
-        echo $websocket->recv(1) . "\n";
+        echo $websocket->recv() . "\n";
         $websocket->push("hello");
         co::sleep(1);
     }

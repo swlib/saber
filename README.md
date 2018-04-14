@@ -226,6 +226,32 @@ go(function () {
 // success: 6666, error: 0
 ```
 
+### 列式请求集
+
+在实际项目中, 经常会存在使用URL列表来配置请求的情况, 因此提供了list方法来方便使用:
+
+```php
+echo Saber::list([
+    'uri' => [
+        'http://www.qq.com/',
+        'https://www.baidu.com/',
+        'https://www.swoole.com/',
+        'http://httpbin.org/'
+    ]
+]);
+```
+
+### 单次并发控制
+
+在实际爬虫项目中, 我们往往要限制单次并发请求数量以防被服务器防火墙屏蔽, 而一个`max_co`参数就可以轻松地解决这个问题, `max_co`会将请求根据上限量分批将请求压入队列并执行收包,   
+
+```php
+// max_co is the max number of concurrency request once, it's very useful to prevent server-waf limit.
+$requests = array_fill(0, 10, ['uri' => 'http://www.qq.com/']);
+echo Saber::requests($requests, ['max_co' => 5])->time."\n";
+echo Saber::requests($requests, ['max_co' => 1])->time."\n";
+```
+
 <br>
 
 ------
@@ -562,9 +588,12 @@ public function unsetCookie(string $name, string $path, string $domain): self { 
 #### Swlib\Saber\RequestQueue
 ```php
 public function enqueue($request) { }
+public function getMaxConcurrency(): int { }
+public function withMaxConcurrency(int $num): self { }
 public function recv(): Swlib\Saber\ResponseMap { }
 ```
 #### Swlib\Saber\ResponseMap
+
 ```php
 public $time = 0.0;
 public $status_map = [];

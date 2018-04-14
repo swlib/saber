@@ -546,6 +546,7 @@ class Client
     public function websocket(string $uri): WebSocket
     {
         $uri = Uri::resolve($this->options['base_uri'] ?? null, $uri);
+
         return $websocket = new WebSocket($uri);
     }
 
