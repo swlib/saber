@@ -14,6 +14,7 @@ use Swlib\Http\Exception\ClientException;
 use Swlib\Http\Exception\HttpExceptionMask;
 use Swlib\Http\Exception\ServerException;
 use Swlib\Http\Exception\TooManyRedirectsException;
+use Swlib\Util\DataParserTrait;
 use Swlib\Util\SpecialMarkTrait;
 
 class Response extends \Swlib\Http\Response
@@ -38,6 +39,8 @@ class Response extends \Swlib\Http\Response
     use CookiesManagerTrait;
 
     use SpecialMarkTrait;
+
+    use DataParserTrait;
 
     /** @noinspection PhpMissingParentConstructorInspection */
     function __construct(Request $request)
@@ -71,6 +74,9 @@ class Response extends \Swlib\Http\Response
         }
 
         $this->withBody(new BufferStream($body));
+
+        /** data parser */
+        $this->__dataParserInitialization($this->body);
 
         $e_level = $request->getExceptionReport();
         if ($this->statusCode >= 200 && $this->statusCode < 300) {

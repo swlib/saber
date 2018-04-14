@@ -6,16 +6,18 @@ require __DIR__ . '/../vendor/autoload.php';
 
 $ws = new swoole_websocket_server('127.0.0.1', 9999);
 $ws->set(['worker_num' => 1]);
-$ws->on('workerStart', function () {
+$ws->on('workerStart', function (swoole_websocket_server $serv) {
     $websocket = Saber::websocket('ws://127.0.0.1:9999');
-    while (true) {
+    $i = 5;
+    while ($i--) {
         echo $websocket->recv() . "\n";
         $websocket->push("hello");
-        co::sleep(1);
+        co::sleep(0.5);
     }
+    $serv->shutdown();
 });
 $ws->on('open', function (swoole_websocket_server $ws, swoole_http_request $request) {
-    $ws->push($request->fd, "server: hello, welcome\n");
+    $ws->push($request->fd, "server: hello, welcome");
 });
 $ws->on('message', function (swoole_websocket_server $ws, swoole_websocket_frame $frame) {
     echo "client: {$frame->data}\n";

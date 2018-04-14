@@ -67,9 +67,7 @@ class Request extends \Swlib\Http\Request
 
     public $_status = self::STATUS_NONE;
 
-    use CookiesManagerTrait {
-        CookiesManagerTrait::initialization as private __cookiesInitialization;
-    }
+    use CookiesManagerTrait;
 
     use InterceptorTrait;
 
