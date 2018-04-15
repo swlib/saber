@@ -149,7 +149,7 @@ echo $response->getBody();
 **The recommended way to install Saber is through [Composer](http://getcomposer.org/)**
 
 ```shell
-composer require swlib/saber
+composer require swlib/saber:dev-master
 ```
 
 how to install composer?

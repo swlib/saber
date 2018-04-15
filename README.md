@@ -36,7 +36,7 @@ HTTP军刀(呆毛王), `Swoole人性化组件库`之PHP高性能HTTP客户端, �
 最好的安装方法是通过 [Composer](http://getcomposer.org/) 包管理器 :
 
 ```shell
-composer require swlib/saber
+composer require swlib/saber:dev-master
 ```
 
 ------
@@ -66,6 +66,10 @@ go(function () {
 ## 例子
 
 ### 静态方法
+
+> 数据自动打包: 传入的data会自动转换成content-type所指定的类型格式
+>
+> 默认为`x-www-form-urlencoded`, 也支持`json`等其它格式
 
 ```php
 Saber::get('http://httpbin.org/get');
@@ -98,7 +102,7 @@ echo $saber->put('/put', ['foo' => 'bar']);
 
 ### 生成会话
 
-Session会自动保存cookie信息, 其实现是[**浏览器级别完备**](#cookies)的.
+Session会自动保存cookie信息, 其实现是[**浏览器级别完备**](#cookies)的
 
 ```php
 $session = Saber::session([
@@ -112,7 +116,7 @@ echo $session->get('/cookies')->body;
 
 ### 并发请求
 
-注意: 此处使用了并发重定向优化方案, 多个重定向总是依旧并发的而不会退化为队列的单个请求.
+注意: 此处使用了并发重定向优化方案, 多个重定向总是依旧并发的而不会退化为队列的单个请求
 ```php
 $responses = Saber::requests([
     ['uri' => 'http://github.com/'],
@@ -136,6 +140,24 @@ echo $saber->requests([
 ]);
 ```
 
+### 数据解析
+
+目前支持`json`,`xml`,`html`,`url-query`四种格式的数据快速解析
+
+```php
+[$json, $xml, $html] = Saber::list([
+    'uri' => [
+        'http://httpbin.org/get',
+        'http://www.w3school.com.cn/example/xmle/note.xml',
+        'http://httpbin.org/html'
+    ]
+]);
+var_dump($json->getParsedJson());
+var_dump($json->getParsedJsonObject());
+var_dump($xml->getParsedXml());
+var_dump($html->getParsedHtml()->getElementsByTagName('h1')->item(0)->textContent);
+```
+
 ### 网络代理
 
 支持HTTP和SOCKS5代理
@@ -148,7 +170,7 @@ echo Saber::get($uri, ['proxy' => 'socks5://127.0.0.1:1086'])->body;
 
 ### 文件上传
 
-底层自动协程调度, 可支持异步发送超大文件, 断点续传。
+底层自动协程调度, 可支持异步发送超大文件, 断点续传
 
 >同时上传三个文件(三种参数风格`string`| `array` |`object`)
 
@@ -206,7 +228,7 @@ while (true) {
 
 ### 压力测试
 
-> 测试机器为最低配MacBookPro, 请求服务器为本地echo服务器.
+> 测试机器为最低配MacBookPro, 请求服务器为本地echo服务器
 
 0.9秒完成6666个请求, 成功率100%.
 
@@ -243,7 +265,7 @@ echo Saber::list([
 
 ### 单次并发控制
 
-在实际爬虫项目中, 我们往往要限制单次并发请求数量以防被服务器防火墙屏蔽, 而一个`max_co`参数就可以轻松地解决这个问题, `max_co`会将请求根据上限量分批将请求压入队列并执行收包,   
+在实际爬虫项目中, 我们往往要限制单次并发请求数量以防被服务器防火墙屏蔽, 而一个`max_co`参数就可以轻松地解决这个问题, `max_co`会将请求根据上限量分批将请求压入队列并执行收包.
 
 ```php
 // max_co is the max number of concurrency request once, it's very useful to prevent server-waf limit.

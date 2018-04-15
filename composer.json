@@ -21,6 +21,7 @@
       "email": "twose@qq.com"
     }
   ],
+  "minimum-stability": "dev",
   "require": {
     "php": ">=7.0",
     "swlib/http": "dev-master",
