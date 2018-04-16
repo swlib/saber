@@ -12,6 +12,8 @@ use Swlib\Http\ContentType;
 use Swlib\Http\Exception\HttpExceptionMask;
 use Swlib\Http\SwUploadFile;
 use Swlib\Http\Uri;
+use Swlib\Util\DataParser;
+use Swlib\Util\TypeDetector;
 
 class Client
 {
@@ -34,11 +36,14 @@ class Client
         ],
         'cookies' => false,
         'useragent' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36',
-        'content_type' => ContentType::URLENCODE,
+        'content_type' => ContentType::QUERY,
         'redirect' => 3,
         'keep_alive' => true,
-        'form_data' => null,
+        'uri_query' => null,
         'data' => null,
+        'json' => null,
+        'query' => null,
+        'xml' => null,
         'files' => [],
         'before' => [],
         'after' => [],
@@ -56,12 +61,12 @@ class Client
         'url' => 'uri',
         'callback' => 'after',
         'content-type' => 'content_type',
+        'contentType' => 'content_type',
         'cookie' => 'cookies',
         'header' => 'headers',
         'follow' => 'redirect',
-        'body' => 'data',
-        'query' => 'form_data',
-        'ua' => 'useragent'
+        'ua' => 'useragent',
+        'body' => 'data'
     ];
 
     private static $default_template_request;
@@ -77,6 +82,11 @@ class Client
         }
 
         return clone self::$default_template_request;
+    }
+
+    public static function getDefaultOptions(): array
+    {
+        return self::$default_options;
     }
 
     public static function setDefaultOptions(array $options = [])
@@ -261,6 +271,12 @@ class Client
         );
 
         if (isset($options['exception_report'])) {
+            if (is_bool($options['exception_report'])) {
+                $options['exception_report'] =
+                    $options['exception_report'] ?
+                        HttpExceptionMask::E_ALL :
+                        HttpExceptionMask::E_NONE;
+            }
             $request->setExceptionReport($options['exception_report']);
         }
 
@@ -270,8 +286,8 @@ class Client
             );
         }
 
-        if (!empty($options['form_data']) && $uri = $request->getUri()) {
-            $uri->withQuery(http_build_query($options['form_data']));
+        if (!empty($options['uri_query']) && $uri = $request->getUri()) {
+            $uri->withQuery(DataParser::toQueryString(($options['uri_query'])));
         }
 
         /** 设置请求方法 */
@@ -279,28 +295,39 @@ class Client
             $request->withMethod($options['method']);
         }
 
+        if (!empty($options['json'])) {
+            $options['content_type'] = ContentType::JSON;
+            $options['data'] = &$options['json'];
+        } elseif (!empty($options['query'])) {
+            $options['content_type'] = ContentType::QUERY;
+            $options['data'] = &$options['query'];
+        } elseif (!empty($options['xml'])) {
+            $options['content_type'] = ContentType::XML;
+            $options['data'] = &$options['xml'];
+        }
+
         /** 设置请求的数据 */
         if (isset($options['content_type'])) {
             $request->withHeader('Content-Type', $options['content_type']);
         }
         if (!empty($options['data'])) {
-            if (!is_string($options['data'])) {
+            if (!TypeDetector::canBeString($options['data'])) {
                 switch ($request->getHeaderLine('Content-Type')) {
                     case ContentType::JSON:
-                        $options['data'] = json_encode($options['data']);
+                        $options['data'] = DataParser::toJsonString($options['data']);
                         break;
                     case ContentType::XML:
-                        throw new \BadMethodCallException('XML-encoder not implemented');
+                        $options['data'] = DataParser::toXmlString($options['data']);
                         break;
-                    case ContentType::URLENCODE:
+                    case ContentType::QUERY:
                     default:
-                        $options['data'] = http_build_query($options['data']);
+                        $options['data'] = DataParser::toQueryString($options['data']);
                 }
             }
         } else {
             $options['data'] = null;
         }
-        $buffer = $options['data'] ? new BufferStream($options['data']) : null;
+        $buffer = $options['data'] ? new BufferStream((string)$options['data']) : null;
         if (isset($buffer)) {
             $request->withBody($buffer);
         }
@@ -550,17 +577,33 @@ class Client
         return $websocket = new WebSocket($uri);
     }
 
+    public function exceptionReport(?int $level = null): ?int
+    {
+        if ($level === null) {
+            return $this->options['exception_report'];
+        } else {
+            $this->setOptions(['exception_report' => $level]);
+        }
+
+        return null;
+    }
+
+    public function exceptionHandle(callable $handle): void
+    {
+        $this->setOptions(['exception_handle' => $handle]);
+    }
+
     /**
      * Note: Swoole doesn't support use coroutine in magic methods now
      * To be on the safe side, we removed __call and __callStatic instead of handwriting
      */
     ///**
-    // * @method Request|Response get(string | string $uri, array $options = [])
-    // * @method Request|Response head(string | string $uri, array $options = [])
-    // * @method Request|Response put(string | string $uri, $data = null, array $options = [])
-    // * @method Request|Response post(string | string $uri, $data = null, array $options = [])
-    // * @method Request|Response patch(string | string $uri, $data = null, array $options = [])
-    // * @method Request|Response delete(string | string $uri, array $options = [])
+    // * @method Request|Response get(string $uri, array $options = [])
+    // * @method Request|Response head(string $uri, array $options = [])
+    // * @method Request|Response put(string $uri, $data = null, array $options = [])
+    // * @method Request|Response post(string $uri, $data = null, array $options = [])
+    // * @method Request|Response patch(string $uri, $data = null, array $options = [])
+    // * @method Request|Response delete(string $uri, array $options = [])
     // */
     //public function __call($name, $arguments)
     //{

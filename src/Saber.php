@@ -104,13 +104,24 @@ class Saber
 
     public static function default(array $options): void
     {
-        Client::setDefaultOptions($options);
-        self::$defaultClient = null;
+        Client::setDefaultOptions($options); //global
+        self::getDefaultClient()->setOptions($options);
     }
 
-    public static function exceptionReport(int $level): void
+    public static function getDefaultOptions(): array
     {
-        self::default(['exception_report' => $level]);
+        return Client::getDefaultOptions();
+    }
+
+    public static function exceptionReport(?int $level = null): ?int
+    {
+        if ($level === null) {
+            return self::getDefaultOptions()['exception_report'];
+        } else {
+            self::default(['exception_report' => $level]);
+        }
+
+        return null;
     }
 
     public static function exceptionHandle(callable $handle): void

@@ -17,8 +17,8 @@ go(function () {
             'http://httpbin.org/html'
         ]
     ]);
-    var_dump($json->getParsedJson());
+    var_dump($json->getParsedJsonArray());
     var_dump($json->getParsedJsonObject());
-    var_dump($xml->getParsedXml());
-    var_dump($html->getParsedHtml()->getElementsByTagName('h1')->item(0)->textContent);
+    var_dump($xml->getParsedXmlObject());
+    var_dump($html->getParsedHtmlObject()->getElementsByTagName('h1')->item(0)->textContent);
 });
