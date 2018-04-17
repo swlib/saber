@@ -21,7 +21,9 @@
       "email": "twose@qq.com"
     }
   ],
-  "minimum-stability": "dev",
+  "support": {
+    "issues": "https://github.com/swlib/saber/issues"
+  },
   "require": {
     "php": ">=7.0",
     "swlib/http": "dev-master",
@@ -45,7 +47,12 @@
     "eaglewu/swoole-ide-helper": "dev-master",
     "phpunit/phpunit": "~7"
   },
+  "config": {
+    "optimize-autoloader": true,
+    "sort-packages": true
+  },
   "scripts": {
-    "test": "./vendor/bin/phpunit -c phpunit.xml"
+    "test": "./phpunit -c phpunit.xml",
+    "install-test": "composer install && composer test"
   }
 }
