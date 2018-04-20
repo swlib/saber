@@ -73,9 +73,9 @@ class Request extends \Swlib\Http\Request
 
     use SpecialMarkTrait;
 
-    function __construct(?Uri $uri = null, string $method = 'GET', array $headers = [], ?StreamInterface $body = null)
+    function __construct(string $method = 'GET', $uri = '', array $headers = [], ?StreamInterface $body = null)
     {
-        parent::__construct($uri, $method, $headers, $body);
+        parent::__construct($method, $uri, $headers, $body);
         $this->__cookiesInitialization(true);
     }
 
@@ -347,7 +347,7 @@ class Request extends \Swlib\Http\Request
 
         /** 获取IP地址 */
         $host = $this->uri->getHost();
-        $port = $this->uri->getPort();
+        $port = $this->uri->getRealPort();
         $is_ssl = $this->getSSL();
         $is_ssl = ($is_ssl === self::SSL_AUTO) ? $port === 443 : (bool)$is_ssl;
 

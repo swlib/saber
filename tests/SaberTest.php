@@ -5,6 +5,8 @@
  * Date: 2018/4/14 下午10:50
  */
 
+namespace Swlib\Tests\Saber;
+
 use PHPUnit\Framework\TestCase;
 use Swlib\Http\ContentType;
 use Swlib\Http\Exception\ClientException;
@@ -15,7 +17,7 @@ use Swlib\Http\Exception\TooManyRedirectsException;
 use Swlib\Http\SwUploadFile;
 use Swlib\Saber;
 
-class HttpTest extends TestCase
+class SaberTest extends TestCase
 {
     public function testExceptionReport()
     {

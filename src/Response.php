@@ -63,8 +63,9 @@ class Response extends \Swlib\Http\Response
 
         /** 转码 */
         if (!empty($body = $request->client->body)) {
-            if (stristr($request->client->headers['content-type'], 'utf-8') === false) {
-                $type = explode('=', $request->client->headers['content-type'])[1] ?? null;
+            $contentType = $request->client->headers['content-type'] ?? '';
+            if ($contentType && stristr($contentType, 'utf-8') === false) {
+                $type = explode('=', $contentType)[1] ?? null;
                 if ($type) {
                     $body = iconv(strtoupper($type), 'UTF-8//IGNORE', $body);
                 }

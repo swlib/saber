@@ -1,7 +1,7 @@
 # Saber
 
 [![Latest Version](https://img.shields.io/github/release/swlib/saber.svg?style=flat-square)](https://github.com/swlib/saber/releases)
-[![Build Status](https://travis-ci.org/swlib/saber.svg?branch=master)](https://github.com/swlib/saber/releases)
+[![Build Status](https://travis-ci.org/swlib/saber.svg?branch=master)](https://travis-ci.org/swlib/saber)
 [![Php Version](https://img.shields.io/badge/php-%3E=7.1-brightgreen.svg?maxAge=2592000)](https://secure.php.net/)
 [![Swoole Version](https://img.shields.io/badge/swoole-%3E=2.1.2-brightgreen.svg?maxAge=2592000)](https://github.com/swoole/swoole-src)
 [![Saber License](https://img.shields.io/hexpm/l/plug.svg?maxAge=2592000)](https://github.com/swlib/saber/blob/master/LICENSE)
@@ -24,7 +24,7 @@ HTTP军刀(呆毛王), `Swoole人性化组件库`之PHP高性能HTTP客户端, �
 - 自动化 编码请求/解析响应 数据
 - 毫秒超时定时器
 - 超大文件上传, 断点重传
-- W​ebSocket连接
+- WebSocket连接
 - 随机UA生成器
 
 <br>
