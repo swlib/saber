@@ -47,7 +47,9 @@ class Client
         'files' => [],
         'before' => [],
         'after' => [],
+        'after_co' => [],
         'before_redirect' => [],
+        'max_co' => -1,
         'exception_report' => HttpExceptionMask::E_ALL,
         'exception_handle' => []
     ];
@@ -125,7 +127,7 @@ class Client
         return $client->setOptions($options);
     }
 
-    private static function mergeOptions(array $options, array $default)
+    private static function mergeOptions(array $options, ... $defaults)
     {
         static $special_fields;
         static $special_fields_length;
@@ -138,22 +140,28 @@ class Client
             }
             $special_fields_length = count($special_fields);
         }
-        if (count($options) > $special_fields_length) {
-            foreach ($special_fields as $field) {
-                if (isset($options[$field])) {
-                    $options[$field] = array_merge($default[$field] ?? [], (array)$options[$field]);
+        foreach ($defaults as $default) {
+            if (!is_array($default)) {
+                continue;
+            }
+            if (count($options) > $special_fields_length) {
+                foreach ($special_fields as $field) {
+                    if (isset($options[$field])) {
+                        $options[$field] = array_merge($default[$field] ?? [], (array)$options[$field]);
+                    }
+                }
+            } else {
+                foreach ($options as $key => $val) {
+                    if (isset($special_fields[$key])) {
+                        $options[$key] = array_merge($default[$key] ?? [], (array)$options[$key]);
+                    }
                 }
             }
-        } else {
-            foreach ($options as $key => $val) {
-                if (isset($special_fields[$key])) {
-                    $options[$key] = array_merge($default[$key] ?? [], (array)$options[$key]);
-                }
-            }
+            $options += $default;
         }
         //FIXME: if get string header, we must trans it to array, but it's too difficult.
 
-        return $options + $default;
+        return $options;
     }
 
     public static function mergeData($default, $add): array
@@ -473,12 +481,16 @@ class Client
             self::$aliasMapOfRequests,
             self::$aliasMapOfRequestsLength ?? self::$aliasMapOfRequestsLength = count(self::$aliasMapOfRequests)
         );
-        if (isset($default_options['max_co'])) {
-            $req_queue->withMaxConcurrency($default_options['max_co']);
+        $default_options = self::mergeOptions($default_options, $this->options);
+        if ($max_co = $default_options['max_co'] ?? false) {
+            $req_queue->withMaxConcurrency($max_co);
+        }
+        if ($default_options['after_co'] ?? false) {
+            $req_queue->withAddedInterceptor('after_concurrency', (array)$default_options['after_co']);
         }
         foreach ($requests as $index => $request_options) {
             $request_instance = clone $this->raw;
-            $request_options = self::mergeOptions($request_options, $this->options);
+            $request_options = self::mergeOptions($request_options, $default_options);
             $this->setOptions($request_options, $request_instance);
             $req_queue->enqueue($request_instance);
         }

@@ -20,8 +20,6 @@ use Swoole\Coroutine\Http\Client;
 
 class Request extends \Swlib\Http\Request
 {
-    /** @var string $name */
-    public $name;
     /** @var \Swoole\Coroutine\Http\Client */
     public $client;
 
@@ -273,7 +271,7 @@ class Request extends \Swlib\Http\Request
     /** @return mixed */
     public function getName()
     {
-        return $this->name;
+        return $this->getSpecialMark('name');
     }
 
     /**
@@ -282,7 +280,7 @@ class Request extends \Swlib\Http\Request
      */
     public function withName($name): self
     {
-        $this->name = $name;
+        $this->withSpecialMark($name, 'name');
 
         return $this;
     }

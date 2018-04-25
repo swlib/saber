@@ -7,12 +7,16 @@
 
 namespace Swlib\Saber;
 
+use Swlib\Util\InterceptorTrait;
+
 class RequestQueue extends \SplQueue
 {
     /** @var \SplQueue */
     public $concurrency_pool;
 
     public $max_concurrency = -1;
+
+    use InterceptorTrait;
 
     public function enqueue($request)
     {
@@ -67,12 +71,14 @@ class RequestQueue extends \SplQueue
             }
             while (!$this->isEmpty()) {
                 $current_co = 0;
+                //de-queue from the total pool and en-queue to the controllable pool
                 while (!$this->isEmpty() && $max_co > $current_co++) {
-                    $req = $this->dequeue();
                     /** @var $req Request */
+                    $req = $this->dequeue();
+                    $req->withSpecialMark($index++, 'requestQueueIndex');
                     if (!$req->isWaiting()) {
                         $req->exec();
-                    } elseif ($max_co > 0) {
+                    } else {
                         throw new \InvalidArgumentException("The waiting request is forbidden when using the max concurrency control!");
                     }
                     $this->concurrency_pool->enqueue($req);
@@ -85,12 +91,17 @@ class RequestQueue extends \SplQueue
                         $this->concurrency_pool->enqueue($res);
                     } else {
                         //response create
-                        $res_map[$index] = $res;
+                        $res_map[$res->getSpecialMark('requestQueueIndex')] = $res;
                         if (($name = $req->getName()) && !isset($res_map[$name])) {
-                            $res_map[$name] = &$res_map[$index];
+                            $res_map[$name] = &$res;
                         }
-                        $index++;
                     }
+                }
+                /** callback */
+                $is_finished = false;
+                $ret = $this->callInterceptor('after_concurrency', $res_map, $is_finished, $this);
+                if ($ret !== null) {
+                    return $ret;
                 }
             }
         } else {
@@ -115,6 +126,13 @@ class RequestQueue extends \SplQueue
             }
         }
         $res_map->time = microtime(true) - $start_time;
+
+        /** callback */
+        $is_finished = true;
+        $ret = $this->callInterceptor('after_concurrency', $res_map, $is_finished, $this);
+        if ($ret !== null) {
+            return $ret;
+        }
 
         return $res_map;
     }
