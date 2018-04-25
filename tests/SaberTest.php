@@ -55,13 +55,13 @@ class SaberTest extends TestCase
         [$json, $xml, $html] = Saber::list([
             'uri' => [
                 'http://httpbin.org/get',
-                'http://www.w3school.com.cn/example/xmle/note.xml',
+                'https://www.javatpoint.com/xmlpages/books.xml',
                 'http://httpbin.org/html'
             ]
         ]);
         $this->assertEquals((string)$json->uri, $json->getParsedJsonArray()['url']);
         $this->assertEquals((string)$json->uri, $json->getParsedJsonObject()->url);
-        $this->assertEquals('John', $xml->getParsedXmlObject()->from);
+        $this->assertEquals('Everyday Italian', $xml->getParsedXmlObject()->book[0]->title);
         $this->assertStringStartsWith(
             'Herman',
             $html->getParsedHtmlObject()->getElementsByTagName('h1')->item(0)->textContent
@@ -172,7 +172,6 @@ class SaberTest extends TestCase
         $uri_list = [
             'http://www.qq.com/',
             'https://www.baidu.com/',
-            'https://www.swoole.com/',
             'http://httpbin.org/'
         ];
         $res = Saber::list(['uri' => $uri_list]);

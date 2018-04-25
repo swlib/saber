@@ -78,37 +78,43 @@ class Response extends \Swlib\Http\Response
 
         /** data parser */
         $this->__stringDataParserInitialization($this->body);
+        /** mark */
+        $this->special_marks = $request->special_marks;
 
         $e_level = $request->getExceptionReport();
-        if ($this->statusCode >= 200 && $this->statusCode < 300) {
-            $this->success = true;
-        } else {
-            $exception = null;
-            if ($this->statusCode >= 300 && $this->statusCode < 400) {
+        $exception = null;
+        $status = ($this->statusCode / 100) % 10;
+        switch ($status) {
+            case 2:
+                $this->success = true;
+                break;
+            case 3:
                 if ($e_level & HttpExceptionMask::E_REDIRECT) {
-                    $exception = new TooManyRedirectsException($request, $this, $this->statusCode,
-                        $this->redirect_headers);
+                    $exception =
+                        new TooManyRedirectsException($request, $this, $this->statusCode, $this->redirect_headers);
                 }
-            } elseif ($this->statusCode >= 400 && $this->statusCode < 500) {
+                break;
+            case 4:
                 if ($e_level & HttpExceptionMask::E_CLIENT) {
                     $exception = new ClientException($request, $this, $this->statusCode);
                 }
-            } elseif ($this->statusCode >= 500) {
+                break;
+            case 5:
                 if ($e_level & HttpExceptionMask::E_SERVER) {
                     $exception = new ServerException($request, $this, $this->statusCode);
                 }
-            } elseif ($e_level & HttpExceptionMask::E_BAD_RESPONSE) {
-                $exception = new BadResponseException($request, $this, $this->statusCode);
-            }
-            if ($exception) {
-                $ret = $request->callInterceptor('exception', $exception);
-                if (!$ret) {
-                    throw $exception;
+                break;
+            default:
+                if ($e_level & HttpExceptionMask::E_BAD_RESPONSE) {
+                    $exception = new BadResponseException($request, $this, $this->statusCode);
                 }
+        }
+        if ($exception) {
+            $ret = $request->callInterceptor('exception', $exception);
+            if (!$ret) {
+                throw $exception;
             }
         }
-
-        $this->special_marks = $request->special_marks;
     }
 
 }
