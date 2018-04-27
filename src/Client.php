@@ -147,13 +147,13 @@ class Client
             if (count($options) > $special_fields_length) {
                 foreach ($special_fields as $field) {
                     if (isset($options[$field])) {
-                        $options[$field] = array_merge($default[$field] ?? [], (array)$options[$field]);
+                        $options[$field] = array_merge((array)($default[$field] ?? []), (array)$options[$field]);
                     }
                 }
             } else {
                 foreach ($options as $key => $val) {
                     if (isset($special_fields[$key])) {
-                        $options[$key] = array_merge($default[$key] ?? [], (array)$options[$key]);
+                        $options[$key] = array_merge((array)($default[$key] ?? []), (array)$options[$key]);
                     }
                 }
             }
@@ -289,9 +289,7 @@ class Client
         }
 
         if (isset($options['base_uri']) || isset($options['uri'])) {
-            $request->withUri(
-                Uri::resolve($options['base_uri'] ?? null, $options['uri'] ?? null)
-            );
+            $request->withUri(Uri::resolve($options['base_uri'] ?? null, $options['uri'] ?? null));
         }
 
         if (!empty($options['uri_query']) && $uri = $request->getUri()) {
@@ -301,6 +299,88 @@ class Client
         /** 设置请求方法 */
         if (isset($options['method'])) {
             $request->withMethod($options['method']);
+        }
+
+        /** （可能的）HTTPS 连接证书 */
+        if (isset($options['ssl'])) {
+            $request->withSSL($options['ssl']);
+        }
+        if (isset($options['ssl_allow_self_signed'])) {
+            $request->withSSLAllowSelfSigned($options['ssl_allow_self_signed']);
+        }
+        if (isset($options['ssl_verify_peer'])) {
+            $request->withSSLVerifyPeer(
+                $options['ssl_verify_peer'],
+                $options['ssl_host_name'] ?? ''
+            );
+        }
+
+        /** 设置超时 */
+        if (isset($options['timeout'])) {
+            $request->withTimeout($options['timeout']);
+        }
+
+        /** 是否跟踪重定向 */
+        if (isset($options['redirect'])) {
+            $request->withRedirect($options['redirect']);
+        }
+
+        /** 设置请求标头 */
+        if (!empty($options['headers'])) {
+            if (is_array($options['headers'])) {
+                foreach ($options['headers'] as $key => $val) {
+                    $request->withHeader($key, $val);
+                }
+            }
+        }
+
+        if (!empty($options['auth'])) {
+            $auth = base64_encode($options['auth']['username'] . ':' . $options['auth']['password']);
+            $request->withHeader('Authorization', "Basic {$auth}");
+        }
+
+        /** 设置COOKIE */
+        if (!empty($options['cookies'])) {
+            $cookies_instance = $options['session'] ?? $request->cookies;//FIXME
+            $cookies_default = ($uri = $request->getUri()) ? ['domain' => $uri->getHost()] : [];
+            //everything can be a Cookies object
+            $cookies_instance->adds(
+                $options['cookies'],
+                $cookies_default,
+                true
+            );
+        }
+
+        /** 设置模拟的浏览器标识 */
+        if (isset($options['useragent'])) {
+            $request->withHeader('User-Agent', $options['useragent']);
+        }
+
+        /** 设置来源页面 */
+        if (isset($options['referer'])) {
+            $request->withHeader('Referer', $options['referer']);
+        }
+
+        if (isset($options['keep_alive'])) {
+            $request->withKeepAlive($options['keep_alive']);
+        }
+
+        /** Set special mark */
+        if (isset($options['mark'])) {
+            $request->withSpecialMark($options['mark']);
+        }
+
+        /** proxy 是否启用代理 */
+        if (isset($options['proxy'])) {
+            $parse = parse_url($options['proxy']);
+            if ($parse['scheme'] === 'socks5') {
+                $request->withSocks5(
+                    $parse['host'], $parse['port'],
+                    $parse['user'] ?? null, $parse['pass'] ?? null
+                );
+            } else {
+                $request->withProxy($parse['host'], $parse['port']);
+            }
         }
 
         if (!empty($options['json'])) {
@@ -346,83 +426,6 @@ class Client
             }
             foreach ($options['files'] as $form_field_name => $file) {
                 $request->withUploadedFile($form_field_name, SwUploadFile::create($file));
-            }
-        }
-
-        /** （可能的）HTTPS 连接证书 */
-        if (isset($options['ssl'])) {
-            $request->withSSL($options['ssl']);
-        }
-        if (isset($options['ssl_allow_self_signed'])) {
-            $request->withSSLAllowSelfSigned($options['ssl_allow_self_signed']);
-        }
-        if (isset($options['ssl_verify_peer'])) {
-            $request->withSSLVerifyPeer(
-                $options['ssl_verify_peer'],
-                $options['ssl_host_name'] ?? ''
-            );
-        }
-
-        /** 设置超时 */
-        if (isset($options['timeout'])) {
-            $request->withTimeout($options['timeout']);
-        }
-
-        /** 是否跟踪重定向 */
-        if (isset($options['redirect'])) {
-            $request->withRedirect($options['redirect']);
-        }
-
-        /** 设置请求标头 */
-        if (!empty($options['headers'])) {
-            if (is_array($options['headers'])) {
-                foreach ($options['headers'] as $key => $val) {
-                    $request->withHeader($key, $val);
-                }
-            }
-        }
-
-        /** 设置COOKIE */
-        if (!empty($options['cookies'])) {
-            $cookies_instance = $options['session'] ?? $request->cookies;//FIXME
-            $cookies_default = ($uri = $request->getUri()) ? ['domain' => $uri->getHost()] : [];
-            //everything can be a Cookies object
-            $cookies_instance->adds(
-                $options['cookies'],
-                $cookies_default,
-                true
-            );
-        }
-
-        /** 设置模拟的浏览器标识 */
-        if (isset($options['useragent'])) {
-            $request->withHeader('User-Agent', $options['useragent']);
-        }
-
-        /** 设置来源页面 */
-        if (isset($options['referer'])) {
-            $request->withHeader('Referer', $options['referer']);
-        }
-
-        if (isset($options['keep_alive'])) {
-            $request->withKeepAlive($options['keep_alive']);
-        }
-
-        /** Set special mark */
-        if (isset($options['mark'])) {
-            $request->withSpecialMark($options['mark']);
-        }
-
-        /** proxy 是否启用代理 */
-        if (isset($options['proxy'])) {
-            $parse = parse_url($options['proxy']);
-            if ($parse['scheme'] === 'socks5') {
-                $request->withSocks5(
-                    $parse['host'], $parse['port'],
-                    $parse['user'] ?? null, $parse['pass'] ?? null
-                );
-            } else {
-                $request->withProxy($parse['host'], $parse['port']);
             }
         }
 
