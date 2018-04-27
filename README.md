@@ -631,9 +631,9 @@ public function __toString() { }
 
 ## Road Map
 
-| File Upload  ✔    | WebSocket ✔ | ResponseParser | Random UserAgent | Http2 |
-| ----------------- | ----------- | -------------- | ---------------- | ----- |
-| 4 (High-priority) | 3           | 2              | 1                | .5    |
+| File Upload  ✔    | WebSocket ✔ | AutoParser✔ | AutoRetry | Random-UA | Http2 |
+| ----------------- | ----------- | ----------- | --------- | --------- | ----- |
+| 4 (High-priority) | 3           | 2           | 1         | .5        | .25   |
 
 #### Why not Http2 ?
 
