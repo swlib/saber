@@ -25,6 +25,11 @@ class SaberTest extends TestCase
         $this->assertEquals(HttpExceptionMask::E_NONE, Saber::exceptionReport());
     }
 
+    public function testShortUri()
+    {
+        $this->assertContains('tencent', (string)Saber::get('www.qq.com')->getBody());
+    }
+
     public function testStaticAndRequests()
     {
         $responses = Saber::requests([

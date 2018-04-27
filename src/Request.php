@@ -345,6 +345,16 @@ class Request extends \Swlib\Http\Request
 
         /** 获取IP地址 */
         $host = $this->uri->getHost();
+        if (empty($host)) {
+            $host = explode('/', ($uri_string = (string)$this->uri))[0] ?? '';
+            if (empty($host) || !preg_match('/\.\w+$/', $uri_string)) {
+                throw new \InvalidArgumentException('Host should not be empty!');
+            } else {
+                $uri_string = 'http://' . ltrim($uri_string, '/');
+                $this->uri = new Uri($uri_string);
+                $host = $this->uri->getHost();
+            }
+        }
         $port = $this->uri->getRealPort();
         $is_ssl = $this->getSSL();
         $is_ssl = ($is_ssl === self::SSL_AUTO) ? $port === 443 : (bool)$is_ssl;
@@ -545,7 +555,7 @@ class Request extends \Swlib\Http\Request
         $response = new Response($this);
 
         /** 执行回调函数 */
-        $ret = $this->callInterceptor('response', $response);
+        $ret = $this->callInterceptor('response', $response, $this);
         if ($ret !== null) {
             return $ret;
         }

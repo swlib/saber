@@ -36,7 +36,7 @@ class Saber
     }
 
     /** @return \Swlib\Saber\Client */
-    public static function wait(array $options = []): Client
+    public static function wait(): Client
     {
         return self::getDefaultClient()->wait();
     }

@@ -7,6 +7,7 @@
 
 namespace Swlib\Saber;
 
+use Psr\Http\Message\UriInterface;
 use Swlib\Http\BufferStream;
 use Swlib\Http\CookiesManagerTrait;
 use Swlib\Http\Exception\BadResponseException;
@@ -115,6 +116,11 @@ class Response extends \Swlib\Http\Response
                 throw $exception;
             }
         }
+    }
+
+    public function getUri(): ?UriInterface
+    {
+        return $this->uri;
     }
 
 }
