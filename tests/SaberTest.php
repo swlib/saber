@@ -183,4 +183,18 @@ class SaberTest extends TestCase
         $this->assertEquals(count($uri_list), $res->success_num);
     }
 
+    public function testRetry()
+    {
+        $uri = 'http://eu.httpbin.org/basic-auth/foo/bar';
+        $res = Saber::get(
+            $uri, [
+                'exception_report' => 0,
+                'retry' => function (Saber\Request $request) {
+                    $request->withBasicAuth('foo', 'bar');
+                }
+            ]
+        );
+        $this->assertEquals(true, $res->success);
+    }
+
 }
