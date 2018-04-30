@@ -29,18 +29,18 @@ class RequestQueue extends \SplQueue
             }
         }
         /**
-         * 注意! `withRedirectWait`是并发重定向优化
+         * 注意! `withInQueue`是并发重定向优化
          * 原理是重定向时并不如同单个请求一样马上收包,而是将其再次加入请求队列执行defer等待收包
          * 待队列中所有原有并发请求第一次收包完毕后,再一同执行重定向收包,
          * 否则并发请求会由于重定向退化为队列请求,可以自行测试验证
          *
-         * Notice! `withRedirectWait` is a concurrent redirection optimization
+         * Notice! `withInQueue` is a concurrent redirection optimization
          * The principle is that instead of receiving a packet as soon as a single request is,
          * it is added to the request queue again and delayed to wait for the packet to recv.
          * After all the original concurrent requests in the queue for the first time are recved, the redirect requests recv again.
          * Otherwise, the concurrent request can be degraded to a queue request due to redirection, you can be tested and verified.
          */
-        parent::enqueue($request->withRedirectWait(true));
+        parent::enqueue($request->withInQueue(true));
     }
 
     public function getMaxConcurrency(): int
@@ -105,8 +105,9 @@ class RequestQueue extends \SplQueue
                 }
             }
         } else {
-            foreach ($this as $req) {
-                $req->exec();
+            /**@var $req Request * */
+            foreach ($this as $index => $req) {
+                $req->withSpecialMark($index, 'requestQueueIndex')->exec();
             }
             $req = null;
             while (!$this->isEmpty()) {
@@ -117,11 +118,10 @@ class RequestQueue extends \SplQueue
                     $this->enqueue($res);
                 } else {
                     //response create
-                    $res_map[$index] = $res;
+                    $res_map[$res->getSpecialMark('requestQueueIndex')] = $res;
                     if (($name = $req->getName()) && !isset($res_map[$name])) {
-                        $res_map[$name] = &$res_map[$index];
+                        $res_map[$name] = &$res;
                     }
-                    $index++;
                 }
             }
         }

@@ -123,4 +123,9 @@ class Response extends \Swlib\Http\Response
         return $this->uri;
     }
 
+    public function isSuccess(): bool
+    {
+        return $this->success;
+    }
+
 }

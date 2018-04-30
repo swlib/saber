@@ -42,10 +42,12 @@ class Request extends \Swlib\Http\Request
     public $timeout = 3;
     /** @var int 最大重定向次数,为0时关闭 */
     public $redirect = 3;
-    /** @var bool 重定向等待,即手动触发重定向 */
-    public $redirect_wait = false;
+    /** @var bool 是否在队列中,如为时, 优化策略会在重定向时等待 */
+    public $in_queue = false;
     /**@var bool 长连接 */
     public $keep_alive = true;
+    /** @var int 自动重试次数 */
+    public $retry_time = 0;
 
     /** @var float request start micro time */
     public $_start_time;
@@ -59,6 +61,8 @@ class Request extends \Swlib\Http\Request
     public $_redirect_headers = [];
     /** @var bool */
     private $_form_redirect = false;
+    /** @var int 已重试次数 */
+    private $_retried_time = 0;
 
     const STATUS_NONE = 1;
     const STATUS_WAITING = 2;
@@ -175,6 +179,20 @@ class Request extends \Swlib\Http\Request
         $this->keep_alive = $enable;
 
         return $this;
+    }
+
+    /**
+     * Add basic authorization header
+     *
+     * @param string $username
+     * @param string $password
+     * @return $this
+     */
+    public function withBasicAuth(string $username, string $password): self
+    {
+        $auth = base64_encode($username . ':' . $password);
+
+        return $this->withHeader('Authorization', "Basic {$auth}");
     }
 
     /**
@@ -299,18 +317,30 @@ class Request extends \Swlib\Http\Request
     }
 
     /** @return bool */
-    public function getRedirectWait(): bool
+    public function isInQueue(): bool
     {
-        return $this->redirect_wait;
+        return $this->in_queue;
     }
 
     /**
      * @param bool $enable
      * @return $this
      */
-    public function withRedirectWait(bool $enable): self
+    public function withInQueue(bool $enable): self
     {
-        $this->redirect_wait = $enable;
+        $this->in_queue = $enable;
+
+        return $this;
+    }
+
+    public function getRetryTime(): int
+    {
+        return $this->retry_time;
+    }
+
+    public function withRetryTime(int $time): self
+    {
+        $this->retry_time = $time;
 
         return $this;
     }
@@ -462,6 +492,7 @@ class Request extends \Swlib\Http\Request
      */
     public function recv()
     {
+        retry_recv:
         if (self::STATUS_WAITING !== $this->_status) {
             throw new \BadMethodCallException('You can\'t recv because client is not in waiting stat.');
         }
@@ -525,7 +556,7 @@ class Request extends \Swlib\Http\Request
             // Redirect-interceptors have permission to release or intercept redirects,
             // just return a bool type value
             $allow_redirect = true;
-            $ret = $this->callInterceptor('redirect', $this);
+            $ret = $this->callInterceptor('before_retry', $this);
             if ($ret !== null) {
                 if (is_bool($ret)) {
                     $allow_redirect = $ret;
@@ -539,7 +570,7 @@ class Request extends \Swlib\Http\Request
                 $this->exec();
                 $this->_redirect_times++;
 
-                if ($this->getRedirectWait()) {
+                if ($this->isInQueue()) {
                     return $this;
                 }
 
@@ -560,6 +591,16 @@ class Request extends \Swlib\Http\Request
             return $ret;
         }
 
+        while (!$response->success && $this->_retried_time++ < $this->retry_time) {
+            $this->callInterceptor('before_retry', $this, $response);
+            $this->exec();
+            if ($this->isInQueue()) {
+                return $this;
+            } else {
+                goto retry_recv;
+            }
+        }
+
         return $response;
     }
 
@@ -573,6 +614,7 @@ class Request extends \Swlib\Http\Request
         $this->_redirect_headers = [];
         $this->_start_time = 0;
         $this->_time = 0.000;
+        $this->_retried_time = 0;
         $this->incremental_cookies->reset();
     }
 

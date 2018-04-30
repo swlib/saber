@@ -51,7 +51,9 @@ class Client
         'before_redirect' => [],
         'max_co' => -1,
         'exception_report' => HttpExceptionMask::E_ALL,
-        'exception_handle' => []
+        'exception_handle' => [],
+        'retry' => [],
+        'retry_time' => 0
     ];
 
     private static $aliasMapLength;
@@ -68,7 +70,10 @@ class Client
         'header' => 'headers',
         'follow' => 'redirect',
         'ua' => 'useragent',
-        'body' => 'data'
+        'body' => 'data',
+        'error_report' => 'exception_report',
+        'report' => 'exception_report',
+        'retry' => 'before_retry'
     ];
 
     private static $default_template_request;
@@ -335,8 +340,7 @@ class Client
         }
 
         if (!empty($options['auth'])) {
-            $auth = base64_encode($options['auth']['username'] . ':' . $options['auth']['password']);
-            $request->withHeader('Authorization', "Basic {$auth}");
+            $request->withBasicAuth($options['auth']['username'] ?? '', $options['auth']['password'] ?? '');
         }
 
         /** 设置COOKIE */
@@ -429,6 +433,17 @@ class Client
             }
         }
 
+        if (isset($options['retry_time'])) {
+            $request->withRetryTime($options['retry_time']);
+        }
+        /** register interceptor before every retry */
+        if (isset($options['retry'])) {
+            if ($request->getRetryTime() < 1) {
+                $request->withRetryTime(1);
+            }
+            $request->withAddedInterceptor('before_retry', (array)$options['before_retry']);
+        }
+
         /** register Interceptor before request */
         if (!empty($options['before'])) {
             $request->withAddedInterceptor('request', (array)$options['before']);
@@ -441,7 +456,7 @@ class Client
 
         /** register interceptor before every redirects */
         if (!empty($options['before_redirect'])) {
-            $request->withAddedInterceptor('redirect', (array)$options['before_redirect']);
+            $request->withAddedInterceptor('before_redirect', (array)$options['before_redirect']);
         }
 
         if (!empty($options['exception_handle'])) {
