@@ -20,5 +20,6 @@ go(function () {
     var_dump($json->getParsedJsonArray());
     var_dump($json->getParsedJsonObject());
     var_dump($xml->getParsedXmlObject());
-    var_dump($html->getParsedHtmlObject()->getElementsByTagName('h1')->item(0)->textContent);
+    var_dump($html->getParsedDomObject()->getElementsByTagName('h1')->item(0)->textContent);
+    var_dump($html->getDataRegexMatch('/<(?<x>(?#it\'s the show)h1>)(?<title>[^>]+)<\/\k<x>/', 'title'));
 });

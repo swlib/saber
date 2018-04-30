@@ -69,7 +69,7 @@ class SaberTest extends TestCase
         $this->assertEquals('Everyday Italian', $xml->getParsedXmlObject()->book[0]->title);
         $this->assertStringStartsWith(
             'Herman',
-            $html->getParsedHtmlObject()->getElementsByTagName('h1')->item(0)->textContent
+            $html->getParsedDomObject()->getElementsByTagName('h1')->item(0)->textContent
         );
     }
 

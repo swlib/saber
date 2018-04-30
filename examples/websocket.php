@@ -11,7 +11,7 @@ $ws->on('workerStart', function (swoole_websocket_server $serv) {
     $i = 5;
     while ($i--) {
         echo $websocket->recv() . "\n";
-        $websocket->push("hello");
+        $websocket->push("hello $i!");
         co::sleep(0.5);
     }
     $serv->shutdown();
