@@ -14,5 +14,5 @@ go(function () {
         echo get_class($e) . " is caught!";
         return true;
     });
-    Saber::get('http://httpbin.org/redirect/10');
+    Saber::get('http://eu.httpbin.org/redirect/10');
 });

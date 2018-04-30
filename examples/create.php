@@ -12,7 +12,7 @@ require __DIR__ . '/../vendor/autoload.php';
 
 go(function () {
     $saber = Saber::create([
-        'base_uri' => 'http://httpbin.org',
+        'base_uri' => 'http://eu.httpbin.org',
         'headers' => [
             'Accept-Language' => 'en,zh-CN;q=0.9,zh;q=0.8',
             'Content-Type' => ContentType::JSON,

@@ -15,7 +15,7 @@ go(function () {
         'password' => md5(openssl_random_pseudo_bytes(6))
     ];
     echo Saber::get(
-        "http://httpbin.org/basic-auth/{$auth['username']}/{$auth['password']}",
+        "http://eu.httpbin.org/basic-auth/{$auth['username']}/{$auth['password']}",
         ['auth' => $auth]
     );
 });

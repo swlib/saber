@@ -15,7 +15,7 @@ require __DIR__ . '/../vendor/autoload.php';
 go(function () {
     $response = Saber::psr()
         ->withMethod('POST')
-        ->withUri(new Uri('http://httpbin.org/post?foo=bar'))
+        ->withUri(new Uri('http://eu.httpbin.org/post?foo=bar'))
         ->withQueryParams(['foo' => 'option is higher-level than uri'])
         ->withHeader('content-type', ContentType::JSON)
         ->withBody(new BufferStream(json_encode(['foo' => 'bar'])))

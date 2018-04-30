@@ -437,7 +437,7 @@ class Client
             $request->withRetryTime($options['retry_time']);
         }
         /** register interceptor before every retry */
-        if (isset($options['retry'])) {
+        if (!empty($options['retry'])) {
             if ($request->getRetryTime() < 1) {
                 $request->withRetryTime(1);
             }

@@ -25,7 +25,7 @@ go(function () {
         ContentType::get('png')
     );
 
-    echo Saber::post('http://httpbin.org/post', null, [
+    echo Saber::post('http://eu.httpbin.org/post', null, [
             'files' => [
                 'image1' => $file1,
                 'image2' => $file2,

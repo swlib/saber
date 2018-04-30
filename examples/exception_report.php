@@ -13,7 +13,7 @@ require __DIR__ . '/../vendor/autoload.php';
 go(function () {
     //redirect exception
     try {
-        Saber::get('http://httpbin.org/redirect/10');
+        Saber::get('http://eu.httpbin.org/redirect/10');
     } catch (\Exception$e) {
         echo get_class($e) . " occurs!\n";
     }
@@ -23,6 +23,6 @@ go(function () {
         HttpExceptionMask::E_ALL ^ HttpExceptionMask::E_REDIRECT
     );
 
-    Saber::get('http://httpbin.org/redirect/10');
+    Saber::get('http://eu.httpbin.org/redirect/10');
     echo "No exception";
 });

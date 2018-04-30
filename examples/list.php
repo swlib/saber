@@ -15,7 +15,7 @@ go(function () {
             'http://www.qq.com/',
             'https://www.baidu.com/',
             'https://www.swoole.com/',
-            'http://httpbin.org/'
+            'http://eu.httpbin.org/'
         ]
     ]);
     echo "success: $res->success_num, error: $res->error_num";

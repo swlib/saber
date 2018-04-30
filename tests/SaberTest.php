@@ -33,18 +33,18 @@ class SaberTest extends TestCase
     public function testStaticAndRequests()
     {
         $responses = Saber::requests([
-            ['get', 'http://httpbin.org/get'],
-            ['delete', 'http://httpbin.org/delete'],
-            ['post', 'http://httpbin.org/post', ['foo' => 'bar']],
-            ['patch', 'http://httpbin.org/patch', ['foo' => 'bar']],
-            ['put', 'http://httpbin.org/put', ['foo' => 'bar']],
+            ['get', 'http://eu.httpbin.org/get'],
+            ['delete', 'http://eu.httpbin.org/delete'],
+            ['post', 'http://eu.httpbin.org/post', ['foo' => 'bar']],
+            ['patch', 'http://eu.httpbin.org/patch', ['foo' => 'bar']],
+            ['put', 'http://eu.httpbin.org/put', ['foo' => 'bar']],
         ]);
         $this->assertEquals(0, $responses->error_num);
     }
 
     public function testInstanceAndRequests()
     {
-        $saber = Saber::create(['base_uri' => 'http://httpbin.org']);
+        $saber = Saber::create(['base_uri' => 'http://eu.httpbin.org']);
         $responses = $saber->requests([
             ['get', '/get'],
             ['delete', '/delete'],
@@ -59,9 +59,9 @@ class SaberTest extends TestCase
     {
         [$json, $xml, $html] = Saber::list([
             'uri' => [
-                'http://httpbin.org/get',
+                'http://eu.httpbin.org/get',
                 'https://www.javatpoint.com/xmlpages/books.xml',
-                'http://httpbin.org/html'
+                'http://eu.httpbin.org/html'
             ]
         ]);
         $this->assertEquals((string)$json->uri, $json->getParsedJsonArray()['url']);
@@ -76,7 +76,7 @@ class SaberTest extends TestCase
     public function testSessionAndUriQuery()
     {
         $session = Saber::session([
-            'base_uri' => 'http://httpbin.org',
+            'base_uri' => 'http://eu.httpbin.org',
             'redirect' => 0,
             'exception_report' => HttpExceptionMask::E_ALL ^ HttpExceptionMask::E_REDIRECT
         ]);
@@ -97,11 +97,11 @@ class SaberTest extends TestCase
         $this->expectException(ConnectException::class);
         $saber->get('http://foo.bar');
         $this->expectException(ClientException::class);
-        $saber->get('http://httpbin.org/status/401');
+        $saber->get('http://eu.httpbin.org/status/401');
         $this->expectException(ServerException::class);
-        $saber->get('http://httpbin.org/status/500');
+        $saber->get('http://eu.httpbin.org/status/500');
         $this->expectException(TooManyRedirectsException::class);
-        $saber->get('http://httpbin.org//redirect/1', ['redirect' => 0]);
+        $saber->get('http://eu.httpbin.org//redirect/1', ['redirect' => 0]);
     }
 
     /**
@@ -114,7 +114,7 @@ class SaberTest extends TestCase
             $exception = get_class($e);
             return true;
         });
-        $saber->get('http://httpbin.org/status/500');
+        $saber->get('http://eu.httpbin.org/status/500');
         $this->assertEquals(ServerException::class, $exception);
     }
 
@@ -135,7 +135,7 @@ class SaberTest extends TestCase
             ContentType::get('png')
         );
 
-        $res = Saber::post('http://httpbin.org/post', null, [
+        $res = Saber::post('http://eu.httpbin.org/post', null, [
                 'files' => [
                     'image1' => $file1,
                     'image2' => $file2,
@@ -177,7 +177,7 @@ class SaberTest extends TestCase
         $uri_list = [
             'http://www.qq.com/',
             'https://www.baidu.com/',
-            'http://httpbin.org/'
+            'http://eu.httpbin.org/'
         ];
         $res = Saber::list(['uri' => $uri_list]);
         $this->assertEquals(count($uri_list), $res->success_num);

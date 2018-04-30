@@ -12,8 +12,8 @@ require __DIR__ . '/../vendor/autoload.php';
 
 go(function () {
     $session = Saber::session([
-        'base_uri' => 'http://httpbin.org',
-        'redirect' => 0,
+        'base_uri' => 'http://eu.httpbin.org',
+        // 'redirect' => 0,
         'exception_report' => HttpExceptionMask::E_ALL ^ HttpExceptionMask::E_REDIRECT
     ]);
     $session->get('/cookies/set?foo=bar&k=v&apple=banana');

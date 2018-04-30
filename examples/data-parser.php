@@ -12,9 +12,9 @@ require __DIR__ . '/../vendor/autoload.php';
 go(function () {
     [$json, $xml, $html] = Saber::list([
         'uri' => [
-            'http://httpbin.org/get',
+            'http://eu.httpbin.org/get',
             'http://www.w3school.com.cn/example/xmle/note.xml',
-            'http://httpbin.org/html'
+            'http://eu.httpbin.org/html'
         ]
     ]);
     var_dump($json->getParsedJsonArray());

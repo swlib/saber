@@ -10,7 +10,7 @@ use Swlib\Saber;
 require __DIR__ . '/../vendor/autoload.php';
 
 go(function () {
-    $saber = Saber::create(['base_uri' => 'http://httpbin.org']);
+    $saber = Saber::create(['base_uri' => 'http://eu.httpbin.org']);
     echo $saber->requests([
         ['get', '/get'],
         ['delete', '/delete'],
