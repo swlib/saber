@@ -411,6 +411,11 @@ class Client
                     case ContentType::XML:
                         $options['data'] = DataParser::toXmlString($options['data']);
                         break;
+                    case ContentType::MULTIPART:
+                        $boundary = '----WebKitFormBoundary' . openssl_random_pseudo_bytes(16);
+                        $request->withHeader('Content-Type', "multipart/form-data; boundary={$boundary}");
+                        $options['data'] = DataParser::toMultipartString($options['data'], $boundary);
+                        break;
                     case ContentType::QUERY:
                     default:
                         $options['data'] = DataParser::toQueryString($options['data']);

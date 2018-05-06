@@ -188,11 +188,20 @@ class Request extends \Swlib\Http\Request
      * @param string $password
      * @return $this
      */
-    public function withBasicAuth(string $username, string $password): self
+    public function withBasicAuth(?string $username = null, string $password = null): self
     {
-        $auth = base64_encode($username . ':' . $password);
+        if ($username === null) {
+            return $this->withoutHeader('Authorization');
+        } else {
+            $auth = base64_encode($username . ':' . $password);
 
-        return $this->withHeader('Authorization', "Basic {$auth}");
+            return $this->withHeader('Authorization', "Basic {$auth}");
+        }
+    }
+
+    public function withXHR(bool $enable = true)
+    {
+        return $this->withHeader('X-Requested-With', $enable ? 'XMLHttpRequest' : null);
     }
 
     /**
