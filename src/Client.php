@@ -49,6 +49,7 @@ class Client
         'after' => [],
         'after_co' => [],
         'before_redirect' => [],
+        'iconv' => ['auto', 'utf-8', false],
         'max_co' => -1,
         'exception_report' => HttpExceptionMask::E_ALL,
         'exception_handle' => [],
@@ -139,7 +140,8 @@ class Client
         if (!isset($special_fields)) {
             $special_fields = [];
             foreach (self::$default_options as $key => $val) {
-                if (is_array($val)) {
+                // dict-array but not array
+                if (is_array($val) && key($val) !== 0) {
                     $special_fields[$key] = $key;
                 }
             }
@@ -435,6 +437,15 @@ class Client
             }
             foreach ($options['files'] as $form_field_name => $file) {
                 $request->withUploadedFile($form_field_name, SwUploadFile::create($file));
+            }
+        }
+
+        if (isset($options['iconv'])) {
+            $options['iconv'] = $options['iconv'] + self::$default_options['iconv'];
+            if (is_array($options['iconv'])) {
+                $request->withExpectCharset(...$options['iconv']);
+            } else {
+                $request->withAutoIconv($options['iconv'] !== false);
             }
         }
 

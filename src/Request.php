@@ -49,6 +49,11 @@ class Request extends \Swlib\Http\Request
     /** @var int 自动重试次数 */
     public $retry_time = 0;
 
+    public $auto_iconv = true;
+    public $charset_source;
+    public $charset_target;
+    public $charset_use_mb = false;
+
     /** @var float request start micro time */
     public $_start_time;
     /** @var float timeout left */
@@ -350,6 +355,22 @@ class Request extends \Swlib\Http\Request
     public function withRetryTime(int $time): self
     {
         $this->retry_time = $time;
+
+        return $this;
+    }
+
+    public function withAutoIconv(bool $enable): self
+    {
+        $this->auto_iconv = $enable;
+
+        return $this;
+    }
+
+    public function withExpectCharset(string $source = 'auto', string $target = 'utf-8', bool $use_mb = false): self
+    {
+        $this->charset_source = $source;
+        $this->charset_target = $target;
+        $this->charset_use_mb = (bool)$use_mb;
 
         return $this;
     }

@@ -62,13 +62,34 @@ class Response extends \Swlib\Http\Response
         /** 置Cookie对象 */
         $this->cookies = $request->incremental_cookies;
 
-        /** 转码 */
         if (!empty($body = $request->client->body)) {
-            $contentType = $request->client->headers['content-type'] ?? '';
-            if ($contentType && stristr($contentType, 'utf-8') === false) {
-                $type = explode('=', $contentType)[1] ?? null;
-                if ($type) {
-                    $body = iconv(strtoupper($type), 'UTF-8//IGNORE', $body);
+            if ($request->auto_iconv) {
+                /** 自动化转码 */
+                // enable auto iconv
+                if ($request->charset_source && strcasecmp($request->charset_source, 'auto') !== 0) {
+                    $charset_source = $request->charset_source;
+                } elseif (
+                    ($contentType = $request->client->headers['content-type'] ?? '') &&
+                    ($charset_source = explode('=', $contentType)[1] ?? null)
+                ) {
+                    // find in headers and success
+                } else {
+                    // failed to get source charset
+                    $charset_source = false;
+                }
+                if ($charset_source) {
+                    // get expect target
+                    $charset_target = $request->charset_target ?: 'utf-8';
+                    // not equals, run iconv
+                    if ($charset_source != $charset_target) {
+                        $charset_source = strtoupper($charset_source);
+                        $charset_target = strtoupper($charset_target);
+                        if ($request->charset_use_mb) {
+                            $body = mb_convert_encoding($body, $charset_target, $charset_source);
+                        } else {
+                            $body = iconv($charset_source, $charset_target . '//IGNORE', $body);
+                        }
+                    }
                 }
             }
         } else {
