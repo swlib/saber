@@ -1,12 +1,13 @@
 #!/usr/bin/env php
 <?php
 /** For Swoole coroutine tests */
-go(function () {
 
-    Co::set([
-      'log_level' => SWOOLE_LOG_INFO,
-      'trace_flags' => 0
-    ]);
+Co::set([
+  'log_level' => SWOOLE_LOG_INFO,
+  'trace_flags' => 0
+]);
+
+go(function () {
 
     /*
      * This file is part of PHPUnit.
