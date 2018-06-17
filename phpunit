@@ -2,6 +2,12 @@
 <?php
 /** For Swoole coroutine tests */
 go(function () {
+
+    Co::set([
+      'log_level' => SWOOLE_LOG_INFO,
+      'trace_flags' => 0
+    ]);
+
     /*
      * This file is part of PHPUnit.
      *
