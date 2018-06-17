@@ -27,9 +27,8 @@ HTTP军刀(呆毛王), `Swoole人性化组件库`之PHP高性能HTTP客户端, �
 - WebSocket连接
 - 随机UA生成器
 
-<br>
-
 ------
+<br>
 
 ## 安装
 
@@ -60,6 +59,48 @@ go(function () {
     echo Saber::get('http://httpbin.org/get');
 })
 ```
+
+------
+
+## 目录
+  - <a href="#例子">例子</a>
+    - <a href="#静态方法">静态方法</a>
+    - <a href="#生成实例">生成实例</a>
+    - <a href="#生成会话">生成会话</a>
+    - <a href="#并发请求">并发请求</a>
+    - <a href="#数据解析">数据解析</a>
+    - <a href="#网络代理">网络代理</a>
+    - <a href="#文件上传">文件上传</a>
+    - <a href="#psr风格">PSR风格</a>
+      - <a href="#websocket">WebSocket</a>
+    - <a href="#压力测试">压力测试</a>
+    - <a href="#列式请求集">列式请求集</a>
+    - <a href="#单次并发控制">单次并发控制</a>
+  - <a href="#配置参数表">配置参数表</a>
+    - <a href="#配置参数别名">配置参数别名</a>
+  - <a href="#拦截器">拦截器</a>
+  - <a href="#cookies">Cookies</a>
+      - <a href="#属性">属性</a>
+      - <a href="#任意格式互转">任意格式互转</a>
+      - <a href="#域名和过期时限校验">域名和过期时限校验</a>
+      - <a href="#持久化">持久化</a>
+  - <a href="#异常机制">异常机制</a>
+      - <a href="#捕获例子">捕获例子</a>
+    - <a href="#异常报告级别控制">异常报告级别控制</a>
+      - <a href="#掩码表">掩码表</a>
+    - <a href="#异常自定义处理函数">异常自定义处理函数</a>
+  - <a href="#road map">Road Map</a>
+      - <a href="#why not http2 ?">Why not Http2 ?</a>
+  - <a href="#ide helper">IDE Helper</a>
+  - <a href="#重中之重">重中之重</a>
+  - <a href="#附录">附录</a>
+    - <a href="#saber api">Saber API</a>
+      - <a href="#swlibsaber">Swlib\Saber</a>
+      - <a href="#swlibsaberrequest">Swlib\Saber\Request</a>
+      - <a href="#swlibsaberresponse">Swlib\Saber\Response</a>
+      - <a href="#swlibsaberrequestqueue">Swlib\Saber\RequestQueue</a>
+      - <a href="#swlibsaberresponsemap">Swlib\Saber\ResponseMap</a>
+
 
 ------
 
@@ -213,7 +254,7 @@ $response = Saber::psr()
 echo $response->getBody();
 ```
 
-#### WebSocket
+### WebSocket
 
 > 可以通过websocketFrame数据帧的__toString方法直接打印返回数据字符串
 
@@ -317,12 +358,14 @@ echo Saber::requests($requests, ['max_co' => 1])->time."\n";
 |data|`2` \| `body`|
 |base_uri|base_url|
 |after|callback|
-|content_type|content-type|
+|content_type|`content-type` \| `contentType`|
 |cookies|cookie|
 |headers|header|
 |redirect|follow|
-|form_data|query|
 |useragent|ua|
+|exception_report|`error_report` \| `report`|
+|before_retry|retry|
+
 
 <br>
 
@@ -489,146 +532,6 @@ Saber::get('http://httpbin.org/redirect/10');
 
 ------
 
-## Saber API
-
-> 由于无法在魔术方法中使用协程(\_\_call, \_\_callStatic), 源码中的方法都是手动定义.
-
-为了使用方便，已为所有支持的请求方法提供了别名。
-
-#### Swlib\Saber
-```php
-public static function create(array $options): Client { }
-public static function session(array $options): Client { }
-public static function psr(array $options): Request { }
-public static function wait(array $options): Client { }
-public static function request(array $options) { }
-public static function requests(array $requests, array $default_options): ResponseMap { }
-public static function get(string $uri, array $options) { }
-public static function delete(string $uri, array $options) { }
-public static function head(string $uri, array $options) { }
-public static function options(string $uri, array $options) { }
-public static function post(string $uri, $data, array $options) { }
-public static function put(string $uri, $data, array $options) { }
-public static function patch(string $uri, $data, array $options) { }
-public static function default(array $options): void { }
-public static function exceptionReport(int $level): void { }
-public static function exceptionHandle(callable $handle): void { }
-```
-#### Swlib\Saber\Request
-```php
-public function getExceptionReport(): int { }
-public function setExceptionReport(int $level): self { }
-public function isWaiting(): bool { }
-public function getSSL(): int { }
-public function withSSL(int $mode): self { }
-public function getCAFile(): string { }
-public function withCAFile(string $ca_file): self { }
-public function withSSLVerifyPeer(bool $verify_peer, string $ssl_host_name): self { }
-public function withSSLAllowSelfSigned(bool $allow): self { }
-public function getSSLConf() { }
-public function getKeepAlive() { }
-public function withKeepAlive(bool $enable): self { }
-public function getProxy(): array { }
-public function withProxy(string $host, int $port): self { }
-public function withSocks5(string $host, int $port, string $username, string $password): self { }
-public function withoutProxy(): self { }
-public function getTimeout(): float { }
-public function withTimeout(float $timeout): self { }
-public function getRedirect(): int { }
-public function getName() { }
-public function withName($name): self { }
-public function withRedirect(int $time): self { }
-public function getRedirectWait(): bool { }
-public function withRedirectWait(bool $enable): self { }
-public function resetClient($client) { }
-public function exec() { }
-public function recv() { }
-public function getRequestTarget(): string { }
-public function withRequestTarget($requestTarget): self { }
-public function getMethod(): string { }
-public function withMethod($method): self { }
-public function getUri(): Psr\Http\Message\UriInterface { }
-public function withUri(Psr\Http\Message\UriInterface $uri, $preserveHost): self { }
-public function getCookieParams(): array { }
-public function getCookieParam(string $name): string { }
-public function withCookieParam(string $name, string $value): self { }
-public function withCookieParams(array $cookies): self { }
-public function getQueryParam(string $name): string { }
-public function getQueryParams(): array { }
-public function withQueryParam(string $name, string $value): self { }
-public function withQueryParams(array $query): self { }
-public function getParsedBody(string $name) { }
-public function withParsedBody($data): self { }
-public function getUploadFile(string $name): Swlib\Http\UploadFile { }
-public function getUploadFiles(): array { }
-public function withUploadFile(Swlib\Http\UploadFile $uploadFile): self { }
-public function withUploadFiles(array $uploadFiles): self { }
-public function getProtocolVersion(): string { }
-public function withProtocolVersion($version): self { }
-public function hasHeader($name): bool { }
-public function getHeader($name): array { }
-public function getHeaderLine($name): string { }
-public function getHeaders(bool $implode, bool $ucwords): array { }
-public function withHeader($raw_name, $value): self { }
-public function withHeaders(array $headers): self { }
-public function withAddedHeader($raw_name, $value): self { }
-public function withoutHeader($name): self { }
-public function getBody(): Swlib\Http\StreamInterface { }
-public function withBody($body): self { }
-public function initialization(bool $incremental) { }
-public function getCookies() { }
-public function setCookie(array $options): self { }
-public function unsetCookie(string $name, string $path, string $domain): self { }
-public function withInterceptor(string $name, array $interceptor) { }
-public function withAddedInterceptor(string $name, array $functions): self { }
-public function removeInterceptor(string $name): self { }
-public function callInterceptor(string $name, $arguments) { }
-```
-#### Swlib\Saber\Response
-```php
-public function getStatusCode() { }
-public function withStatus($code, $reasonPhrase) { }
-public function getReasonPhrase() { }
-public function __toString() { }
-public function getProtocolVersion(): string { }
-public function withProtocolVersion($version): self { }
-public function hasHeader($name): bool { }
-public function getHeader($name): array { }
-public function getHeaderLine($name): string { }
-public function getHeaders(bool $implode, bool $ucwords): array { }
-public function withHeader($raw_name, $value): self { }
-public function withHeaders(array $headers): self { }
-public function withAddedHeader($raw_name, $value): self { }
-public function withoutHeader($name): self { }
-public function getBody(): Swlib\Http\StreamInterface { }
-public function withBody($body): self { }
-public function initialization(bool $incremental) { }
-public function getCookies() { }
-public function setCookie(array $options): self { }
-public function unsetCookie(string $name, string $path, string $domain): self { }
-```
-#### Swlib\Saber\RequestQueue
-```php
-public function enqueue($request) { }
-public function getMaxConcurrency(): int { }
-public function withMaxConcurrency(int $num): self { }
-public function recv(): Swlib\Saber\ResponseMap { }
-```
-#### Swlib\Saber\ResponseMap
-
-```php
-public $time = 0.0;
-public $status_map = [];
-public $success_map = [];
-public $success_num = 0;
-public $error_num = 0;
-public function offsetSet($index, $response) { }
-public function __toString() { }
-```
-<br>
-
-------
-
 ## Road Map
 
 | File Upload  ✔    | WebSocket ✔ | AutoParser✔ | AutoRetry | BigFile Download | Random UA | Http2 |
@@ -656,3 +559,177 @@ As the main HTTP/2 benefit is that it allows multiplexing many requests within a
 ## 重中之重
 
 **欢迎提交issue和PR.**
+
+<br>
+
+------
+
+## 附录
+
+### Saber API
+
+> 由于无法在魔术方法中使用协程(\_\_call, \_\_callStatic), 源码中的方法都是手动定义.
+
+为了使用方便，已为所有支持的请求方法提供了别名。
+
+#### Swlib\Saber
+```php
+public static function create(array $options): Client { }
+public static function session(array $options): Client { }
+public static function psr(array $options): Request { }
+public static function wait(): Client { }
+public static function request(array $options) { }
+public static function requests(array $requests, array $default_options): ResponseMap { }
+public static function list(array $options, array $default_options): ResponseMap { }
+public static function get(string $uri, array $options) { }
+public static function delete(string $uri, array $options) { }
+public static function head(string $uri, array $options) { }
+public static function options(string $uri, array $options) { }
+public static function post(string $uri, $data, array $options) { }
+public static function put(string $uri, $data, array $options) { }
+public static function patch(string $uri, $data, array $options) { }
+public static function websocket(string $uri) { }
+public static function default(array $options): void { }
+public static function getDefaultOptions(): array { }
+public static function exceptionReport(int $level): int { }
+public static function exceptionHandle(callable $handle): void { }
+```
+#### Swlib\Saber\Request
+```php
+public function getExceptionReport(): int { }
+public function setExceptionReport(int $level): self { }
+public function isWaiting(): bool { }
+public function getSSL(): int { }
+public function withSSL(int $mode): self { }
+public function getCAFile(): string { }
+public function withCAFile(string $ca_file): self { }
+public function withSSLVerifyPeer(bool $verify_peer, string $ssl_host_name): self { }
+public function withSSLAllowSelfSigned(bool $allow): self { }
+public function getSSLConf() { }
+public function getKeepAlive() { }
+public function withKeepAlive(bool $enable): self { }
+public function withBasicAuth(string $username, string $password): self { }
+public function withXHR(bool $enable) { }
+public function getProxy(): array { }
+public function withProxy(string $host, int $port): self { }
+public function withSocks5(string $host, int $port, string $username, string $password): self { }
+public function withoutProxy(): self { }
+public function getTimeout(): float { }
+public function withTimeout(float $timeout): self { }
+public function getRedirect(): int { }
+public function getName() { }
+public function withName($name): self { }
+public function withRedirect(int $time): self { }
+public function isInQueue(): bool { }
+public function withInQueue(bool $enable): self { }
+public function getRetryTime(): int { }
+public function withRetryTime(int $time): self { }
+public function withAutoIconv(bool $enable): self { }
+public function withExpectCharset(string $source, string $target, bool $use_mb): self { }
+public function resetClient($client) { }
+public function exec() { }
+public function recv() { }
+public function getRequestTarget(): string { }
+public function withRequestTarget($requestTarget): self { }
+public function getMethod(): string { }
+public function withMethod($method): self { }
+public function getUri(): Psr\Http\Message\UriInterface { }
+public function withUri(Psr\Http\Message\UriInterface $uri, $preserveHost): self { }
+public function getCookieParams(): array { }
+public function getCookieParam(string $name): string { }
+public function withCookieParam(string $name, string $value): self { }
+public function withCookieParams(array $cookies): self { }
+public function getQueryParam(string $name): string { }
+public function getQueryParams(): array { }
+public function withQueryParam(string $name, string $value): self { }
+public function withQueryParams(array $query): self { }
+public function getParsedBody(string $name) { }
+public function withParsedBody($data): self { }
+public function getUploadedFile(string $name): Psr\Http\Message\UploadedFileInterface { }
+public function getUploadedFiles(): array { }
+public function withUploadedFile(string $name, Psr\Http\Message\UploadedFileInterface $uploadedFile): self { }
+public function withoutUploadedFile(string $name): self { }
+public function withUploadedFiles(array $uploadedFiles): self { }
+public function __toString() { }
+public function getProtocolVersion(): string { }
+public function withProtocolVersion($version): self { }
+public function hasHeader($name): bool { }
+public function getHeader($name): array { }
+public function getHeaderLine($name): string { }
+public function getHeaders(bool $implode, bool $ucwords): array { }
+public function getHeadersString(bool $ucwords): string { }
+public function withHeader($raw_name, $value): self { }
+public function withHeaders(array $headers): self { }
+public function withAddedHeaders(array $headers): self { }
+public function withAddedHeader($raw_name, $value): self { }
+public function withoutHeader($name): self { }
+public function getBody(): Psr\Http\Message\StreamInterface { }
+public function withBody(Psr\Http\Message\StreamInterface $body): self { }
+public function getCookies() { }
+public function setCookie(array $options): self { }
+public function unsetCookie(string $name, string $path, string $domain): self { }
+public function withInterceptor(string $name, array $interceptor) { }
+public function withAddedInterceptor(string $name, array $functions): self { }
+public function removeInterceptor(string $name): self { }
+public function callInterceptor(string $name, $arguments) { }
+public function getSpecialMark(string $name) { }
+public function withSpecialMark($mark, string $name): self { }
+```
+#### Swlib\Saber\Response
+```php
+public function getUri(): Psr\Http\Message\UriInterface { }
+public function isSuccess(): bool { }
+public function getStatusCode() { }
+public function withStatus($code, $reasonPhrase) { }
+public function getReasonPhrase() { }
+public function __toString() { }
+public function getProtocolVersion(): string { }
+public function withProtocolVersion($version): self { }
+public function hasHeader($name): bool { }
+public function getHeader($name): array { }
+public function getHeaderLine($name): string { }
+public function getHeaders(bool $implode, bool $ucwords): array { }
+public function getHeadersString(bool $ucwords): string { }
+public function withHeader($raw_name, $value): self { }
+public function withHeaders(array $headers): self { }
+public function withAddedHeaders(array $headers): self { }
+public function withAddedHeader($raw_name, $value): self { }
+public function withoutHeader($name): self { }
+public function getBody(): Psr\Http\Message\StreamInterface { }
+public function withBody(Psr\Http\Message\StreamInterface $body): self { }
+public function getCookies() { }
+public function setCookie(array $options): self { }
+public function unsetCookie(string $name, string $path, string $domain): self { }
+public function getSpecialMark(string $name) { }
+public function withSpecialMark($mark, string $name): self { }
+public function getParsedJsonArray(bool $reParse): array { }
+public function getParsedJsonObject(bool $reParse): object { }
+public function getParsedQueryArray(bool $reParse): array { }
+public function getParsedXmlArray(bool $reParse): array { }
+public function getParsedXmlObject(bool $reParse): SimpleXMLElement { }
+public function getParsedDomObject(bool $reParse): DOMDocument { }
+public function getDataRegexMatch(string $regex, $group, int $fill_size) { }
+public function getDataRegexMatches(string $regex, int $flag): array { }
+```
+#### Swlib\Saber\RequestQueue
+```php
+public function enqueue($request) { }
+public function getMaxConcurrency(): int { }
+public function withMaxConcurrency(int $num): self { }
+public function recv(): Swlib\Saber\ResponseMap { }
+public function withInterceptor(string $name, array $interceptor) { }
+public function withAddedInterceptor(string $name, array $functions): self { }
+public function removeInterceptor(string $name): self { }
+public function callInterceptor(string $name, $arguments) { }
+```
+#### Swlib\Saber\ResponseMap
+```php
+public $time = 0.0;
+public $status_map = [];
+public $success_map = [];
+public $success_num = 0;
+public $error_num = 0;
+public function offsetSet($index, $response) { }
+public function __toString() { }
+```
+
