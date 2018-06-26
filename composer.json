@@ -31,7 +31,8 @@
   },
   "autoload": {
     "classmap": [
-      "src/Saber.php"
+      "src/Saber.php",
+      "src/SaberGM.php"
     ],
     "psr-4": {
       "Swlib\\Saber\\": "src"

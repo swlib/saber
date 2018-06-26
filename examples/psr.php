@@ -8,12 +8,12 @@
 use Swlib\Http\BufferStream;
 use Swlib\Http\ContentType;
 use Swlib\Http\Uri;
-use Swlib\Saber;
+use Swlib\SaberGM;
 
 require __DIR__ . '/../vendor/autoload.php';
 
 go(function () {
-    $response = Saber::psr()
+    $response = SaberGM::psr()
         ->withMethod('POST')
         ->withUri(new Uri('http://eu.httpbin.org/post?foo=bar'))
         ->withQueryParams(['foo' => 'option is higher-level than uri'])

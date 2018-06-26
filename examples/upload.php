@@ -7,7 +7,7 @@
 
 use Swlib\Http\ContentType;
 use Swlib\Http\SwUploadFile;
-use Swlib\Saber;
+use Swlib\SaberGM;
 
 require __DIR__ . '/../vendor/autoload.php';
 go(function () {
@@ -25,7 +25,7 @@ go(function () {
         ContentType::get('png')
     );
 
-    echo Saber::post('http://eu.httpbin.org/post', null, [
+    echo SaberGM::post('http://eu.httpbin.org/post', null, [
             'files' => [
                 'image1' => $file1,
                 'image2' => $file2,

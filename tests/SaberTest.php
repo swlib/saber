@@ -16,23 +16,24 @@ use Swlib\Http\Exception\ServerException;
 use Swlib\Http\Exception\TooManyRedirectsException;
 use Swlib\Http\SwUploadFile;
 use Swlib\Saber;
+use Swlib\SaberGM;
 
 class SaberTest extends TestCase
 {
     public function testExceptionReport()
     {
-        Saber::exceptionReport(HttpExceptionMask::E_NONE);
-        $this->assertEquals(HttpExceptionMask::E_NONE, Saber::exceptionReport());
+        SaberGM::exceptionReport(HttpExceptionMask::E_NONE);
+        $this->assertEquals(HttpExceptionMask::E_NONE, SaberGM::exceptionReport());
     }
 
     public function testShortUri()
     {
-        $this->assertContains('tencent', (string)Saber::get('www.qq.com')->getBody());
+        $this->assertContains('tencent', (string)SaberGM::get('www.qq.com')->getBody());
     }
 
     public function testStaticAndRequests()
     {
-        $responses = Saber::requests([
+        $responses = SaberGM::requests([
             ['get', 'http://eu.httpbin.org/get'],
             ['delete', 'http://eu.httpbin.org/delete'],
             ['post', 'http://eu.httpbin.org/post', ['foo' => 'bar']],
@@ -57,7 +58,7 @@ class SaberTest extends TestCase
 
     public function testDataParser()
     {
-        [$json, $xml, $html] = Saber::list([
+        [$json, $xml, $html] = SaberGM::list([
             'uri' => [
                 'http://eu.httpbin.org/get',
                 'https://www.javatpoint.com/xmlpages/books.xml',
@@ -135,7 +136,7 @@ class SaberTest extends TestCase
             ContentType::get('png')
         );
 
-        $res = Saber::post('http://eu.httpbin.org/post', null, [
+        $res = SaberGM::post('http://eu.httpbin.org/post', null, [
                 'files' => [
                     'image1' => $file1,
                     'image2' => $file2,
@@ -150,7 +151,7 @@ class SaberTest extends TestCase
     public function testMark()
     {
         $mark = 'it is request one!';
-        $responses = Saber::requests([
+        $responses = SaberGM::requests([
             ['uri' => 'http://www.qq.com/', 'mark' => $mark],
             ['uri' => 'http://www.qq.com']
         ]);
@@ -160,7 +161,7 @@ class SaberTest extends TestCase
     public function testInterceptor()
     {
         $target = 'http://www.qq.com/';
-        Saber::get($target, [
+        SaberGM::get($target, [
             'before' => function (Saber\Request $request) use (&$uri) {
                 $uri = $request->getUri();
             },
@@ -179,14 +180,14 @@ class SaberTest extends TestCase
             'https://www.baidu.com/',
             'http://eu.httpbin.org/'
         ];
-        $res = Saber::list(['uri' => $uri_list]);
+        $res = SaberGM::list(['uri' => $uri_list]);
         $this->assertEquals(count($uri_list), $res->success_num);
     }
 
     public function testRetry()
     {
         $uri = 'http://eu.httpbin.org/basic-auth/foo/bar';
-        $res = Saber::get(
+        $res = SaberGM::get(
             $uri, [
                 'exception_report' => 0,
                 'retry' => function (Saber\Request $request) {

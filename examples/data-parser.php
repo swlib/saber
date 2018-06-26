@@ -5,12 +5,12 @@
  * Date: 2018/4/15 上午12:09
  */
 
-use Swlib\Saber;
+use Swlib\SaberGM;
 
 require __DIR__ . '/../vendor/autoload.php';
 
 go(function () {
-    [$json, $xml, $html] = Saber::list([
+    [$json, $xml, $html] = SaberGM::list([
         'uri' => [
             'http://eu.httpbin.org/get',
             'http://www.w3school.com.cn/example/xmle/note.xml',

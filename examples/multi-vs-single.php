@@ -5,20 +5,20 @@
  * Date: 2018/3/31 下午3:36
  */
 
-use Swlib\Saber;
+use Swlib\SaberGM;
 
 require __DIR__ . '/../vendor/autoload.php';
 
 go(function () {
     echo str_repeat("=", 20) . "\n";
 
-    $response = Saber::request(['uri' => 'https://github.com/']);
+    $response = SaberGM::request(['uri' => 'https://github.com/']);
     echo "single-request [ status: {$response->statusCode} ]: \n" .
         "consuming-time: {$response->time}s\n";
 
     echo str_repeat("=", 20) . "\n";
 
-    $responses = Saber::requests([
+    $responses = SaberGM::requests([
         ['uri' => 'http://github.com/'],
         ['uri' => 'http://github.com/'],
         ['uri' => 'http://github.com/'],

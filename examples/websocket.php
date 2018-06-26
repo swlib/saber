@@ -1,13 +1,13 @@
 <?php
 
-use Swlib\Saber;
+use Swlib\SaberGM;
 
 require __DIR__ . '/../vendor/autoload.php';
 
 $ws = new swoole_websocket_server('127.0.0.1', 9999);
 $ws->set(['worker_num' => 1]);
 $ws->on('workerStart', function (swoole_websocket_server $serv) {
-    $websocket = Saber::websocket('ws://127.0.0.1:9999');
+    $websocket = SaberGM::websocket('ws://127.0.0.1:9999');
     $i = 5;
     while ($i--) {
         echo $websocket->recv() . "\n";

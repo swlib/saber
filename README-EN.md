@@ -2,7 +2,7 @@
 
 [![Latest Version](https://img.shields.io/github/release/swlib/saber.svg?style=flat-square)](https://github.com/swlib/saber/releases)
 [![Build Status](https://travis-ci.org/swlib/saber.svg?branch=master)](https://travis-ci.org/swlib/saber)
-[![Php Version](https://img.shields.io/badge/php-%3E=7.1-brightgreen.svg?maxAge=2592000)](https://secure.php.net/)
+[![Php Version](https://img.shields.io/badge/php-%3E=7.0-brightgreen.svg?maxAge=2592000)](https://secure.php.net/)
 [![Swoole Version](https://img.shields.io/badge/swoole-%3E=2.1.2-brightgreen.svg?maxAge=2592000)](https://github.com/swoole/swoole-src)
 [![Saber License](https://img.shields.io/hexpm/l/plug.svg?maxAge=2592000)](https://github.com/swlib/saber/blob/master/LICENSE)
 
@@ -44,18 +44,18 @@ Swoole implements coroutine scheduling at the bottom layer, and the business lay
 
 ```php
 go(function () {
-    echo Saber::get('http://httpbin.org/get');
+    echo SaberGM::get('http://httpbin.org/get');
 })
 ```
 
 ### Easy Request
 
 ```php
-Saber::get('http://httpbin.org/get');
-Saber::post('http://httpbin.org/post');
-Saber::put('http://httpbin.org/put');
-Saber::patch('http://httpbin.org/patch');
-Saber::delete('http://httpbin.org/delete');
+SaberGM::get('http://httpbin.org/get');
+SaberGM::post('http://httpbin.org/post');
+SaberGM::put('http://httpbin.org/put');
+SaberGM::patch('http://httpbin.org/patch');
+SaberGM::delete('http://httpbin.org/delete');
 ```
 
 ### Create Instance
@@ -96,7 +96,7 @@ echo $session->get('/cookies')->body;
 
 Note: A concurrent redirection optimization scheme is used here. Multiple redirects are always concurrent and do not degenerate into a single request for the queue.
 ```php
-$responses = Saber::requests([
+$responses = SaberGM::requests([
     ['uri' => 'http://github.com/'],
     ['uri' => 'http://github.com/'],
     ['uri' => 'https://github.com/']
@@ -124,14 +124,14 @@ Support HTTP and Socks5
 
 ```php
 $uri = 'http://myip.ipip.net/';
-echo Saber::get($uri, ['proxy' => 'http://127.0.0.1:1087'])->body;
-echo Saber::get($uri, ['proxy' => 'socks5://127.0.0.1:1086'])->body;
+echo SaberGM::get($uri, ['proxy' => 'http://127.0.0.1:1087'])->body;
+echo SaberGM::get($uri, ['proxy' => 'socks5://127.0.0.1:1086'])->body;
 ```
 
 ### PSR Style
 
 ```php
-$response = Saber::psr()
+$response = SaberGM::psr()
     ->withMethod('POST')
     ->withUri(new Uri('http://httpbin.org/post?foo=bar'))
     ->withQueryParams(['foo' => 'option is higher-level than uri'])

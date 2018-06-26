@@ -5,7 +5,7 @@
  * Date: 2018/4/27 下午5:40
  */
 
-use Swlib\Saber;
+use Swlib\SaberGM;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -14,7 +14,7 @@ go(function () {
         'username' => md5(openssl_random_pseudo_bytes(6)),
         'password' => md5(openssl_random_pseudo_bytes(6))
     ];
-    echo Saber::get(
+    echo SaberGM::get(
         "http://eu.httpbin.org/basic-auth/{$auth['username']}/{$auth['password']}",
         ['auth' => $auth]
     );

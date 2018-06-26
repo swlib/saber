@@ -6,11 +6,12 @@
  */
 
 use Swlib\Saber;
+use Swlib\SaberGM;
 
 require __DIR__ . '/../vendor/autoload.php';
 
 go(function () {
-    Saber::get('http://twosee.cn/', [
+    SaberGM::get('http://twosee.cn/', [
         'before' => function (Saber\Request $request) {
             $uri = $request->getUri();
             echo "log: request $uri now...\n";

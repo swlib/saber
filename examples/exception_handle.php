@@ -5,14 +5,14 @@
  * Date: 2018/4/1 上午2:17
  */
 
-use Swlib\Saber;
+use Swlib\SaberGM;
 
 require __DIR__ . '/../vendor/autoload.php';
 
 go(function () {
-    Saber::exceptionHandle(function (\Exception $e) {
+    SaberGM::exceptionHandle(function (\Exception $e) {
         echo get_class($e) . " is caught!";
         return true;
     });
-    Saber::get('http://eu.httpbin.org/redirect/10');
+    SaberGM::get('http://eu.httpbin.org/redirect/10');
 });

@@ -6,13 +6,13 @@
  */
 
 use Swlib\Http\Exception\RequestException;
-use Swlib\Saber;
+use Swlib\SaberGM;
 
 require __DIR__ . '/../vendor/autoload.php';
 
 go(function () {
     try {
-        Saber::get('https://www.google.com/', ['timeout' => 1]); //China only
+        SaberGM::get('https://www.google.com/', ['timeout' => 1]); //China only
     } catch (RequestException $e) {
         var_dump($e->hasResponse());
         var_dump($e->getMessage());

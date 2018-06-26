@@ -6,23 +6,23 @@
  */
 
 use Swlib\Http\Exception\HttpExceptionMask;
-use Swlib\Saber;
+use Swlib\SaberGM;
 
 require __DIR__ . '/../vendor/autoload.php';
 
 go(function () {
     //redirect exception
     try {
-        Saber::get('http://eu.httpbin.org/redirect/10');
+        SaberGM::get('http://eu.httpbin.org/redirect/10');
     } catch (\Exception$e) {
         echo get_class($e) . " occurs!\n";
     }
 
     //set report to ignore redirect exception
-    Saber::exceptionReport(
+    SaberGM::exceptionReport(
         HttpExceptionMask::E_ALL ^ HttpExceptionMask::E_REDIRECT
     );
 
-    Saber::get('http://eu.httpbin.org/redirect/10');
+    SaberGM::get('http://eu.httpbin.org/redirect/10');
     echo "No exception";
 });

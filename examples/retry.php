@@ -6,12 +6,13 @@
  */
 
 use Swlib\Saber;
+use Swlib\SaberGM;
 
 require __DIR__ . '/../vendor/autoload.php';
 
 go(function () {
     $uri = 'http://eu.httpbin.org/basic-auth/foo/bar';
-    $res = Saber::get(
+    $res = SaberGM::get(
         $uri, [
             'exception_report' => 0,
             'retry' => function (Saber\Request $request) {

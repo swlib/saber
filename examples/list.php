@@ -5,12 +5,12 @@
  * Date: 2018/4/14 下午4:55
  */
 
-use Swlib\Saber;
+use Swlib\SaberGM;
 
 require __DIR__ . '/../vendor/autoload.php';
 
 go(function () {
-    $res = Saber::list([
+    $res = SaberGM::list([
         'uri' => [
             'http://www.qq.com/',
             'https://www.baidu.com/',

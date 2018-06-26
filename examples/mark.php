@@ -5,13 +5,13 @@
  * Date: 2018/4/12 下午9:58
  */
 
-use Swlib\Saber;
+use Swlib\SaberGM;
 
 require __DIR__ . '/../vendor/autoload.php';
 
 go(function () {
     //it's the way to bind some special request data to response.
-    $responses = Saber::requests([
+    $responses = SaberGM::requests([
         ['uri' => 'http://www.qq.com/', 'mark' => 'it is request one!'],
         ['uri' => 'http://www.qq.com']
     ]);

@@ -5,12 +5,12 @@
  * Date: 2018/3/30 下午11:58
  */
 
-use Swlib\Saber;
+use Swlib\SaberGM;
 
 require __DIR__ . '/../vendor/autoload.php';
 
 go(function () {
     $uri = 'http://t.cn/Rn3tRyK';
-    $res = Saber::get($uri);
+    $res = SaberGM::get($uri);
     var_dump($res->redirect_headers);
 });
