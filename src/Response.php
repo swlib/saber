@@ -81,9 +81,9 @@ class Response extends \Swlib\Http\Response
                     // get expect target
                     $charset_target = $request->charset_target ?: 'utf-8';
                     // not equals, run iconv
-                    if ($charset_source != $charset_target) {
-                        $charset_source = strtoupper($charset_source);
-                        $charset_target = strtoupper($charset_target);
+                    $charset_source = strtoupper($charset_source);
+                    $charset_target = strtoupper($charset_target);
+                    if ($charset_source !== $charset_target) {
                         if ($request->charset_use_mb) {
                             $body = mb_convert_encoding($body, $charset_target, $charset_source);
                         } else {
