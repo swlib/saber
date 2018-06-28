@@ -71,9 +71,12 @@ go(function () {
     - <a href="#数据解析">数据解析</a>
     - <a href="#网络代理">网络代理</a>
     - <a href="#文件上传">文件上传</a>
+    - <a href="#超大文件下载">超大文件下载</a>
+    - <a href="#自动重试">自动重试</a>
+    - <a href="#缓存机制">缓存机制</a>
     - <a href="#psr风格">PSR风格</a>
     - <a href="#websocket">WebSocket</a>
-    - <a href="#压力测试">压力测试</a>
+    - <a href="#极限压力测试">极限压力测试</a>
     - <a href="#列式请求集">列式请求集</a>
     - <a href="#单次并发控制">单次并发控制</a>
   - <a href="#配置参数表">配置参数表</a>
@@ -214,7 +217,7 @@ echo SaberGM::get($uri, ['proxy' => 'socks5://127.0.0.1:1086'])->body;
 
 ### 文件上传
 
-底层自动协程调度, 可支持异步发送超大文件, 断点续传
+底层自动协程调度, 可支持**异步发送超大文件**, **断点续传**
 
 >同时上传三个文件(三种参数风格`string`| `array` |`object`)
 
@@ -243,6 +246,47 @@ echo SaberGM::post('http://httpbin.org/post', null, [
 );
 ```
 
+### 超大文件下载
+
+Download收到数据后会直接异步写入到磁盘, 而不是在内存中对HttpBody进行拼接. 因此download仅使用**小量内存**, 就可以完成**超大文件**的下载. 且支持**断点续传**, 通过设置offset参数来进行断点下载.
+
+> 异步下载Saber壁纸
+
+```php
+$download_dir = '/tmp/saber.jpg';
+$response = SaberGM::download(
+    'https://ws1.sinaimg.cn/large/006DQdzWly1fsr8jt2botj31hc0wxqfs.jpg',
+    $download_dir
+);
+if ($response->success) {
+    exec('open ' . $download_dir);
+}
+```
+
+### 自动重试
+
+在爬虫项目中, 请求失败自动重试是非常常见的需求, 比如会话过期后重新登录.
+
+而`Saber`内置了此功能, 并可使用`拦截器`来强化它.
+
+```PHP
+$uri = 'http://eu.httpbin.org/basic-auth/foo/bar';
+$res = SaberGM::get(
+    $uri, [
+        'exception_report' => 0,
+        'retry' => function (Saber\Request $request) {
+            echo "retry...\n";
+            $request->withBasicAuth('foo', 'bar'); //发现失败后添加验证信息
+        }
+    ]
+);
+echo $res;
+```
+
+### 缓存机制
+
+有时候HTTP资源并不会总是变更, 我们可以学习浏览器缓存不会变动的资源, 来加快请求效率, 由`Saber`自动化地完成且不必自己维护缓存逻辑(CURD或文件读写), 协程的调度使得其不论如何都不会阻塞服务器, `Saber`没有使用中间件机制因为它和Swoole是强相关的, 但是缓存可以使用 `内存/文件/数据库` 等多种方式, 所以虽然它尚未实现, 但它将会列入`Saber`的后续路线图中.
+
 ### PSR风格
 
 ```php
@@ -270,11 +314,11 @@ while (true) {
 }
 ```
 
-### 压力测试
+### 极限压力测试
 
 > 测试机器为最低配MacBookPro, 请求服务器为本地echo服务器
 
-0.9秒完成6666个请求, 成功率100%.
+**0.9秒完成6666个请求**, 成功率100%.
 
 ```php
 co::set(['max_coroutine' => 8191]);
@@ -547,9 +591,9 @@ SaberGM::get('http://httpbin.org/redirect/10');
 
 ## Road Map
 
-| File Upload  ✔    | WebSocket ✔ | AutoParser✔ | AutoRetry | BigFile Download | Random UA | Http2 |
+| File Upload  ✔    | WebSocket ✔ | AutoParser✔ | AutoRetry✔ | BigFile Download✔ | Cache | Random UA |
 | ----------------- | ----------- | ----------- | --------- | --------- | --------- | ----- |
-| 4 (High-priority) | 3           | 2           | 1         | .5        | .25        | .175   |
+| 4 (High-priority) | 3           | 2           | 1         | .5        | .5       | .175   |
 
 #### Why not Http2 ?
 
@@ -597,6 +641,7 @@ public static function options(string $uri, array $options = [])
 public static function post(string $uri, $data = null, array $options = [])
 public static function put(string $uri, $data = null, array $options = [])
 public static function patch(string $uri, $data = null, array $options = [])
+public static function download(string $uri, string $dir, int $offset, array $options = [])
 public static function requests(array $requests, array $default_options = []): Swlib\Saber\ResponseMap
 public static function list(array $options, array $default_options = []): Swlib\Saber\ResponseMap
 public static function websocket(string $uri)
@@ -616,6 +661,7 @@ public function options(string $uri, array $options = [])
 public function post(string $uri, $data = null, array $options = [])
 public function put(string $uri, $data = null, array $options = [])
 public function patch(string $uri, $data = null, array $options = [])
+public function download(string $uri, string $dir, int $offset, array $options = [])
 public function requests(array $requests, array $default_options = []): ResponseMap
 public function list(array $options, array $default_options = []): ResponseMap
 public function websocket(string $uri): Swlib\WebSocket
@@ -660,6 +706,8 @@ public function getRetryTime(): int
 public function withRetryTime(int $time): self
 public function withAutoIconv(bool $enable): self
 public function withExpectCharset(string $source = 'auto', string $target = 'utf-8', bool $use_mb = false): self
+public function withDownloadDir(string $dir): self
+public function withDownloadOffset(int $offset): self
 public function resetClient($client)
 public function exec()
 public function recv()
