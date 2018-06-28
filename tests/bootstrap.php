@@ -6,3 +6,8 @@
  */
 
 require __DIR__.'/../vendor/autoload.php';
+
+//travis test need more time
+Swlib\SaberGM::default([
+    'timeout' => 30
+]);
