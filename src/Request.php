@@ -388,7 +388,8 @@ class Request extends \Swlib\Http\Request
 
     public function withDownloadOffset(int $offset): self
     {
-        $this->download_offset = $offset;
+        $this->withHeader('Range', $offset > 0 ? "bytes={$offset}-" : null)
+            ->download_offset = $offset;
 
         return $this;
     }
