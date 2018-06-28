@@ -474,7 +474,7 @@ class Request extends \Swlib\Http\Request
         }
         /** 设置请求主体 */
         $body = (string)($this->getBody() ?? '');
-        if (!empty($body)) {
+        if ($body !== '') {
             $this->client->setData($body);
         }
 
