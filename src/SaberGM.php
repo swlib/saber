@@ -79,6 +79,11 @@ class SaberGM
         return self::getDefaultClient()->patch($uri, $data, $options);
     }
 
+    public static function download(string $uri, string $dir, int $offset = 0, array $options = [])
+    {
+        return self::getDefaultClient()->download($uri, $dir, $offset, $options);
+    }
+
     /** @return Saber\Response[]|ResponseMap */
     public static function requests(array $requests, array $default_options = []): ResponseMap
     {

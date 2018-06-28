@@ -49,6 +49,10 @@ class Request extends \Swlib\Http\Request
     /** @var int 自动重试次数 */
     public $retry_time = 0;
 
+    /** @var string where download to */
+    private $download_dir = '';
+    private $download_offset = 0;
+
     public $auto_iconv = true;
     public $charset_source;
     public $charset_target;
@@ -375,12 +379,26 @@ class Request extends \Swlib\Http\Request
         return $this;
     }
 
+    public function withDownloadDir(string $dir): self
+    {
+        $this->download_dir = $dir;
+
+        return $this;
+    }
+
+    public function withDownloadOffset(int $offset): self
+    {
+        $this->download_offset = $offset;
+
+        return $this;
+    }
+
     /**
      * Clear the swoole client to make it back to the first state.
      *
      * @param $client
      */
-    public function resetClient(&$client)
+    public function resetClient($client)
     {
         //TODO
     }
@@ -509,7 +527,15 @@ class Request extends \Swlib\Http\Request
 
         /** Set defer and timeout */
         $this->client->setDefer(); //总是延迟回包以使用timeout定时器特性
-        $this->client->execute($path);
+
+        if (empty($this->download_dir)) {
+            $this->client->execute($path);
+        } else {
+            $this->client->download($path, $this->download_dir, $this->download_offset);
+            // reset: download mode only once
+            $this->download_dir = '';
+            $this->download_offset = 0;
+        }
         $this->_status = self::STATUS_WAITING;
 
         return $this;

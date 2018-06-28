@@ -224,6 +224,17 @@ class Saber
         return $this->request($options);
     }
 
+    public function download(string $uri, string $dir, int $offset = 0, array $options = [])
+    {
+        return $this->request([
+                'uri' => $uri,
+                'method' => 'GET',
+                'download_dir' => $dir,
+                'download_offset' => $offset
+            ] + $options
+        );
+    }
+
     /**
      * Multi requests
      *
@@ -574,6 +585,13 @@ class Saber
             } else {
                 $request->withAutoIconv($options['iconv'] !== false);
             }
+        }
+
+        /** download mode */
+        if (!empty($options['download_dir'])) {
+            $request
+                ->withDownloadDir((string)$options['download_dir'])
+                ->withDownloadOffset((int)$options['download_offset']);
         }
 
         if (isset($options['retry_time'])) {
