@@ -591,9 +591,9 @@ SaberGM::get('http://httpbin.org/redirect/10');
 
 ## Road Map
 
-| File Upload  ✔    | WebSocket ✔ | AutoParser✔ | AutoRetry✔ | BigFile Download✔ | Cache | Random UA |
-| ----------------- | ----------- | ----------- | --------- | --------- | --------- | ----- |
-| 4 (High-priority) | 3           | 2           | 1         | .5        | .5       | .175   |
+| File Upload  ✔    | WebSocket ✔ | AutoParser✔ | AutoRetry✔ | BigFile Download✔ | Cache | ClientPool | Random UA |
+| ----------------- | ----------- | ----------- | --------- | --------- | --------- | ----- | ----------------- |
+| 4 (High-priority) | 3           | 2           | 1         | .5        | .5       | .5 | .175 |
 
 #### Why not Http2 ?
 
