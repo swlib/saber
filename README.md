@@ -2,7 +2,7 @@
 
 [![Latest Version](https://img.shields.io/github/release/swlib/saber.svg?style=flat-square)](https://github.com/swlib/saber/releases)
 [![Build Status](https://travis-ci.org/swlib/saber.svg?branch=master)](https://travis-ci.org/swlib/saber)
-[![Php Version](https://img.shields.io/badge/php-%3E=7.0-brightgreen.svg?maxAge=2592000)](https://secure.php.net/)
+[![Php Version](https://img.shields.io/badge/php-%3E=7.1-brightgreen.svg?maxAge=2592000)](https://secure.php.net/)
 [![Swoole Version](https://img.shields.io/badge/swoole-%3E=2.1.2-brightgreen.svg?maxAge=2592000)](https://github.com/swoole/swoole-src)
 [![Saber License](https://img.shields.io/hexpm/l/plug.svg?maxAge=2592000)](https://github.com/swlib/saber/blob/master/LICENSE)
 
@@ -16,16 +16,21 @@ HTTP军刀(呆毛王), `Swoole人性化组件库`之PHP高性能HTTP客户端, �
 - 人性化使用风格, ajax.js/axios.js/requests.py用户福音, 同时支持PSR风格操作
 - 浏览器级别完备的Cookie管理机制, 完美适配爬虫/API代理应用
 - 请求/响应/异常拦截器
-- 多请求并发, 并发重定向优化, 自动化复用长连接
-- 响应报文自动编码转换
+- 多请求并发, 并发重定向优化
+- 连接池, 自动化复用长连接
+- 通道池(Chan): 最大连接数限制+无阻塞
 - HTTPS连接, CA证书自动化支持
 - HTTP/Socks5 Proxy支持
-- 重定向控制, 自动化长连接复用
+- WebSocket连接支持
+- 毫秒级超时定时器
 - 自动化 编码请求/解析响应 数据
-- 毫秒超时定时器
-- 超大文件上传, 断点重传
-- WebSocket连接
-- 随机UA生成器
+- 响应报文自动编码转换
+- 异步超大文件上传/下载, 断点重传
+- 自动重试机制
+- 单次并发数控制
+- 多模式/超细粒度异常处理机制
+- (=)浏览器级别缓存机制
+- (=)随机UA生成器
 
 ------
 <br>
@@ -42,8 +47,9 @@ composer require swlib/saber:dev-master
 
 ## 依赖
 
-- PHP7 or later
-- Swoole **2.1.2** or later
+- **PHP71** or later
+- Swoole 2.1.2 or later
+- **Swoole 4 is the best**
 
 ------
 <br>

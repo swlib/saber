@@ -2,7 +2,7 @@
 
 [![Latest Version](https://img.shields.io/github/release/swlib/saber.svg?style=flat-square)](https://github.com/swlib/saber/releases)
 [![Build Status](https://travis-ci.org/swlib/saber.svg?branch=master)](https://travis-ci.org/swlib/saber)
-[![Php Version](https://img.shields.io/badge/php-%3E=7.0-brightgreen.svg?maxAge=2592000)](https://secure.php.net/)
+[![Php Version](https://img.shields.io/badge/php-%3E=7.1-brightgreen.svg?maxAge=2592000)](https://secure.php.net/)
 [![Swoole Version](https://img.shields.io/badge/swoole-%3E=2.1.2-brightgreen.svg?maxAge=2592000)](https://github.com/swoole/swoole-src)
 [![Saber License](https://img.shields.io/hexpm/l/plug.svg?maxAge=2592000)](https://github.com/swlib/saber/blob/master/LICENSE)
 
@@ -28,8 +28,9 @@ The PHP high-performance HTTP client for `Swoole Humanized Component Library`, b
 
 ## Requirement
 
-- PHP7 or later
-- Swoole **2.1.2** or later
+- **PHP71** or later
+- Swoole 2.1.2 or later
+- **Swoole 4 is the best**
 
 
 
