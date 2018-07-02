@@ -4,14 +4,15 @@ use Swlib\SaberGM;
 
 require __DIR__ . '/../vendor/autoload.php';
 
-$ws = new swoole_websocket_server('127.0.0.1', 9999);
+$ws = new swoole_websocket_server('0.0.0.0', 9999);
 $ws->set(['worker_num' => 1]);
 $ws->on('workerStart', function (swoole_websocket_server $serv) {
     $websocket = SaberGM::websocket('ws://127.0.0.1:9999');
     $i = 5;
-    while ($i--) {
+    while ($i) {
         echo $websocket->recv() . "\n";
         $websocket->push("hello $i!");
+        $i--;
         co::sleep(0.5);
     }
     $serv->shutdown();
