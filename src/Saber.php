@@ -43,6 +43,7 @@ class Saber
         ],
         'cookies' => false,
         'useragent' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36',
+        'referer' => '',
         'content_type' => ContentType::QUERY,
         'redirect' => 3,
         'keep_alive' => true,
@@ -79,10 +80,13 @@ class Saber
         'header' => 'headers',
         'follow' => 'redirect',
         'ua' => 'useragent',
+        'user-agent' => 'useragent',
         'body' => 'data',
         'error_report' => 'exception_report',
         'report' => 'exception_report',
-        'retry' => 'before_retry'
+        'retry' => 'before_retry',
+        'ref' => 'referer',
+        'referrer' => 'referer'
     ];
 
     private static $aliasMapOfRequestsLength;
