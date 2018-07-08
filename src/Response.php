@@ -139,14 +139,24 @@ class Response extends \Swlib\Http\Response
         }
     }
 
+    public function isSuccess(): bool
+    {
+        return $this->success;
+    }
+
     public function getUri(): ?UriInterface
     {
         return $this->uri;
     }
 
-    public function isSuccess(): bool
+    public function getTime(): float
     {
-        return $this->success;
+        return $this->time;
+    }
+
+    public function getRedirectHeaders(): array
+    {
+        return $this->redirect_headers;
     }
 
 }
