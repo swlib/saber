@@ -49,12 +49,12 @@ class Response extends \Swlib\Http\Response
         /** consuming time */
         $this->time = $request->_time;
         /** status code */
-        $this->withStatus($request->client->statusCode);
+        $this->withStatus($request->client->statusCode ?: 0);
         /** 设定uri */
         $this->uri = $request->getUri();
 
         /** 初始化 */
-        $this->withHeaders($request->client->headers);
+        $this->withHeaders($request->client->headers ?: []);
 
         /** 记录重定向头 */
         $this->redirect_headers = $request->_redirect_headers; //记录重定向前的headers
