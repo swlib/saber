@@ -122,7 +122,7 @@ go(function () {
 >
 > 默认为`x-www-form-urlencoded`, 也支持`json`等其它格式
 
-`SaberGM ` := `Saber Global Manager`
+`SaberGM ` := `Saber Global Manager`, 如果觉得类名有点长, 可以使用`class_alias`自己取别名, 推荐服务中使用**生成实例**的方式使用, 而把`SaberGM`作为快捷方式.
 
 ```php
 SaberGM::get('http://httpbin.org/get');
@@ -370,6 +370,66 @@ echo SaberGM::requests($requests, ['max_co' => 1])->time."\n";
 
 <br>
 
+### 高性能无极限协程连接池
+
+在常驻内存的服务器中使用时, **一定要手动开启连接池选项**:
+
+```php
+$swoole = Saber::create([
+    'base_uri' => 'https://www.swoole.com/',
+    'use_pool' => true
+]);
+```
+
+在通过该实例使用时, 就会启用连接池特性, 即底层与`www.swoole.com`网站的连接客户端将会用一个全局连接池存取, 避免了每次使用创建/连接的开销.
+
+#### 无限连接池
+
+在参数为`true`时, 该网站的连接池容量是**无限**的, 一般情况下没有问题, 且无限容量的连接池性能更好.
+
+#### 定容连接池
+
+但如果你使用其作为爬虫代理服务, 遭遇**大量请求**时, 连接池中的客户端数量就会不可控制地快速上升, 甚至超出你所请求的源网站的最大允许连接数, 这时候你就需要将`use_pool`设置为一个**理想数值**(int), 此时, 底层会使用Channel作为连接池, 在连接池创建的客户端超出数量且不够取用时, 挂起需要取用客户端的协程, 并等待正在使用客户端的协程归还客户端, 协程等待和切换几乎没有多大的性能消耗, 是一种**非常先进**的解决方式.
+
+#### 动态变容
+
+需要注意的是, 连接池是绑定`服务器IP+端口`的, 即如果你有多个实例面向的是同一个`服务器IP+端口`, 他们之间使用的连接池也是同一个.
+
+所以你在重复创建`服务器IP+端口`的实例时, 新创建的实例指定的`use_pool`是允许覆盖之前数值的, 即连接池底层是自动变容的, 容量增加时底层会重新创建新的连接池并转移客户端, 容量减少时也会销毁在连接池内的多余的客户端.
+
+## 注意事项
+
+### 注册你所希望的配置
+
+除了一定要记得配备连接池以外, 异常处理的方式也需要注意是符合你的编程习惯的, `Saber`默认的异常处理是最主流且严谨的`抛出异常`, 但`Saber`也支持静默地使用`错误码`和`状态位`, 可能更符合很多人的口味.
+
+```php
+SaberGM::exceptionReport(0); // 关闭抛出异常报告, 在业务代码之前注册即可全局生效
+$saber->exceptionReport(0);  //也可以单独设置某个实例
+```
+
+同理, 你所希望的配置都可以在业务代码之前如`onWorkerStart`甚至是`swoole_server`启动之前预先配置.
+
+```php
+SaberGM::default([
+    'exception_report' => 0
+    'use_pool' => true
+]);
+```
+
+像这样配置你所期望的选项可以让你获得更好的使用体验!
+
+#### 注意在一次性脚本中释放连接池
+
+```php
+go(function(){
+    // your code with pool...
+    saber_pool_release(); // and this script will exit
+});
+```
+
+如果你在一次性脚本中使用的连接池, 由于协程客户端是存在池中的, 引用计数为1无法释放, 就会导致swoole一直处于事件循环中, 脚本就无法退出, 你需要手动调用`saber_pool_release`或`saber_exit`或`swoole_event_exit`来正常退出, 也可以使用exit强制退出当前脚本(不要在server中使用exit).
+
 ------
 
 ## 配置参数表
@@ -384,21 +444,27 @@ echo SaberGM::requests($requests, ['max_co' => 1])->time."\n";
 | method                | string                | 请求方法           | `get` \| `post` \| `head` \| `patch` \| `put` \| `delete`    | 底层自动转换为大写                                           |
 | headers               | array                 | 请求报头           | `['DNT' => '1']` \| `['accept' => ['text/html'], ['application/xml']]` | 字段名不区分大小写, 但会保留设定时的原始大小写规则, 底层每个字段值会根据PSR-7自动分割为数组 |
 | cookies               | `array`\|`string`     |                    | `['foo '=> 'bar']` \| `'foo=bar; foz=baz'`                   | 底层自动转化为Cookies对象, 并设置其domain为当前的uri, 具有[浏览器级别的完备属性](#cookies). |
-| useragent             | string                | 用户代理           |                                                              | 默认为macos平台的chrome                                      |
+| useragent             | string                | 用户代理           | `curl-1.0`                                                   | 默认为macos平台的chrome                                      |
+| referer               | string                | 来源地址           | `https://www.google.com`                                     | 默认为空                                                     |
 | redirect              | int                   | 最大重定向次数     | 5                                                            | 默认为3, 为0时不重定向.                                      |
 | keep_alive            | bool                  | 是否保持连接       | `true` \| `false`                                            | 默认为true, 重定向时会自动复用连接                           |
 | content_type          | string                | 发送的内容编码类型 | `text/plain` \| `Swlib\Http\ContentType::JSON`               | 默认为application/x-www-form-urlencoded                      |
 | data                  | `array` \| `string`   | 发送的数据         | `'foo=bar&dog=cat'` \|` ['foo' => 'bar']`                    | 会根据content_type自动编码数据                               |
 | before                | `callable` \| `array` | 请求前拦截器       | `function(Request $request){}`                               | [具体参考拦截器一节](#拦截器)                                |
 | after                 | `callable` \| `array` | 响应后拦截器       | `function(Response $response){}`                             | [具体参考拦截器一节](#拦截器)                                |
+| before_redirect       | `callable` \| `array` | 重定向后拦截器     | `function(Request $request, Response $response){}`           | [具体参考拦截器一节](#拦截器)                                |
 | timeout               | float                 | 超时时间           | 0.5                                                          | 默认5s, 支持毫秒级超时                                       |
 | proxy                 | string                | 代理               | `http://127.0.0.1:1087` \| `socks5://127.0.0.1:1087`         | 支持http和socks5                                             |
 | ssl                   | int                   | 是否开启ssl连接    | `0=关闭` `1=开启` `2=自动`                                   | 默认自动                                                     |
 | cafile                | string                | ca文件             | `__DIR__ . '/cacert.pem'`                                    | 默认自带                                                     |
 | ssl_verify_peer       | bool                  | 验证服务器端证书   | `false` \| `true`                                            | 默认关闭                                                     |
 | ssl_allow_self_signed | bool                  | 允许自签名证书     | `true` \| `false`                                            | 默认允许                                                     |
+| iconv                 | array                 | 指定编码转换       | `['gbk', 'utf-8']`                                           | 共三个参数为`from,to,use_mb`, 默认自动识别                   |
 | exception_report      | int                   | 异常报告级别       | HttpExceptionMask::E_ALL                                     | 默认汇报所有异常                                             |
 | exception_handle      | callable\|array       | 异常自定义处理函数 | `function(Exception $e){}`                                   | 函数返回true时可忽略错误                                     |
+| retry                 | callable              | 自动重试拦截器     | `function(Request $request, Response $response){}`           | 位于发生错误后及重试之前                                     |
+| retry_time            | int                   | 自动重试次数       |                                                              | 默认不重试                                                   |
+| use_pool              | bool\|int             | 连接池             | `true`| `false` |`100`                                       | 是否启用连接池, 为数字时可限制连接池最大容量                 |
 
 ### 配置参数别名
 
@@ -415,9 +481,10 @@ echo SaberGM::requests($requests, ['max_co' => 1])->time."\n";
 |cookies|cookie|
 |headers|header|
 |redirect|follow|
-|useragent|ua|
+|useragent|`ua` \| `user-agent`|
 |exception_report|`error_report` \| `report`|
 |before_retry|retry|
+|referer|`ref` \| `referrer`|
 
 
 <br>
@@ -459,6 +526,15 @@ SaberGM::get('http://twosee.cn/', [
         'interceptor_old' => null
     ]
 ]
+```
+
+拦截器可以使用四种方式注册([4种PHP回调函数](http://twosee.cn/2018/01/04/PHP-callback/)):
+
+```php
+callable: function(){}
+string: 'function_name'
+string: 'ClassName::method_name'
+array: [$object, 'method_name']
 ```
 
 <br>
@@ -670,7 +746,7 @@ public function patch(string $uri, $data = null, array $options = [])
 public function download(string $uri, string $dir, int $offset, array $options = [])
 public function requests(array $requests, array $default_options = []): ResponseMap
 public function list(array $options, array $default_options = []): ResponseMap
-public function websocket(string $uri): Swlib\WebSocket
+public function websocket(string $uri): WebSocket
 public function psr(array $options = []): Request
 public function wait(): self
 public function exceptionReport(?int $level = null): int
@@ -685,6 +761,8 @@ public static function setDefaultOptions(array $options = [])
 public function getExceptionReport(): int
 public function setExceptionReport(int $level): self
 public function isWaiting(): bool
+public function getPool()
+public function withPool($bool_or_max_size): self
 public function getSSL(): int
 public function withSSL(int $mode = 2): self
 public function getCAFile(): string
@@ -765,8 +843,10 @@ public function withSpecialMark($mark, string $name = 'default'): self
 ```
 #### Swlib\Saber\Response
 ```php
-public function getUri(): Psr\Http\Message\UriInterface
 public function isSuccess(): bool
+public function getUri(): Psr\Http\Message\UriInterface
+public function getTime(): float
+public function getRedirectHeaders(): array
 public function getStatusCode()
 public function withStatus($code, $reasonPhrase = '')
 public function getReasonPhrase()
