@@ -85,6 +85,13 @@ go(function () {
     - <a href="#极限压力测试">极限压力测试</a>
     - <a href="#列式请求集">列式请求集</a>
     - <a href="#单次并发控制">单次并发控制</a>
+    - <a href="#高性能无极限协程连接池">高性能无极限协程连接池</a>
+      - <a href="#无限连接池">无限连接池</a>
+      - <a href="#定容连接池">定容连接池</a>
+      - <a href="#动态变容">动态变容</a>
+  - <a href="#注意事项">注意事项</a>
+    - <a href="#注册你所希望的配置">注册你所希望的配置</a>
+      - <a href="#注意在一次性脚本中释放连接池">注意在一次性脚本中释放连接池</a>
   - <a href="#配置参数表">配置参数表</a>
     - <a href="#配置参数别名">配置参数别名</a>
   - <a href="#拦截器">拦截器</a>
@@ -685,11 +692,15 @@ As the main HTTP/2 benefit is that it allows multiplexing many requests within a
 
 ## IDE Helper
 
-将本项目源文件加入到IDE的 `Include Path` 中. (使用composer安装,则可以包含整个vendor文件夹)
+将本项目源文件加入到IDE的 `Include Path` 中.
 
-良好的注释书写使得Saber完美支持IDE自动提示, 只要在对象后书写箭头符号即可查看所有对象方法名称, 名称都十分通俗易懂, 大量方法都遵循PSR规范或是参考[Guzzle](https://github.com/guzzle/guzzle)项目而实现.
+ (使用composer安装,则可以包含整个vendor文件夹, PHPStorm会自动包含)
 
-对于底层Swoole相关类的IDE提示则需要引入[swoole-ide-helper](https://github.com/eaglewu/swoole-ide-helper)(composer在dev环境下会默认安装), 该项目会由我持续维护并推送最新代码到eaglewu持有的主仓库中.
+良好的注释书写使得Saber完美支持IDE自动提示, 只要在对象后书写箭头符号即可查看所有对象方法名称, 名称都十分通俗易懂, 大量方法都遵循**PSR**规范或是参考[Guzzle](https://github.com/guzzle/guzzle)项目(感谢)而实现.
+
+对于底层Swoole相关类的IDE提示则需要引入eaglewu的[swoole-ide-helper](https://github.com/eaglewu/swoole-ide-helper)(composer在dev环境下会默认安装), 但是该项目为手动维护, 不太完整, 也可以使用[swoft-ide-helper](https://github.com/swoft-cloud/swoole-ide-helper)或:
+
+**Swoole官方的[ide-helper](https://github.com/swoole/ide-helper/)并运行`php dump.php`生成一下.**
 
 <br>
 
