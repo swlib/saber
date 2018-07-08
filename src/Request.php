@@ -679,7 +679,7 @@ class Request extends \Swlib\Http\Request
              * just return a bool type value
              */
             $allow_redirect = true;
-            $ret = $this->callInterceptor('before_redirect', $this);
+            $ret = $this->callInterceptor('before_redirect', $this, $response);
             if ($ret !== null) {
                 if (is_bool($ret)) {
                     $allow_redirect = $ret;
