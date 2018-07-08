@@ -20,8 +20,9 @@ use Swoole\Coroutine\Http\Client;
 
 class Request extends \Swlib\Http\Request
 {
-    /** @var \Swoole\Coroutine\Http\Client */
+    /** @var $client \Swoole\Coroutine\Http\Client */
     public $client;
+    public $use_pool = true;
 
     public $exception_report = HttpExceptionMask::E_ALL;
 
@@ -105,6 +106,48 @@ class Request extends \Swlib\Http\Request
     public function isWaiting(): bool
     {
         return $this->_status === self::STATUS_WAITING;
+    }
+
+    private function getConnectionTarget(): array
+    {
+        $host = $this->uri->getHost();
+        if (empty($host)) {
+            $host = explode('/', ($uri_string = (string)$this->uri))[0] ?? '';
+            if (empty($host) || !preg_match('/\.\w+$/', $host)) {
+                throw new \InvalidArgumentException('Host should not be empty!');
+            } else {
+                $uri_string = 'http://' . rtrim($uri_string, '/');
+                $this->uri = new Uri($uri_string);
+                $host = $this->uri->getHost();
+            }
+        }
+        $port = $this->uri->getRealPort();
+        $ssl = $this->getSSL();
+        $ssl = ($ssl === self::SSL_AUTO) ? $port === 443 : (bool)$ssl;
+
+        return ['host' => $host, 'port' => $port, 'ssl' => $ssl];
+    }
+
+    public function getPool()
+    {
+        //Todo: implement it
+    }
+
+    /**
+     * @param $bool_or_max_size bool|int
+     * @return $this
+     */
+    public function withPool($bool_or_max_size): self
+    {
+        $this->use_pool = $bool_or_max_size;
+        if ($bool_or_max_size > 0 && is_numeric($this->use_pool)) {
+            ClientPool::getInstance()->setMaxEx($this->getConnectionTarget(), $bool_or_max_size);
+        }
+        if ($bool_or_max_size > 0) {
+            $this->withKeepAlive(true);
+        }
+
+        return $this;
     }
 
     /**
@@ -422,33 +465,30 @@ class Request extends \Swlib\Http\Request
             return $ret;
         }
 
-        /** 获取IP地址 */
-        $host = $this->uri->getHost();
-        if (empty($host)) {
-            $host = explode('/', ($uri_string = (string)$this->uri))[0] ?? '';
-            if (empty($host) || !preg_match('/\.\w+$/', $host)) {
-                throw new \InvalidArgumentException('Host should not be empty!');
+        if (!$this->client) {
+            /** 获取连接信息 */
+            list($host, $port, $ssl) = array_values($this->getConnectionTarget());
+            /** 新建协程HTTP客户端 */
+            if ($this->use_pool > 0) {
+                $client_pool = ClientPool::getInstance();
+                if ($client = $client_pool->getEx($host, $port)) {
+                    $this->client = $client;
+                } else {
+                    $this->client = $client_pool->create([
+                        'host' => $host,
+                        'port' => $port,
+                        'ssl' => $ssl
+                    ]);
+                }
             } else {
-                $uri_string = 'http://' . rtrim($uri_string, '/');
-                $this->uri = new Uri($uri_string);
-                $host = $this->uri->getHost();
+                if (\Swoole\Coroutine::getuid() < 0) {
+                    throw  new \BadMethodCallException(
+                        'You can only use coroutine client in `go` function or some Event callback functions.' . PHP_EOL .
+                        'Please check https://wiki.swoole.com/wiki/page/696.html'
+                    );
+                }
+                $this->client = new Client($host, $port, $ssl);
             }
-        }
-        $port = $this->uri->getRealPort();
-        $is_ssl = $this->getSSL();
-        $is_ssl = ($is_ssl === self::SSL_AUTO) ? $port === 443 : (bool)$is_ssl;
-
-        /** 新建协程HTTP客户端 */
-        /** @noinspection PhpUndefinedFieldInspection */
-        if (!$this->client || $this->client->host !== $host || $this->client->port !== $port || $this->client->isSSL !== $is_ssl) {
-            if (\Swoole\Coroutine::getuid() < 0) {
-                throw  new \BadMethodCallException(
-                    'You can only use coroutine client in `go` function or some Event callback functions.' .
-                    "\n Please check https://wiki.swoole.com/wiki/page/696.html"
-                );
-            }
-            $this->client = new Client($host, $port, $is_ssl);
-            $this->client->isSSL = $is_ssl;
         }
 
         /** 清空client自带的不靠谱的cookie */
@@ -656,6 +696,32 @@ class Request extends \Swlib\Http\Request
             } else {
                 goto retry_recv;
             }
+        }
+
+        static $need_clear = null;
+        if ($need_clear === null) {
+            $need_clear =
+                (!defined('PHP_DEBUG') || !PHP_DEBUG) && // ref-count check problem
+                (version_compare('4.0.1', swoole_version()) > 0); // in ver >= 4.0.1 swoole can auto clear
+        }
+        // clear native client
+        if ($need_clear) {
+            $this->client->headers = [];
+            $this->client->set_cookie_headers = [];
+            $this->client->cookies = [];
+        }
+        $this->client->body = '';
+
+        if ($this->use_pool > 0) {
+            // revert the client to the pool
+            if (version_compare('4.0.1', swoole_version()) <= 0 && $this->isInQueue()) {
+                // in ver <= 4.0.1 (https://github.com/swoole/swoole-src/pull/1790)
+                // swoole have a bug about defer client, we can't reuse it anymore.
+                $this->client->close();
+            } else {
+                ClientPool::getInstance()->putEx($this->client);
+            }
+            $this->client = null;
         }
 
         return $response;

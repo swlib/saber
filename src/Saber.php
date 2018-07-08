@@ -16,6 +16,7 @@ use Swlib\Saber\Request;
 use Swlib\Saber\RequestQueue;
 use Swlib\Saber\Response;
 use Swlib\Saber\ResponseMap;
+use Swlib\Saber\WebSocket;
 use Swlib\Util\DataParser;
 use Swlib\Util\TypeDetector;
 
@@ -58,7 +59,8 @@ class Saber
         'exception_report' => HttpExceptionMask::E_ALL,
         'exception_handle' => [],
         'retry' => [],
-        'retry_time' => 0
+        'retry_time' => 0,
+        'use_pool' => true
     ];
 
     private static $aliasMapLength;
@@ -423,6 +425,10 @@ class Saber
             self::$aliasMapLength ?? self::$aliasMapLength = count(self::$aliasMap)
         );
 
+        if (isset($options['use_pool'])) {
+            $request->withPool($options['use_pool']);
+        }
+
         if (isset($options['exception_report'])) {
             if (is_bool($options['exception_report'])) {
                 $options['exception_report'] =
@@ -663,18 +669,18 @@ class Saber
         return $options;
     }
 
-    private static function mergeData($default, $add): array
-    {
-        if (is_string($default)) {
-            parse_str($default, $default);
-        }
-        if (is_string($add)) {
-            parse_str($add, $add);
-        }
-
-        /** @var $add array */
-        /** @var $default array */
-        return $add + $default;
-    }
+    // private static function mergeData($default, $add): array
+    // {
+    //     if (is_string($default)) {
+    //         parse_str($default, $default);
+    //     }
+    //     if (is_string($add)) {
+    //         parse_str($add, $add);
+    //     }
+    //
+    //     /** @var $add array */
+    //     /** @var $default array */
+    //     return $add + $default;
+    // }
 
 }
