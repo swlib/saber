@@ -610,7 +610,7 @@ class Request extends \Swlib\Http\Request
                 } elseif ($statusCode === 3) {
                     $message = 'Connection is forcibly cut off by the remote server';
                 } else {
-                    $message = "Linux Code $errCode: " . socket_strerror($errCode);
+                    $message = "Linux Code $errCode: " . swoole_strerror($errCode);
                 }
                 $exception = new ConnectException($this, $statusCode, $message);
                 $ret = $this->callInterceptor('exception', $exception);
@@ -636,10 +636,14 @@ class Request extends \Swlib\Http\Request
             $this->cookies->adds($this->incremental_cookies); //TODO: optimize
         }
 
-        /** 处理重定向 */
+        /** Solve redirect */
         if (($this->client->headers['location'] ?? false) && $this->_redirect_times < $this->redirect) {
             $current_uri = (string)$this->uri;
-            $this->_redirect_headers[$current_uri] = $this->client->headers; //记录跳转前的headers
+            //record headers before redirect
+            $this->_redirect_headers[$current_uri] =
+                @PHP_DEBUG ?
+                    array_merge([], $this->client->headers) :
+                    $this->client->headers;
             $location = $this->client->headers['location'];
             $this->uri = Uri::resolve($this->uri, $location);
             if ($this->uri->getPort() === 443) {
@@ -650,10 +654,12 @@ class Request extends \Swlib\Http\Request
                 ->withHeader('referer', $current_uri)
                 ->removeInterceptor('request');
 
-            // Redirect-interceptors have permission to release or intercept redirects,
-            // just return a bool type value
+            /**
+             * Redirect-interceptors have permission to release or intercept redirects,
+             * just return a bool type value
+             */
             $allow_redirect = true;
-            $ret = $this->callInterceptor('before_retry', $this);
+            $ret = $this->callInterceptor('before_redirect', $this);
             if ($ret !== null) {
                 if (is_bool($ret)) {
                     $allow_redirect = $ret;
@@ -679,15 +685,16 @@ class Request extends \Swlib\Http\Request
             }
         }
 
-        /** 创建响应对象 */
+        /** create response object */
         $response = new Response($this);
 
-        /** 执行回调函数 */
+        /** call response interceptor */
         $ret = $this->callInterceptor('response', $response, $this);
         if ($ret !== null) {
             return $ret;
         }
 
+        /** auto retry */
         while (!$response->success && $this->_retried_time++ < $this->retry_time) {
             $this->callInterceptor('before_retry', $this, $response);
             $this->exec();
@@ -701,8 +708,8 @@ class Request extends \Swlib\Http\Request
         static $need_clear = null;
         if ($need_clear === null) {
             $need_clear =
-                (!defined('PHP_DEBUG') || !PHP_DEBUG) && // ref-count check problem
-                (version_compare('4.0.1', swoole_version()) > 0); // in ver >= 4.0.1 swoole can auto clear
+                !@PHP_DEBUG && // ref-count check problem
+                (version_compare('4.0.1', swoole_version()) <= 0); // in ver >= 4.0.1 swoole can auto clear
         }
         // clear native client
         if ($need_clear) {
