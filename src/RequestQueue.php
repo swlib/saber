@@ -122,6 +122,8 @@ class RequestQueue extends \SplQueue
                     if (($name = $req->getName()) && !isset($res_map[$name])) {
                         $res_map[$name] = &$res;
                     }
+                    // clear mark
+                    $req->withInQueue(false);
                 }
             }
         }
