@@ -150,6 +150,22 @@ class Request extends \Swlib\Http\Request
         return $this;
     }
 
+    private function tryToRevertClient()
+    {
+        if ($this->use_pool > 0) {
+            // revert the client to the pool
+            if (version_compare('4.0.1', swoole_version()) <= 0 && $this->isInQueue()) {
+                // in ver <= 4.0.1 (https://github.com/swoole/swoole-src/pull/1790)
+                // swoole have a bug about defer client and auto reconnect
+                // so we can't reuse it anymore.
+                $this->client->close();
+            } else {
+                ClientPool::getInstance()->putEx($this->client);
+            }
+            $this->client = null;
+        }
+    }
+
     /**
      * 是否为SSL连接
      *
@@ -454,21 +470,25 @@ class Request extends \Swlib\Http\Request
      */
     public function exec()
     {
-        /** 重置临时变量 */
+        /** reset temp attributes */
         if (!$this->_form_redirect) {
             $this->clear();
         }
 
-        /** 请求前拦截器 */
+        /** interceptor after request */
         $ret = $this->callInterceptor('request', $this);
         if ($ret !== null) {
             return $ret;
         }
 
+        /** get connection info */
+        list($host, $port, $ssl) = array_values($this->getConnectionTarget());
+        if ($this->client && ($this->client->host !== $host || $this->client->port !== $port)) {
+            // target maybe changed
+            $this->tryToRevertClient();
+        }
         if (!$this->client) {
-            /** 获取连接信息 */
-            list($host, $port, $ssl) = array_values($this->getConnectionTarget());
-            /** 新建协程HTTP客户端 */
+            /** create a new coroutine client */
             if ($this->use_pool > 0) {
                 $client_pool = ClientPool::getInstance();
                 if ($client = $client_pool->getEx($host, $port)) {
@@ -719,17 +739,7 @@ class Request extends \Swlib\Http\Request
         }
         $this->client->body = '';
 
-        if ($this->use_pool > 0) {
-            // revert the client to the pool
-            if (version_compare('4.0.1', swoole_version()) <= 0 && $this->isInQueue()) {
-                // in ver <= 4.0.1 (https://github.com/swoole/swoole-src/pull/1790)
-                // swoole have a bug about defer client, we can't reuse it anymore.
-                $this->client->close();
-            } else {
-                ClientPool::getInstance()->putEx($this->client);
-            }
-            $this->client = null;
-        }
+        $this->tryToRevertClient();
 
         return $response;
     }
