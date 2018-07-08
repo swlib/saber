@@ -22,7 +22,7 @@ class Request extends \Swlib\Http\Request
 {
     /** @var $client \Swoole\Coroutine\Http\Client */
     public $client;
-    public $use_pool = true;
+    public $use_pool = false;
 
     public $exception_report = HttpExceptionMask::E_ALL;
 

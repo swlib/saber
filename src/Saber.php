@@ -20,6 +20,8 @@ use Swlib\Saber\WebSocket;
 use Swlib\Util\DataParser;
 use Swlib\Util\TypeDetector;
 
+require __DIR__ . '/include/functions.php';
+
 class Saber
 {
 
@@ -60,7 +62,7 @@ class Saber
         'exception_handle' => [],
         'retry' => [],
         'retry_time' => 0,
-        'use_pool' => true
+        'use_pool' => false
     ];
 
     private static $aliasMapLength;
