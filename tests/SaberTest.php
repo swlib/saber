@@ -198,4 +198,12 @@ class SaberTest extends TestCase
         $this->assertEquals(true, $res->success);
     }
 
+    public function testIconv()
+    {
+        $this->assertContains(
+            '编码转换',
+            (string)SaberGM::get('http://www.ip138.com/', ['iconv' => ['gbk', 'utf-8']])
+        );
+    }
+
 }

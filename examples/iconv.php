@@ -10,5 +10,5 @@ use Swlib\SaberGM;
 require '../vendor/autoload.php';
 
 go(function () {
-    echo SaberGM::get('http://jtb.cust.edu.cn/tz/', ['iconv' => ['gbk', 'utf-8']]);
+    echo SaberGM::get('http://www.ip138.com/', ['iconv' => ['gbk', 'utf-8']]);
 });
