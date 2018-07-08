@@ -6,6 +6,7 @@
 
 namespace Swlib\Saber;
 
+use Swoole\Coroutine\Channel;
 use Swoole\Coroutine\Http\Client;
 
 class ClientPool extends \Swlib\Util\MapPool
@@ -62,19 +63,29 @@ class ClientPool extends \Swlib\Util\MapPool
         parent::put($client, "{$client->host}:{$client->port}");
     }
 
-    public function clean(string $key)
+    public function remove(string $key)
     {
-        $chan = $this->resource_map[$key] ?? null;
-        if ($chan) {
-            while (!$chan->isEmpty()) {
+        $pool = $this->resource_map[$key] ?? null;
+        if ($pool) {
+            while (!$pool->isEmpty()) {
                 /** @var $client Client */
-                $client = $chan->pop();
+                $client = $pool->pop();
                 if ($client->connected) {
                     $client->close();
                 }
             }
+            if ($pool instanceof Channel) {
+                $pool->close();
+            }
         }
-        return;
+        $this->resource_map[$key] = $this->status_map[$key] = null;
+    }
+
+    public function destroy()
+    {
+        foreach ($this->resource_map as $key => $_) {
+            $this->remove($key);
+        }
     }
 
 }
