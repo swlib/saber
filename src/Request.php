@@ -162,8 +162,11 @@ class Request extends \Swlib\Http\Request
             } else {
                 ClientPool::getInstance()->putEx($this->client);
             }
-            $this->client = null;
+        } else {
+            // it will be left
+            $this->client->close();
         }
+        $this->client = null;
     }
 
     /**
