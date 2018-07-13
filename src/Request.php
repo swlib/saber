@@ -39,6 +39,8 @@ class Request extends \Swlib\Http\Request
 
     /** @var array 代理配置 */
     public $proxy = [];
+    /** @var string User-Agent */
+    public $ua = '';
     /** @var int IO超时时间 */
     public $timeout = 3;
     /** @var int 最大重定向次数,为0时关闭 */
@@ -326,6 +328,30 @@ class Request extends \Swlib\Http\Request
     public function withoutProxy(): self
     {
         $this->proxy = null;
+
+        return $this;
+    }
+
+    /**
+     * Rand User-Agent
+     *
+     * @return string
+     */
+    public function getUserAgent(){
+        if(file_exists('user-agents.txt')){
+            $UA = file_get_contents('user-agents.txt');
+        }else{
+            $uri = "https://raw.githubusercontent.com/sqlmapproject/sqlmap/master/txt/user-agents.txt";
+            $UA = SaberGM::get($uri)->body;
+            file_put_contents('user-agents.txt', $UA);
+        }
+
+        $ua_arr = explode(PHP_EOL, $UA);
+        // 随机获取一行作为ua
+        $this->ua = $ua_arr[mt_rand(0,count($ua_arr))];
+        while (preg_match('[# ]', $this->ua)){
+            $this->ua = $ua_arr[mt_rand(0,count($ua_arr))];
+        }
 
         return $this;
     }
