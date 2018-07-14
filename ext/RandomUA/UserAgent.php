@@ -10,6 +10,11 @@ namespace Swlib\saber;
 
 class UserAgent
 {
+    /**
+     * Random  User-Agent
+     *
+     * @return string
+     */
     static public function getUserAgent():string
     {
         $filename = "user-agents.txt";
@@ -25,6 +30,11 @@ class UserAgent
         }
     }
 
+    /**
+     * @param string $UA 
+     *
+     * @return string
+     */
     public function afterget(string $UA):string
     {
         $ua_arr = explode(PHP_EOL, $UA);
