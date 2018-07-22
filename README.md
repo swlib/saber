@@ -40,7 +40,7 @@ HTTP军刀(呆毛王), `Swoole人性化组件库`之PHP高性能HTTP客户端, �
 最好的安装方法是通过 [Composer](http://getcomposer.org/) 包管理器 :
 
 ```shell
-composer require swlib/saber:dev-master
+composer require swlib/saber
 ```
 
 ------
