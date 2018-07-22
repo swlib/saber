@@ -15,5 +15,5 @@ before_install:
   - mkdir data/redis
   - chmod -R 777 data
 script:
-  - docker-compose -f docker-compose.travis.yml up -d
+  - docker-compose -f .travis-dc.yml up -d
   - docker run -it -v `pwd`:/app:rw -w /app --name="test" twosee/swoole-coroutine composer install-test
