@@ -20,15 +20,18 @@ use Swlib\SaberGM;
 
 class SaberTest extends TestCase
 {
+
     public function testExceptionReport()
     {
         SaberGM::exceptionReport(HttpExceptionMask::E_NONE);
         $this->assertEquals(HttpExceptionMask::E_NONE, SaberGM::exceptionReport());
     }
 
-    public function testShortUri()
+    public function testPoolAndShortUri()
     {
         $this->assertContains('tencent', (string)SaberGM::get('www.qq.com')->getBody());
+        $this->assertContains('tencent', (string)SaberGM::get('www.qq.com')->getBody());
+        $this->assertTrue(saber_pool_get_status('www.qq.com:80')['created'] === 1);
     }
 
     public function testStaticAndRequests()
@@ -241,6 +244,17 @@ class SaberTest extends TestCase
             $this->assertEquals($ws->recv(1), "server-reply: hello client\n");
         }
         $ws->close();
+    }
+
+    public function testFinalClear()
+    {
+        if (!SABER_SW_LE_V401) {
+            $status = saber_pool_get_status();
+            array_walk($status, function ($pool) {
+                $this->assertEquals($pool['created'], $pool['in_pool']);
+            });
+        }
+        $this->assertTrue(saber_pool_release());
     }
 
 }

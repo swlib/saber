@@ -3,9 +3,10 @@
 /** For Swoole coroutine tests */
 
 Co::set([
-  'log_level' => SWOOLE_LOG_INFO,
-  'trace_flags' => 0
+    'log_level' => SWOOLE_LOG_INFO,
+    'trace_flags' => 0
 ]);
+
 /*
  * This file is part of PHPUnit.
  *
@@ -14,49 +15,48 @@ Co::set([
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-
 if (version_compare('7.1.0', PHP_VERSION, '>')) {
-  fwrite(
-    STDERR,
-    sprintf(
-      'This version of PHPUnit is supported on PHP 7.1 and PHP 7.2.' . PHP_EOL .
-      'You are using PHP %s (%s).' . PHP_EOL,
-      PHP_VERSION,
-      PHP_BINARY
-    )
-  );
+    fwrite(
+        STDERR,
+        sprintf(
+            'This version of PHPUnit is supported on PHP 7.1 and PHP 7.2.' . PHP_EOL .
+            'You are using PHP %s (%s).' . PHP_EOL,
+            PHP_VERSION,
+            PHP_BINARY
+        )
+    );
 
-  die(1);
+    die(1);
 }
 
 if (!ini_get('date.timezone')) {
-  ini_set('date.timezone', 'UTC');
+    ini_set('date.timezone', 'UTC');
 }
 
 foreach ([
-           __DIR__ . '/../../autoload.php',
-           __DIR__ . '/../vendor/autoload.php',
-           __DIR__ . '/vendor/autoload.php'
+             __DIR__ . '/../../autoload.php',
+             __DIR__ . '/../vendor/autoload.php',
+             __DIR__ . '/vendor/autoload.php'
          ] as $file
 ) {
-  if (file_exists($file)) {
-    define('PHPUNIT_COMPOSER_INSTALL', $file);
+    if (file_exists($file)) {
+        define('PHPUNIT_COMPOSER_INSTALL', $file);
 
-    break;
-  }
+        break;
+    }
 }
 
 unset($file);
 
 if (!defined('PHPUNIT_COMPOSER_INSTALL')) {
-  fwrite(
-    STDERR,
-    'You need to set up the project dependencies using Composer:' . PHP_EOL . PHP_EOL .
-    '    composer install' . PHP_EOL . PHP_EOL .
-    'You can learn all about Composer on https://getcomposer.org/.' . PHP_EOL
-  );
+    fwrite(
+        STDERR,
+        'You need to set up the project dependencies using Composer:' . PHP_EOL . PHP_EOL .
+        '    composer install' . PHP_EOL . PHP_EOL .
+        'You can learn all about Composer on https://getcomposer.org/.' . PHP_EOL
+    );
 
-  die(1);
+    die(1);
 }
 
 require PHPUNIT_COMPOSER_INSTALL;
@@ -64,8 +64,8 @@ require PHPUNIT_COMPOSER_INSTALL;
 $server_list = require __DIR__ . '/servers/manager.php';
 
 go(function () {
-  // run tests
-  PHPUnit\TextUI\Command::main();
-  // exit event loop (useless?)
-  swoole_event_exit();
+    // run tests
+    PHPUnit\TextUI\Command::main();
+    // exit event loop (useless?)
+    swoole_event_exit();
 });

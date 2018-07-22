@@ -775,6 +775,7 @@ public function setExceptionReport(int $level): self
 public function isWaiting(): bool
 public function getPool()
 public function withPool($bool_or_max_size): self
+public function tryToRevertClientToPool(bool $connect_failed = false)
 public function getSSL(): int
 public function withSSL(int $mode = 2): self
 public function getCAFile(): string

@@ -12,7 +12,7 @@ use Swoole\Coroutine\Http\Client;
 class ClientPool extends \Swlib\Util\MapPool
 {
 
-    public function create(array $options, string $key = null)
+    public function createEx(array $options, bool $temp = false)
     {
         if (\Swoole\Coroutine::getuid() < 0) {
             throw  new \BadMethodCallException(
@@ -21,12 +21,13 @@ class ClientPool extends \Swlib\Util\MapPool
             );
         }
         $client = new Client($options['host'], $options['port'], $options['ssl']);
-        if (!isset($key)) {
+        if ($temp) {
+            return $client; // not record
+        } else {
             $key = "{$options['host']}:{$options['port']}";
+            parent::create($options, $key);
+            return $client;
         }
-        parent::create($options, $key);
-
-        return $client;
     }
 
     public function setMaxEx(array $options, int $max_size = -1): int
@@ -51,7 +52,14 @@ class ClientPool extends \Swlib\Util\MapPool
 
     public function getEx(string $host, string $port): ?Client
     {
-        return parent::get("{$host}:{$port}");
+        /** @var $client Client */
+        $key = "{$host}:{$port}";
+        $client = parent::get($key);
+        if ($client && SABER_SW_LE_V401 && !$client->isConnected()) {
+            @$this->status_map[$key]['disconnected']++;
+            $client->close(); // clear hcc to prevent not active warn in swoole ver <= 4.0.1
+        }
+        return $client;
     }
 
     public function putEx(Client $client)
@@ -63,7 +71,13 @@ class ClientPool extends \Swlib\Util\MapPool
         parent::put($client, "{$client->host}:{$client->port}");
     }
 
-    public function remove(string $key)
+    public function destroyEx(Client $client)
+    {
+        $client->close();
+        parent::destroy($client, "{$client->host}:{$client->port}");
+    }
+
+    public function release(string $key)
     {
         $pool = $this->resource_map[$key] ?? null;
         if ($pool) {
@@ -81,10 +95,10 @@ class ClientPool extends \Swlib\Util\MapPool
         $this->resource_map[$key] = $this->status_map[$key] = null;
     }
 
-    public function destroy()
+    public function releaseAll()
     {
         foreach ($this->resource_map as $key => $_) {
-            $this->remove($key);
+            $this->release($key);
         }
     }
 

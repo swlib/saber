@@ -26,8 +26,8 @@
   },
   "require": {
     "php": ">=7.0",
-    "swlib/http": "dev-master",
-    "swlib/util": "dev-master"
+    "swlib/http": "1.0.0-rc.1",
+    "swlib/util": "1.0.0-rc.2"
   },
   "autoload": {
     "classmap": [
@@ -54,6 +54,6 @@
   },
   "scripts": {
     "test": "php ./tests/phpunit -c ./tests/phpunit.xml",
-    "install-test": "composer install && composer test"
+    "install-test": "php --ri swoole && composer install && composer test"
   }
 }

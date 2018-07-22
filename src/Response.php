@@ -134,6 +134,7 @@ class Response extends \Swlib\Http\Response
         if ($exception) {
             $ret = $request->callInterceptor('exception', $exception);
             if (!$ret) {
+                $request->tryToRevertClientToPool();
                 throw $exception;
             }
         }

@@ -16,13 +16,13 @@ use Swlib\Http\SwUploadFile;
 use Swlib\Http\Uri;
 use Swlib\Util\InterceptorTrait;
 use Swlib\Util\SpecialMarkTrait;
-use Swoole\Coroutine\Http\Client;
 
 class Request extends \Swlib\Http\Request
 {
     /** @var $client \Swoole\Coroutine\Http\Client */
     public $client;
-    public $use_pool = false;
+    /** @var bool must be changed through method */
+    private $use_pool = false;
 
     public $exception_report = HttpExceptionMask::E_ALL;
 
@@ -128,9 +128,10 @@ class Request extends \Swlib\Http\Request
         return ['host' => $host, 'port' => $port, 'ssl' => $ssl];
     }
 
+    /** @return null|bool */
     public function getPool()
     {
-        //Todo: implement it
+        return $this->use_pool;
     }
 
     /**
@@ -139,28 +140,36 @@ class Request extends \Swlib\Http\Request
      */
     public function withPool($bool_or_max_size): self
     {
+        if ($bool_or_max_size < 0) {
+            $bool_or_max_size = true; // translate to unlimited
+        }
         $this->use_pool = $bool_or_max_size;
-        if ($bool_or_max_size > 0 && is_numeric($this->use_pool)) {
+        if (is_numeric($this->use_pool)) {
+            // limit max num
             ClientPool::getInstance()->setMaxEx($this->getConnectionTarget(), $bool_or_max_size);
         }
-        if ($bool_or_max_size > 0) {
+        if ($bool_or_max_size) {
             $this->withKeepAlive(true);
         }
 
         return $this;
     }
 
-    private function tryToRevertClient()
+    public function tryToRevertClientToPool(bool $connect_failed = false)
     {
-        if ($this->use_pool > 0) {
+        if ($this->use_pool) {
+            $client_pool = ClientPool::getInstance();
             // revert the client to the pool
-            if (version_compare('4.0.1', swoole_version()) <= 0 && $this->isInQueue()) {
-                // in ver <= 4.0.1 (https://github.com/swoole/swoole-src/pull/1790)
-                // swoole have a bug about defer client and auto reconnect
-                // so we can't reuse it anymore.
-                $this->client->close();
+            if (SABER_SW_LE_V401) {
+                if ($connect_failed || $this->isInQueue()) {
+                    // in ver <= 4.0.1 when connect failed we must create new one
+                    // in ver <= 4.0.1 (https://github.com/swoole/swoole-src/pull/1790)
+                    // swoole have a bug about defer client and auto reconnect
+                    // so we can't reuse it anymore.
+                    $client_pool->destroyEx($this->client);
+                }
             } else {
-                ClientPool::getInstance()->putEx($this->client);
+                $client_pool->putEx($this->client);
             }
         } else {
             // it will be left
@@ -488,36 +497,27 @@ class Request extends \Swlib\Http\Request
         list($host, $port, $ssl) = array_values($this->getConnectionTarget());
         if ($this->client && ($this->client->host !== $host || $this->client->port !== $port)) {
             // target maybe changed
-            $this->tryToRevertClient();
+            $this->tryToRevertClientToPool();
         }
         if (!$this->client) {
             /** create a new coroutine client */
-            if ($this->use_pool > 0) {
-                $client_pool = ClientPool::getInstance();
-                if ($client = $client_pool->getEx($host, $port)) {
-                    $this->client = $client;
-                } else {
-                    $this->client = $client_pool->create([
-                        'host' => $host,
-                        'port' => $port,
-                        'ssl' => $ssl
-                    ]);
-                }
+            $client_pool = ClientPool::getInstance();
+            if ($this->use_pool && $client = $client_pool->getEx($host, $port)) {
+                $this->client = $client;
             } else {
-                if (\Swoole\Coroutine::getuid() < 0) {
-                    throw  new \BadMethodCallException(
-                        'You can only use coroutine client in `go` function or some Event callback functions.' . PHP_EOL .
-                        'Please check https://wiki.swoole.com/wiki/page/696.html'
-                    );
-                }
-                $this->client = new Client($host, $port, $ssl);
+                $options = [
+                    'host' => $host,
+                    'port' => $port,
+                    'ssl' => $ssl
+                ];
+                $this->client = $client_pool->createEx($options, !$this->use_pool);
             }
         }
 
-        /** 清空client自带的不靠谱的cookie */
+        /** Clear useless cookies property */
         $this->client->cookies = null;
 
-        /** 设置请求头 */
+        /** Set request headers */
         $cookie = $this->cookies->toRequestString($this->uri);
 
         // Ensure Host is the first header.
@@ -528,7 +528,7 @@ class Request extends \Swlib\Http\Request
         }
         $this->client->setHeaders($headers);
 
-        /** 设置请求方法 */
+        /** Set method */
         $this->client->setMethod($this->getMethod());
         /** Set Upload file */
         $files = $this->getUploadedFiles();
@@ -633,11 +633,12 @@ class Request extends \Swlib\Http\Request
                 } elseif ($statusCode === 3) {
                     $message = 'Connection is forcibly cut off by the remote server';
                 } else {
-                    $message = "Linux Code $errCode: " . swoole_strerror($errCode);
+                    $message = "Linux Code {$errCode}: " . swoole_strerror($errCode);
                 }
                 $exception = new ConnectException($this, $statusCode, $message);
                 $ret = $this->callInterceptor('exception', $exception);
                 if (!$ret) {
+                    $this->tryToRevertClientToPool(true);
                     throw $exception;
                 }
             } else {
@@ -663,10 +664,9 @@ class Request extends \Swlib\Http\Request
         if (($this->client->headers['location'] ?? false) && $this->_redirect_times < $this->redirect) {
             $current_uri = (string)$this->uri;
             //record headers before redirect
-            $this->_redirect_headers[$current_uri] =
-                @PHP_DEBUG ?
-                    array_merge([], $this->client->headers) :
-                    $this->client->headers;
+            $this->_redirect_headers[$current_uri] = PHP_DEBUG ?
+                array_merge([], $this->client->headers) :
+                $this->client->headers;
             $location = $this->client->headers['location'];
             $this->uri = Uri::resolve($this->uri, $location);
             if ($this->uri->getPort() === 443) {
@@ -728,21 +728,15 @@ class Request extends \Swlib\Http\Request
             }
         }
 
-        static $need_clear = null;
-        if ($need_clear === null) {
-            $need_clear =
-                !@PHP_DEBUG && // ref-count check problem
-                (version_compare('4.0.1', swoole_version()) <= 0); // in ver >= 4.0.1 swoole can auto clear
-        }
         // clear native client
-        if ($need_clear) {
+        if (SABER_HCP_NEED_CLEAR) {
             $this->client->headers = [];
             $this->client->set_cookie_headers = [];
             $this->client->cookies = [];
         }
         $this->client->body = '';
 
-        $this->tryToRevertClient();
+        $this->tryToRevertClientToPool();
 
         return $response;
     }
