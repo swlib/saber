@@ -8,6 +8,7 @@
 namespace Swlib\Saber;
 
 use Psr\Http\Message\UriInterface;
+use Swlib\Http\Exception\ConnectException;
 
 class WebSocket extends \Swlib\Http\Request
 {
@@ -17,6 +18,7 @@ class WebSocket extends \Swlib\Http\Request
     /** @noinspection PhpMissingParentConstructorInspection */
     public function __construct(UriInterface $uri)
     {
+        //Todo: improve it
         $this->withUri($uri);
         $this->client = new \Swoole\Coroutine\Http\Client(
             $uri->getHost(),
@@ -27,7 +29,7 @@ class WebSocket extends \Swlib\Http\Request
         if (!$ret) {
             throw new ConnectException(
                 $this, $this->client->errCode,
-                'Websocket upgrade failed! ' . socket_strerror($this->client->errCode)
+                'Websocket upgrade failed by [' . socket_strerror($this->client->errCode) . '].'
             );
         }
     }

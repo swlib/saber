@@ -131,6 +131,11 @@ class Saber
         return $client->setOptions($options);
     }
 
+    public static function websocket(string $uri): WebSocket
+    {
+        return self::create(['uri' => $uri])->upgrade();
+    }
+
     /******************************************************************************
      *                             Normal Methods                                 *
      ******************************************************************************/
@@ -292,11 +297,17 @@ class Saber
         return $this->requests($new, $default_options);
     }
 
-    public function websocket(string $uri): WebSocket
+    public function upgrade(string $path = null): WebSocket
     {
-        $uri = Uri::resolve($this->options['base_uri'] ?? null, $uri);
+        $uri = Uri::resolve(
+            $this->options['base_uri'] ?? null,
+            $this->options['uri'] ?? null
+        );
+        if (isset($path)) {
+            $uri->withPath($path);
+        }
 
-        return $websocket = new WebSocket($uri);
+        return new WebSocket($uri);
     }
 
     /******************************************************************************

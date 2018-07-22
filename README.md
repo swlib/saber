@@ -10,7 +10,7 @@
 
 HTTP军刀(呆毛王), `Swoole人性化组件库`之PHP高性能HTTP客户端, 基于Swoole原生协程, 支持多种风格操作, 底层提供高性能解决方案, 让开发者专注于功能开发, 从传统同步阻塞且配置繁琐的Curl中解放.
 
->  **[English Document](./README-en.md)**
+>  **[English Document](./README-EN.md)**
 
 - 基于Swoole协程Client开发
 - 人性化使用风格, ajax.js/axios.js/requests.py用户福音, 同时支持PSR风格操作
@@ -746,6 +746,7 @@ public static function exceptionHandle(callable $handle): void
 ```php
 public static function create(array $options = []): self
 public static function session(array $options = []): self
+public static function websocket(string $uri): WebSocket
 public function request(array $options)
 public function get(string $uri, array $options = [])
 public function delete(string $uri, array $options = [])
@@ -757,7 +758,7 @@ public function patch(string $uri, $data = null, array $options = [])
 public function download(string $uri, string $dir, int $offset, array $options = [])
 public function requests(array $requests, array $default_options = []): ResponseMap
 public function list(array $options, array $default_options = []): ResponseMap
-public function websocket(string $uri): WebSocket
+public function upgrade(?string $path = null): WebSocket
 public function psr(array $options = []): Request
 public function wait(): self
 public function exceptionReport(?int $level = null): int
@@ -887,7 +888,7 @@ public function getParsedQueryArray(bool $reParse = false): array
 public function getParsedXmlArray(bool $reParse = false): array
 public function getParsedXmlObject(bool $reParse = false): SimpleXMLElement
 public function getParsedDomObject(bool $reParse = false): DOMDocument
-public function getDataRegexMatch(string $regex, $group = -1, int $fill_size)
+public function getDataRegexMatch(string $regex, $group = null, int $fill_size)
 public function getDataRegexMatches(string $regex, int $flag): array
 public function isExistInData(string $needle, int $offset)
 ```
