@@ -117,6 +117,8 @@ go(function () {
       - <a href="#swlibsaberresponse">Swlib\Saber\Response</a>
       - <a href="#swlibsaberrequestqueue">Swlib\Saber\RequestQueue</a>
       - <a href="#swlibsaberresponsemap">Swlib\Saber\ResponseMap</a>
+      - <a href="#swlibsaberwebsocket">Swlib\Saber\WebSocket</a>
+      - <a href="#swlibsaberwebsocketframe">Swlib\Saber\WebSocketFrame</a>
 
 
 ------
@@ -912,6 +914,23 @@ public $success_map = [];
 public $success_num = 0;
 public $error_num = 0;
 public function offsetSet($index, $response)
+public function __toString()
+```
+#### Swlib\Saber\WebSocket
+```php
+public function withMock(bool $ssl): self
+public function recv(float $timeout = -1)
+public function push(string $data, int $opcode = 1, bool $finish = true): bool
+public function close(): bool
+```
+#### Swlib\Saber\WebSocketFrame
+```php
+public $finish = true;
+public $opcode = null;
+public $data = null;
+public function getOpcodeDefinition()
+public function getOpcode()
+public function getData()
 public function __toString()
 ```
 

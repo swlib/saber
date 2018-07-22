@@ -9,6 +9,7 @@ namespace Swlib\Saber;
 
 use Psr\Http\Message\UriInterface;
 use Swlib\Http\Exception\ConnectException;
+use Swlib\Http\Uri;
 
 class WebSocket extends \Swlib\Http\Request
 {
@@ -16,15 +17,26 @@ class WebSocket extends \Swlib\Http\Request
     public $client;
 
     /** @noinspection PhpMissingParentConstructorInspection */
-    public function __construct(UriInterface $uri)
+    public function __construct(UriInterface $uri, bool $mock = false)
     {
-        //Todo: improve it
-        $this->withUri($uri);
-        $this->client = new \Swoole\Coroutine\Http\Client(
-            $uri->getHost(),
-            $uri->getPort(),
-            $uri->getScheme() == 'wss'
-        );
+        $this->uri = $uri;
+        $host = $this->uri->getHost();
+        $port = $this->uri->getPort();
+        $ssl = $this->uri->getScheme() === 'wss';
+        if (empty($host)) {
+            $host = explode('/', ($uri_string = (string)$this->uri))[0] ?? '';
+            if (empty($host) || !preg_match('/\.\w+$/', $host)) {
+                throw new \InvalidArgumentException('Host should not be empty!');
+            } else {
+                $uri_string = 'ws://' . rtrim($uri_string, '/');
+                $this->uri = new Uri($uri_string);
+                $host = $this->uri->getHost();
+            }
+        }
+        $this->client = new \Swoole\Coroutine\Http\Client($host, $port, $ssl);
+        if ($mock) {
+            $this->withMock($ssl);
+        }
         $ret = $this->client->upgrade($uri->getPath() ?: '/');
         if (!$ret) {
             throw new ConnectException(
@@ -32,6 +44,20 @@ class WebSocket extends \Swlib\Http\Request
                 'Websocket upgrade failed by [' . socket_strerror($this->client->errCode) . '].'
             );
         }
+    }
+
+    /**
+     * enable mask to mock the browser
+     */
+    public function withMock(bool $ssl): self
+    {
+        $settings = ['websocket_mask' => true];
+        if ($ssl) {
+            $settings['ssl_host_name'] = $this->uri->getHost();
+        }
+        $this->client->set($settings);
+
+        return $this;
     }
 
     public function recv(float $timeout = -1)
