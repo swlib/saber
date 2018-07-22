@@ -121,17 +121,17 @@ class SaberTest extends TestCase
 
     public function testUploadFiles()
     {
-        $file1 = __DIR__ . '/black.png';
+        $file1 = __DIR__ . '/resources/black.png';
         $this->assertFileExists($file1);
         $file2 = [
-            'path' => __DIR__ . '/black.png',
+            'path' => __DIR__ . '/resources/black.png',
             'name' => 'white.png',
             'type' => ContentType::get('png'),
             'offset' => null, //re-upload from break
             'size' => null //upload a part of the file
         ];
         $file3 = new SwUploadFile(
-            __DIR__ . '/black.png',
+            __DIR__ . '/resources/black.png',
             'white.png',
             ContentType::get('png')
         );
@@ -184,7 +184,7 @@ class SaberTest extends TestCase
         $this->assertEquals(count($uri_list), $res->success_num);
     }
 
-    public function testRetry()
+    public function testRetryAndAuth()
     {
         $uri = 'http://eu.httpbin.org/basic-auth/foo/bar';
         $res = SaberGM::get(
@@ -204,6 +204,43 @@ class SaberTest extends TestCase
             '编码转换',
             (string)SaberGM::get('http://www.ip138.com/', ['iconv' => ['gbk', 'utf-8']])
         );
+    }
+
+    public function testDownload()
+    {
+        $download_dir = __DIR__ . '/saber.jpg';
+        $response = SaberGM::download(
+            'https://ws1.sinaimg.cn/large/006DQdzWly1fsr8jt2botj31hc0wxqfs.jpg',
+            $download_dir
+        );
+        $this->assertTrue($response->success);
+        if ($response->success) {
+            unlink($download_dir);
+        }
+    }
+
+    public function testBeforeRedirect()
+    {
+        SaberGM::get(
+            'http://eu.httpbin.org/redirect-to?url=http://www.qq.com/', [
+                'before_redirect' => function (Saber\Request $request) {
+                    $this->assertEquals('http://www.qq.com/', (string)$request->getUri());
+                }
+            ]
+        );
+    }
+
+    public function testWebSocket()
+    {
+        global $server_list;
+        list($ip, $port) = array_values($server_list['websocket']);
+        $ws = SaberGM::websocket("ws://{$ip}:{$port}");
+        $this->assertEquals($ws->recv(), "server: hello, welcome\n");
+        for ($i = 0; $i < 5; $i++) {
+            $ws->push("hello server\n");
+            $this->assertEquals($ws->recv(1), "server-reply: hello client\n");
+        }
+        $ws->close();
     }
 
 }

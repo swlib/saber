@@ -6,8 +6,11 @@
  */
 
 require __DIR__ . '/../vendor/autoload.php';
+require __DIR__ . '/include/functions.php';
+require __DIR__ . '/include/ProcessManager.php';
 
-//travis test need more time
+/** === Travis test need more time === **/
 Swlib\SaberGM::default([
-    'timeout' => 30
+    'timeout' => 30,
+    'use_pool' => true
 ]);

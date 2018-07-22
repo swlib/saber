@@ -12,7 +12,7 @@ require __DIR__ . '/../vendor/autoload.php';
 
 go(function () {
     try {
-        SaberGM::get('https://www.google.com/', ['timeout' => 1]); //China only
+        SaberGM::get('https://www.google.com/', ['timeout' => 0.001]); //China only
     } catch (RequestException $e) {
         var_dump($e->hasResponse());
         var_dump($e->getMessage());

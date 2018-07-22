@@ -53,7 +53,7 @@
     "sort-packages": true
   },
   "scripts": {
-    "test": "./phpunit -c phpunit.xml",
+    "test": "php ./tests/phpunit -c ./tests/phpunit.xml",
     "install-test": "composer install && composer test"
   }
 }
