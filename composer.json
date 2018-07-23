@@ -36,7 +36,10 @@
     ],
     "psr-4": {
       "Swlib\\Saber\\": "src"
-    }
+    },
+    "files": [
+      "src/include/functions.php"
+    ]
   },
   "repositories": {
     "packagist": {

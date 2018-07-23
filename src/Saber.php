@@ -20,8 +20,6 @@ use Swlib\Saber\WebSocket;
 use Swlib\Util\DataParser;
 use Swlib\Util\TypeDetector;
 
-require __DIR__ . '/include/functions.php';
-
 class Saber
 {
 
