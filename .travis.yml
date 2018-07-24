@@ -9,7 +9,8 @@ before_install:
   - sudo mv docker-compose /usr/local/bin
   - docker-compose -v
   - docker -v
-  - ls
+  - ls -al
+  - pwd
   - mkdir data
   - mkdir data/mysql
   - mkdir data/redis
