@@ -12,8 +12,11 @@ use Swlib\SaberGM;
 $http = new swoole_http_server('0.0.0.0', 9999);
 
 $http->set([
-    'worker_num' => 1
+    'worker_num' => 1,
+    'log_level' => SWOOLE_LOG_INFO,
+    'trace_flags' => 0
 ]);
+
 /**@var $saber Saber */
 $http->on('workerStart', function () use (&$saber) {
     require_once __DIR__ . '/../vendor/autoload.php';
@@ -22,6 +25,7 @@ $http->on('workerStart', function () use (&$saber) {
     $saber = Saber::create([
         'base_uri' => 'https://news-at.zhihu.com/api/4/'
     ]);
+    echo "Server is running on http://127.0.0.1:9999\n";
 });
 
 $http->on('request', function (swoole_http_request $request, swoole_http_response $response) use (&$saber) {
