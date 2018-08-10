@@ -26,8 +26,8 @@
   },
   "require": {
     "php": ">=7.0",
-    "swlib/http": "1.0.0-rc.1",
-    "swlib/util": "1.0.0-rc.2"
+    "swlib/http": "1.0.0-rc.2",
+    "swlib/util": "1.0.0-rc.3"
   },
   "autoload": {
     "classmap": [
