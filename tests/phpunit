@@ -64,8 +64,11 @@ require PHPUNIT_COMPOSER_INSTALL;
 $server_list = require __DIR__ . '/servers/manager.php';
 
 go(function () {
-    // run tests
-    PHPUnit\TextUI\Command::main();
-    // exit event loop (useless?)
-    swoole_event_exit();
+    try{
+        // run tests
+        PHPUnit\TextUI\Command::main();
+    }
+    catch (\Swoole\ExitException $e) {
+        return;
+    }
 });
