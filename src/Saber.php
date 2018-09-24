@@ -440,10 +440,6 @@ class Saber
             self::$aliasMapLength ?? self::$aliasMapLength = count(self::$aliasMap)
         );
 
-        if (isset($options['use_pool'])) {
-            $request->withPool($options['use_pool']);
-        }
-
         if (isset($options['exception_report'])) {
             if (is_bool($options['exception_report'])) {
                 $options['exception_report'] =
@@ -456,6 +452,10 @@ class Saber
 
         if (isset($options['base_uri']) || isset($options['uri'])) {
             $request->withUri(Uri::resolve($options['base_uri'] ?? null, $options['uri'] ?? null));
+        }
+
+        if (isset($options['use_pool'])) {
+            $request->withPool($options['use_pool']);
         }
 
         if (!empty($options['uri_query']) && $uri = $request->getUri()) {
