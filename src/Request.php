@@ -630,7 +630,7 @@ class Request extends \Swlib\Http\Request
                 } elseif ($statusCode === -2) {
                     $timeout = $this->getTimeout();
                     $message = "Request timeout! the server hasn't responded over the timeout setting({$timeout}s)!";
-                } elseif ($statusCode === 3) {
+                } elseif ($statusCode === -3) {
                     $message = 'Connection is forcibly cut off by the remote server';
                 } else {
                     $message = "Linux Code {$errCode}: " . swoole_strerror($errCode);
