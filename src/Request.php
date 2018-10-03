@@ -522,7 +522,8 @@ class Request extends \Swlib\Http\Request
 
         // Ensure Host is the first header.
         // See: http://tools.ietf.org/html/rfc7230#section-5.4
-        $headers = ['Host' => $this->uri->getHost()] + $this->getHeaders(true, true);
+        $headers = ['Host' => $this->getHeaderLine('Host') ?: $this->uri->getHost()] +
+            $this->getHeaders(true, true);
         if (!empty($cookie) && empty($headers['Cookie'])) {
             $headers['Cookie'] = $cookie;
         }

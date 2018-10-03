@@ -451,7 +451,10 @@ class Saber
         }
 
         if (isset($options['base_uri']) || isset($options['uri'])) {
-            $request->withUri(Uri::resolve($options['base_uri'] ?? null, $options['uri'] ?? null));
+            $request->withUri(
+                Uri::resolve($options['base_uri'] ?? null, $options['uri'] ?? null),
+                !!$request->getHeader('Host')
+            );
         }
 
         if (isset($options['use_pool'])) {
@@ -494,10 +497,9 @@ class Saber
         /** 设置请求标头 */
         if (!empty($options['headers'])) {
             if (is_array($options['headers'])) {
-                foreach ($options['headers'] as $key => $val) {
-                    $request->withHeader($key, $val);
-                }
+                $request->withHeaders($options['headers']);
             }
+            // TODO: other types
         }
 
         if (!empty($options['auth'])) {
