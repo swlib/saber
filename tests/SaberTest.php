@@ -23,7 +23,6 @@ class SaberTest extends TestCase
 
     public function testExceptionReport()
     {
-        SaberGM::exceptionReport(HttpExceptionMask::E_NONE);
         $this->assertEquals(HttpExceptionMask::E_NONE, SaberGM::exceptionReport());
     }
 
@@ -244,6 +243,18 @@ class SaberTest extends TestCase
             $this->assertEquals($ws->recv(1), "server-reply: hello client\n");
         }
         $ws->close();
+    }
+
+    public function testWithHost()
+    {
+        $ip = \Swoole\Coroutine::getHostByName('httpbin.org');
+        $saber = Saber::create([
+            'base_uri' => "http://{$ip}",
+            'headers' => [
+                'Host' => 'httpbin.org'
+            ]
+        ]);
+        $this->assertTrue($saber->get('/get')->getParsedJsonArray()['headers']['Host'] === 'httpbin.org');
     }
 
     public function testFinalClear()
