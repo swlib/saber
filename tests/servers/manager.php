@@ -24,20 +24,23 @@ function get_one_free_port()
 }
 
 return (function () {
-    return [
-        'websocket' => (function () {
-            $ip = '127.0.0.1';
-            $port = get_one_free_port();
-            $process = new \swoole_process(function (\swoole_process $process) use ($ip, $port) {
-                $process->exec(PHP_BINARY, [__DIR__ . '/websocket.php', $ip, $port]);
-            }, '/dev/null');
-            $pid = $process->start();
+    function run_server(string $file): array
+    {
+        $ip = '127.0.0.1';
+        $port = get_one_free_port();
+        $process = new \swoole_process(function (\swoole_process $process) use ($file, $ip, $port) {
+            $process->exec(PHP_BINARY, [$file, $ip, $port]);
+        }, '/dev/null');
+        $pid = $process->start();
 
-            return [
-                'ip' => $ip,
-                'port' => $port,
-                'pid' => $pid
-            ];
-        })()
+        return [
+            'ip' => $ip,
+            'port' => $port,
+            'pid' => $pid
+        ];
+    }
+
+    return [
+        'mixed' => run_server(__DIR__ . '/mixed.php')
     ];
 })();

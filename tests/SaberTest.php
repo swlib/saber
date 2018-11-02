@@ -235,7 +235,7 @@ class SaberTest extends TestCase
     public function testWebSocket()
     {
         global $server_list;
-        list($ip, $port) = array_values($server_list['websocket']);
+        list($ip, $port) = array_values($server_list['mixed']);
         $ws = SaberGM::websocket("ws://{$ip}:{$port}");
         $this->assertEquals($ws->recv(), "server: hello, welcome\n");
         for ($i = 0; $i < 5; $i++) {
