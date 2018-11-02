@@ -368,13 +368,20 @@ class Saber
             $request = $this->raw;
             $this->options += self::mergeOptions($options, $this->options);
         }
+
+        // special options
         $options += [
             'base_uri' => $this->options['base_uri'] ?? null,
             'uri' => $this->options['uri'] ?? null
         ];
+        if (empty($options['base_uri']) && !empty($options['uri'] && strpos($options['uri'], '://') === false)) {
+            // fix uri like localhost
+            $options['uri'] = "http://{$options['uri']}";
+        }
         if ($this->session) {
             $options['session'] = $this->raw->cookies;
         }
+
         self::transOptionsToRequest($options, $request);
 
         return $this;
@@ -452,8 +459,8 @@ class Saber
 
         if (isset($options['base_uri']) || isset($options['uri'])) {
             $request->withUri(
-                Uri::resolve($options['base_uri'] ?? null, $options['uri'] ?? null),
-                !!$request->getHeader('Host')
+                Uri::resolve($options['base_uri'], $options['uri']),
+                $request->hasHeader('Host')
             );
         }
 

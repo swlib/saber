@@ -112,13 +112,7 @@ class Request extends \Swlib\Http\Request
     {
         $host = $this->uri->getHost();
         if (empty($host)) {
-            $host = explode('/', ($uri_string = (string)$this->uri))[0] ?? '';
-            if (empty($host) || !preg_match('/\.\w+$/', $host)) {
-                throw new \InvalidArgumentException('Host should not be empty!');
-            }
-            $uri_string = 'http://' . rtrim($uri_string, '/');
-            $this->uri = new Uri($uri_string);
-            $host = $this->uri->getHost();
+            throw new \InvalidArgumentException('Host should not be empty!');
         }
         $port = $this->uri->getRealPort();
         $ssl = $this->getSSL();
