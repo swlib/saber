@@ -666,9 +666,11 @@ class Request extends \Swlib\Http\Request
             if ($this->uri->getPort() === 443) {
                 $this->withSSL(true);
             }
+            // TODO: remove some secret information
             $this->withMethod('GET')
                 ->withBody(null)
-                ->withHeader('referer', $current_uri)
+                ->withHeader('Host', $this->uri->getHost())
+                ->withHeader('Referer', $current_uri)
                 ->removeInterceptor('request');
 
             /**
