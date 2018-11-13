@@ -223,13 +223,15 @@ class SaberTest extends TestCase
 
     public function testBeforeRedirect()
     {
-        SaberGM::get(
-            'http://eu.httpbin.org/redirect-to?url=http://www.qq.com/', [
+        $response = SaberGM::get(
+            'http://eu.httpbin.org/redirect-to?url=https://www.qq.com/', [
                 'before_redirect' => function (Saber\Request $request) {
-                    $this->assertEquals('http://www.qq.com/', (string)$request->getUri());
+                    $this->assertEquals('https://www.qq.com/', (string)$request->getUri());
                 }
             ]
         );
+        $this->assertTrue($response->success);
+        $this->assertContains('www.qq.com', (string)$response->body);
     }
 
     public function testWebSocket()
