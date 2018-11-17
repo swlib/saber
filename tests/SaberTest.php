@@ -58,6 +58,16 @@ class SaberTest extends TestCase
         $this->assertEquals(0, $responses->error_num);
     }
 
+    public function testDisableUA()
+    {
+        $this->assertEquals(
+            SaberGM::default()['useragent'],
+            SaberGM::get('http://eu.httpbin.org/get')->getParsedJsonArray()['headers']['User-Agent']
+        );
+        $response = SaberGM::get('http://eu.httpbin.org/get', ['user-agent' => null]);
+        $this->assertEquals(null, $response->getParsedJsonArray()['headers']['User-Agent'] ?? null);
+    }
+
     public function testDataParser()
     {
         [$json, $xml, $html] = SaberGM::list([

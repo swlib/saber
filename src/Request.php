@@ -330,7 +330,7 @@ class Request extends \Swlib\Http\Request
      */
     public function withoutProxy(): self
     {
-        $this->proxy = null;
+        $this->proxy = [];
 
         return $this;
     }

@@ -447,7 +447,7 @@ class Saber
             self::$aliasMapLength ?? self::$aliasMapLength = count(self::$aliasMap)
         );
 
-        if (isset($options['exception_report'])) {
+        if (array_key_exists('exception_report', $options)) {
             if (is_bool($options['exception_report'])) {
                 $options['exception_report'] =
                     $options['exception_report'] ?
@@ -481,10 +481,10 @@ class Saber
         if (isset($options['ssl'])) {
             $request->withSSL($options['ssl']);
         }
-        if (isset($options['ssl_allow_self_signed'])) {
+        if (array_key_exists('ssl_allow_self_signed', $options)) {
             $request->withSSLAllowSelfSigned($options['ssl_allow_self_signed']);
         }
-        if (isset($options['ssl_verify_peer'])) {
+        if (array_key_exists('ssl_verify_peer', $options)) {
             $request->withSSLVerifyPeer(
                 $options['ssl_verify_peer'],
                 $options['ssl_host_name'] ?? ''
@@ -526,12 +526,12 @@ class Saber
         }
 
         /** 设置模拟的浏览器标识 */
-        if (isset($options['useragent'])) {
+        if (array_key_exists('useragent', $options)) {
             $request->withHeader('User-Agent', $options['useragent']);
         }
 
         /** 设置来源页面 */
-        if (isset($options['referer'])) {
+        if (array_key_exists('referer', $options)) {
             $request->withHeader('Referer', $options['referer']);
         }
 
@@ -545,15 +545,19 @@ class Saber
         }
 
         /** proxy 是否启用代理 */
-        if (isset($options['proxy'])) {
-            $parse = parse_url($options['proxy']);
-            if ($parse['scheme'] === 'socks5') {
-                $request->withSocks5(
-                    $parse['host'], $parse['port'],
-                    $parse['user'] ?? null, $parse['pass'] ?? null
-                );
+        if (array_key_exists('proxy', $options)) {
+            if ($options['proxy'] === null) {
+                $request->withoutProxy();
             } else {
-                $request->withProxy($parse['host'], $parse['port']);
+                $parse = parse_url($options['proxy']);
+                if ($parse['scheme'] === 'socks5') {
+                    $request->withSocks5(
+                        $parse['host'], $parse['port'],
+                        $parse['user'] ?? null, $parse['pass'] ?? null
+                    );
+                } else {
+                    $request->withProxy($parse['host'], $parse['port']);
+                }
             }
         }
 
@@ -569,7 +573,7 @@ class Saber
         }
 
         /** 设置请求的数据 */
-        if (isset($options['content_type'])) {
+        if (array_key_exists('content_type', $options)) {
             $request->withHeader('Content-Type', $options['content_type']);
         }
         if (!empty($options['data'])) {
@@ -608,7 +612,7 @@ class Saber
             }
         }
 
-        if (isset($options['iconv'])) {
+        if (array_key_exists('iconv', $options)) {
             $options['iconv'] = $options['iconv'] + self::$default_options['iconv'];
             if (is_array($options['iconv'])) {
                 $request->withExpectCharset(...$options['iconv']);
