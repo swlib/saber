@@ -120,7 +120,6 @@ go(function () {
       - <a href="#swlibsaberwebsocket">Swlib\Saber\WebSocket</a>
       - <a href="#swlibsaberwebsocketframe">Swlib\Saber\WebSocketFrame</a>
 
-
 ------
 
 ## 例子
@@ -284,14 +283,20 @@ if ($response->success) {
 
 而`Saber`内置了此功能, 并可使用`拦截器`来强化它.
 
+如未设置`retry_time`而设置了`retry`拦截器, 则`retry_time`会置为1, 如`retry`拦截器的回调方法返回了`false`, 无论`retry_time`是多少, 都会在返回`false`时终止重试.
+
 ```PHP
 $uri = 'http://eu.httpbin.org/basic-auth/foo/bar';
 $res = SaberGM::get(
     $uri, [
         'exception_report' => 0,
+        'retry_time' => 3,
         'retry' => function (Saber\Request $request) {
             echo "retry...\n";
             $request->withBasicAuth('foo', 'bar'); //发现失败后添加验证信息
+            if ('i don not want to retry again') {
+                return false; // shutdown
+            }
         }
     ]
 );

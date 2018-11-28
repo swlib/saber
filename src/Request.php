@@ -19,10 +19,16 @@ use Swlib\Util\SpecialMarkTrait;
 
 class Request extends \Swlib\Http\Request
 {
+    public const STATUS_NONE = 1;
+    public const STATUS_WAITING = 2;
+
+    protected const FROM_REDIRECT = 1 << 1;
+    protected const FROM_RETRY = 1 << 2;
+
     /** @var $client \Swoole\Coroutine\Http\Client */
     public $client;
     /** @var bool must be changed through method */
-    private $use_pool = false;
+    protected $use_pool = false;
 
     public $exception_report = HttpExceptionMask::E_ALL;
 
@@ -51,14 +57,16 @@ class Request extends \Swlib\Http\Request
     public $retry_time = 0;
 
     /** @var string where download to */
-    private $download_dir = '';
-    private $download_offset = 0;
+    protected $download_dir = '';
+    protected $download_offset = 0;
 
     public $auto_iconv = true;
     public $charset_source;
     public $charset_target;
     public $charset_use_mb = false;
 
+    /** @var int client status */
+    public $_status = self::STATUS_NONE;
     /** @var float request start micro time */
     public $_start_time;
     /** @var float timeout left */
@@ -69,15 +77,11 @@ class Request extends \Swlib\Http\Request
     public $_redirect_times = 0;
     /** @var array 重定向的headers */
     public $_redirect_headers = [];
-    /** @var bool */
-    private $_form_redirect = false;
     /** @var int 已重试次数 */
-    private $_retried_time = 0;
+    public $_retried_time = 0;
 
-    const STATUS_NONE = 1;
-    const STATUS_WAITING = 2;
-
-    public $_status = self::STATUS_NONE;
+    /** @var int internal flag */
+    protected $_form_flag = 0;
 
     use CookiesManagerTrait;
 
@@ -108,7 +112,7 @@ class Request extends \Swlib\Http\Request
         return $this->_status === self::STATUS_WAITING;
     }
 
-    private function getConnectionTarget(): array
+    protected function getConnectionTarget(): array
     {
         $host = $this->uri->getHost();
         if (empty($host)) {
@@ -427,6 +431,11 @@ class Request extends \Swlib\Http\Request
         return $this;
     }
 
+    public function getRetriedTime(): int
+    {
+        return $this->_retried_time;
+    }
+
     public function withAutoIconv(bool $enable): self
     {
         $this->auto_iconv = $enable;
@@ -476,7 +485,7 @@ class Request extends \Swlib\Http\Request
     public function exec()
     {
         /** reset temp attributes */
-        if (!$this->_form_redirect) {
+        if (!($this->_form_flag & self::FROM_REDIRECT)) {
             $this->clear();
         }
 
@@ -573,7 +582,7 @@ class Request extends \Swlib\Http\Request
 
         /** 设定配置项 */
         $settings = [
-            'timeout' => $this->_form_redirect && $this->_timeout ? $this->_timeout : $this->getTimeout(),
+            'timeout' => (($this->_form_flag & self::FROM_REDIRECT) && $this->_timeout) ? $this->_timeout : $this->getTimeout(),
             'keep_alive' => $this->getKeepAlive(),
         ];
         $settings += $this->getProxy();
@@ -688,7 +697,7 @@ class Request extends \Swlib\Http\Request
             }
 
             if ($allow_redirect) {
-                $this->_form_redirect = true;
+                $this->_form_flag |= self::FROM_REDIRECT;
                 $this->exec();
                 $this->_redirect_times++;
 
@@ -715,7 +724,11 @@ class Request extends \Swlib\Http\Request
 
         /** auto retry */
         while (!$response->success && $this->_retried_time++ < $this->retry_time) {
-            $this->callInterceptor('before_retry', $this, $response);
+            $ret = $this->callInterceptor('before_retry', $this, $response);
+            if ($ret === false) {
+                break;
+            }
+            $this->_form_flag |= self::FROM_RETRY;
             $this->exec();
             if ($this->isInQueue()) {
                 return $this;
@@ -740,15 +753,19 @@ class Request extends \Swlib\Http\Request
     /**
      * clear tmp arguments
      */
-    private function clear()
+    protected function clear()
     {
-        $this->_form_redirect = false;
         $this->_redirect_times = 0;
         $this->_redirect_headers = [];
         $this->_start_time = 0;
         $this->_time = 0.000;
-        $this->_retried_time = 0;
+        if (!($this->_form_flag) & self::FROM_RETRY) {
+            $this->_retried_time = 0;
+        }
         $this->incremental_cookies->reset();
+
+        // should be at the end of the clear
+        $this->_form_flag = 0;
     }
 
     /**

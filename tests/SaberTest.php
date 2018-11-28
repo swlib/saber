@@ -196,6 +196,41 @@ class SaberTest extends TestCase
         $this->assertEquals(count($uri_list), $res->success_num);
     }
 
+    public function testRetryInterceptor()
+    {
+        $count = 0;
+        $res = SaberGM::get(
+            'http://127.0.0.1:65535', [
+                'exception_report' => 0,
+                'timeout' => 0.001,
+                'retry_time' => 999,
+                'retry' => function (Saber\Request $request) use (&$count) {
+                    $count++;
+                    return false; // shutdown
+                }
+            ]
+        );
+        $this->assertEquals(false, $res->success);
+        $this->assertEquals(1, $count);
+    }
+
+    public function testRetryTime()
+    {
+        $log = [];
+        $res = SaberGM::get(
+            'http://127.0.0.1:65535', [
+                'exception_report' => 0,
+                'timeout' => 0.001,
+                'retry_time' => 3,
+                'retry' => function (Saber\Request $request) use (&$log) {
+                    $log[] = "retry {$request->getRetriedTime()}";
+                }
+            ]
+        );
+        $this->assertEquals(false, $res->success);
+        $this->assertEquals(['retry 1', 'retry 2', 'retry 3'], $log);
+    }
+
     public function testRetryAndAuth()
     {
         $uri = 'http://eu.httpbin.org/basic-auth/foo/bar';
