@@ -64,6 +64,7 @@ class RequestQueue extends \SplQueue
         $res_map = new ResponseMap(); //Result-set
         $index = 0;
 
+        // FIXME: 并发模式使用的是defer机制, 这一机制可以节省协程的创建, 但当重定向发生时它无法完美地并发, 并且在执行时会和use_pool上限产生冲突, 导致死锁, 所以需要将其改成channel调度的模式
         $max_co = $this->getMaxConcurrency();
         if ($max_co > 0 && $max_co < $this->count()) {
             if (!isset($this->concurrency_pool) || !$this->concurrency_pool->isEmpty()) {
