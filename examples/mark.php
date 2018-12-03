@@ -12,8 +12,8 @@ require __DIR__ . '/../vendor/autoload.php';
 go(function () {
     //it's the way to bind some special request data to response.
     $responses = SaberGM::requests([
-        ['uri' => 'http://www.qq.com/', 'mark' => 'it is request one!'],
-        ['uri' => 'http://www.qq.com']
+        ['uri' => 'https://www.qq.com/', 'mark' => 'it is request one!'],
+        ['uri' => 'https://www.qq.com']
     ]);
     echo $responses[0]->getSpecialMark();
 });

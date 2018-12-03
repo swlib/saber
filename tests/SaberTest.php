@@ -106,7 +106,7 @@ class SaberTest extends TestCase
     {
         $saber = Saber::create(['exception_report' => true]);
         $this->expectException(ConnectException::class);
-        $saber->get('http://www.qq.com', ['timeout' => 0.001]);
+        $saber->get('https://www.qq.com', ['timeout' => 0.001]);
         $this->expectException(ConnectException::class);
         $saber->get('http://foo.bar');
         $this->expectException(ClientException::class);
@@ -164,15 +164,15 @@ class SaberTest extends TestCase
     {
         $mark = 'it is request one!';
         $responses = SaberGM::requests([
-            ['uri' => 'http://www.qq.com/', 'mark' => $mark],
-            ['uri' => 'http://www.qq.com']
+            ['uri' => 'https://www.qq.com/', 'mark' => $mark],
+            ['uri' => 'https://www.qq.com']
         ]);
         $this->assertEquals($mark, $responses[0]->getSpecialMark());
     }
 
     public function testInterceptor()
     {
-        $target = 'http://www.qq.com/';
+        $target = 'https://www.qq.com/';
         SaberGM::get($target, [
             'before' => function (Saber\Request $request) use (&$uri) {
                 $uri = $request->getUri();
@@ -188,7 +188,7 @@ class SaberTest extends TestCase
     public function testList()
     {
         $uri_list = [
-            'http://www.qq.com/',
+            'https://www.qq.com/',
             'https://www.baidu.com/',
             'http://eu.httpbin.org/'
         ];

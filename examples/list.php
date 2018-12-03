@@ -12,7 +12,7 @@ require __DIR__ . '/../vendor/autoload.php';
 go(function () {
     $res = SaberGM::list([
         'uri' => [
-            'http://www.qq.com/',
+            'https://www.qq.com/',
             'https://www.baidu.com/',
             'https://www.swoole.com/',
             'http://eu.httpbin.org/'

@@ -363,7 +363,7 @@ go(function () {
 ```php
 echo SaberGM::list([
     'uri' => [
-        'http://www.qq.com/',
+        'https://www.qq.com/',
         'https://www.baidu.com/',
         'https://www.swoole.com/',
         'http://httpbin.org/'
@@ -377,7 +377,7 @@ echo SaberGM::list([
 
 ```php
 // max_co is the max number of concurrency request once, it's very useful to prevent server-waf limit.
-$requests = array_fill(0, 10, ['uri' => 'http://www.qq.com/']);
+$requests = array_fill(0, 10, ['uri' => 'https://www.qq.com/']);
 echo SaberGM::requests($requests, ['max_co' => 5])->time."\n";
 echo SaberGM::requests($requests, ['max_co' => 1])->time."\n";
 ```

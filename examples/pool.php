@@ -11,7 +11,7 @@ require __DIR__ . '/../vendor/autoload.php';
 
 go(function () {
     $pool = Saber::create([
-        'base_uri' => 'http://www.qq.com',
+        'base_uri' => 'https://www.qq.com',
         'use_pool' => true
     ]);
     $start = microtime(true);
@@ -22,7 +22,7 @@ go(function () {
     var_dump($pool_time);
 
     $not_pool = Saber::create([
-        'base_uri' => 'http://www.qq.com',
+        'base_uri' => 'https://www.qq.com',
         'use_pool' => false
     ]);
     $start = microtime(true);
