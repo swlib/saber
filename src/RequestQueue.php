@@ -105,7 +105,7 @@ class RequestQueue extends \SplQueue
                 }
             }
         } else {
-            /**@var $req Request * */
+            /**@var $req Request */
             foreach ($this as $index => $req) {
                 $req->withSpecialMark($index, 'requestQueueIndex')->exec();
             }

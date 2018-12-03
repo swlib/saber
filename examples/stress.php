@@ -25,14 +25,13 @@ $http->on('workerStart', function (swoole_server $server, int $worker_id) {
         go(function () use ($server) {
             SaberGM::default(['use_pool' => true]);
             $requests = array_fill(0, 6666, ['uri' => 'http://127.0.0.1:1234']);
-            $res = SaberGM::requests($requests, ['max_co' => ((int)(`ulimit -n`) / 2)]);
+            $res = SaberGM::requests($requests, ['max_co' => 1111]);
             echo "use {$res->time}s\n";
             echo "success: $res->success_num, error: $res->error_num\n";
             // on MacOS
             // use 0.91531705856323s
             // success: 6666, error: 0
             saber_pool_release();
-            swoole_event_exit();
             $server->shutdown();
         });
     }
