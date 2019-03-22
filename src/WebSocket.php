@@ -41,7 +41,7 @@ class WebSocket extends \Swlib\Http\Request
         if (!$ret) {
             throw new ConnectException(
                 $this, $this->client->errCode,
-                'Websocket upgrade failed by [' . socket_strerror($this->client->errCode) . '].'
+                'Websocket upgrade failed by [' . swoole_strerror($this->client->errCode) . '].'
             );
         }
     }

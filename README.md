@@ -604,7 +604,7 @@ Saber遵循将**业务与错误**分离的守则, 当请求任意环节失败时
 | Exception                 | Intro              | scene                                                        |
 | ------------------------- | ------------------ | ------------------------------------------------------------ |
 | RequestException          | 请求失败           | 请求配置错误                                                 |
-| ConnectException          | 连接失败           | 如无网络连接, DNS查询失败, 超时等,  errno的值等于Linux errno。可使用socket_strerror将错误码转为错误信息。 |
+| ConnectException          | 连接失败           | 如无网络连接, DNS查询失败, 超时等,  errno的值等于Linux errno。可使用swoole_strerror将错误码转为错误信息。 |
 | TooManyRedirectsException | 重定向次数超限     | 重定向的次数超过了设定的限制, 抛出的异常将会打印重定向追踪信息 |
 | ClientException           | 客户端异常         | 服务器返回了4xx错误码                                        |
 | ServerException           | 服务器异常         | 服务器返回了5xx错误码                                        |
