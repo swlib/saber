@@ -7,7 +7,10 @@
 
 namespace Swlib\Saber;
 
-class ResponseMap extends \ArrayObject
+use ArrayObject;
+use InvalidArgumentException;
+
+class ResponseMap extends ArrayObject
 {
 
     public $time = 0.000;
@@ -24,7 +27,7 @@ class ResponseMap extends \ArrayObject
     public function offsetSet($index, $response)
     {
         if (!($response instanceof Response)) {
-            throw new \InvalidArgumentException("Value must be instance of " . Response::class);
+            throw new InvalidArgumentException("Value must be instance of " . Response::class);
         }
         parent::offsetSet($index, $response);
         $this->time = $this->time ?: max($this->time, $response->time);

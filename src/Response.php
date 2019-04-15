@@ -15,6 +15,7 @@ use Swlib\Http\Exception\ClientException;
 use Swlib\Http\Exception\HttpExceptionMask;
 use Swlib\Http\Exception\ServerException;
 use Swlib\Http\Exception\TooManyRedirectsException;
+use Swlib\Http\StreamInterface;
 use Swlib\Util\StringDataParserTrait;
 use Swlib\Util\SpecialMarkTrait;
 
@@ -34,7 +35,7 @@ class Response extends \Swlib\Http\Response
     public $reasonPhrase = 'Failed';
     public $uri;
     public $time;
-    /** @var \Swlib\Http\StreamInterface */
+    /** @var StreamInterface */
     public $body;
 
     use CookiesManagerTrait;

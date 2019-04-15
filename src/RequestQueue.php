@@ -7,11 +7,13 @@
 
 namespace Swlib\Saber;
 
+use InvalidArgumentException;
+use SplQueue;
 use Swlib\Util\InterceptorTrait;
 
-class RequestQueue extends \SplQueue
+class RequestQueue extends SplQueue
 {
-    /** @var \SplQueue */
+    /** @var SplQueue */
     public $concurrency_pool;
 
     public $max_concurrency = -1;
@@ -21,11 +23,11 @@ class RequestQueue extends \SplQueue
     public function enqueue($request)
     {
         if (!($request instanceof Request)) {
-            throw new \InvalidArgumentException('Value must be instance of ' . Request::class);
+            throw new InvalidArgumentException('Value must be instance of ' . Request::class);
         }
         if ($this->getMaxConcurrency() > 0) {
             if ($request->isWaiting()) {
-                throw new \InvalidArgumentException("You can't enqueue a waiting request when using the max concurrency control!");
+                throw new InvalidArgumentException("You can't enqueue a waiting request when using the max concurrency control!");
             }
         }
         /**
@@ -68,7 +70,7 @@ class RequestQueue extends \SplQueue
         $max_co = $this->getMaxConcurrency();
         if ($max_co > 0 && $max_co < $this->count()) {
             if (!isset($this->concurrency_pool) || !$this->concurrency_pool->isEmpty()) {
-                $this->concurrency_pool = new \SplQueue();
+                $this->concurrency_pool = new SplQueue();
             }
             while (!$this->isEmpty()) {
                 $current_co = 0;
@@ -80,7 +82,7 @@ class RequestQueue extends \SplQueue
                     if (!$req->isWaiting()) {
                         $req->exec();
                     } else {
-                        throw new \InvalidArgumentException("The waiting request is forbidden when using the max concurrency control!");
+                        throw new InvalidArgumentException("The waiting request is forbidden when using the max concurrency control!");
                     }
                     $this->concurrency_pool->enqueue($req);
                 }

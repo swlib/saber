@@ -7,9 +7,11 @@
 
 namespace Swlib\Saber;
 
+use InvalidArgumentException;
 use Psr\Http\Message\UriInterface;
 use Swlib\Http\Exception\ConnectException;
 use Swlib\Http\Uri;
+use Swoole\Coroutine\Http\Client;
 
 class WebSocket extends \Swlib\Http\Request
 {
@@ -26,14 +28,14 @@ class WebSocket extends \Swlib\Http\Request
         if (empty($host)) {
             $host = explode('/', ($uri_string = (string)$this->uri))[0] ?? '';
             if (empty($host) || !preg_match('/\.\w+$/', $host)) {
-                throw new \InvalidArgumentException('Host should not be empty!');
+                throw new InvalidArgumentException('Host should not be empty!');
             } else {
                 $uri_string = 'ws://' . rtrim($uri_string, '/');
                 $this->uri = new Uri($uri_string);
                 $host = $this->uri->getHost();
             }
         }
-        $this->client = new \Swoole\Coroutine\Http\Client($host, $port, $ssl);
+        $this->client = new Client($host, $port, $ssl);
         if ($mock) {
             $this->withMock($ssl);
         }

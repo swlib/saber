@@ -7,6 +7,7 @@
 
 namespace Swlib;
 
+use BadMethodCallException;
 use Swlib\Http\BufferStream;
 use Swlib\Http\ContentType;
 use Swlib\Http\Exception\HttpExceptionMask;
@@ -605,7 +606,7 @@ class Saber
 
         if (!empty($options['files'])) {
             if (key($options['files']) === 0) {
-                throw new \BadMethodCallException('File must has it\'s form field name! Such as {"file1": "~/foo.png"}}.');
+                throw new BadMethodCallException('File must has it\'s form field name! Such as {"file1": "~/foo.png"}}.');
             }
             foreach ($options['files'] as $form_field_name => $file) {
                 $request->withUploadedFile($form_field_name, SwUploadFile::create($file));

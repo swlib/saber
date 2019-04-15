@@ -7,6 +7,8 @@
 
 namespace Swlib\Saber;
 
+use BadMethodCallException;
+use InvalidArgumentException;
 use Swlib\Http\Cookies;
 use Swlib\Http\CookiesManagerTrait;
 use Swlib\Http\Exception\ConnectException;
@@ -16,6 +18,7 @@ use Swlib\Http\SwUploadFile;
 use Swlib\Http\Uri;
 use Swlib\Util\InterceptorTrait;
 use Swlib\Util\SpecialMarkTrait;
+use Swoole\Coroutine\Http\Client;
 
 class Request extends \Swlib\Http\Request
 {
@@ -25,7 +28,7 @@ class Request extends \Swlib\Http\Request
     protected const FROM_REDIRECT = 1 << 1;
     protected const FROM_RETRY = 1 << 2;
 
-    /** @var $client \Swoole\Coroutine\Http\Client */
+    /** @var $client Client */
     public $client;
     /** @var bool must be changed through method */
     protected $use_pool = false;
@@ -116,7 +119,7 @@ class Request extends \Swlib\Http\Request
     {
         $host = $this->uri->getHost();
         if (empty($host)) {
-            throw new \InvalidArgumentException('Host should not be empty!');
+            throw new InvalidArgumentException('Host should not be empty!');
         }
         $port = $this->uri->getRealPort();
         $ssl = $this->getSSL();
@@ -617,7 +620,7 @@ class Request extends \Swlib\Http\Request
     {
         retry_recv:
         if (self::STATUS_WAITING !== $this->_status) {
-            throw new \BadMethodCallException('You can\'t recv because client is not in waiting stat.');
+            throw new BadMethodCallException('You can\'t recv because client is not in waiting stat.');
         }
         $this->client->recv($this->getTimeout());
         $this->_status = self::STATUS_NONE;

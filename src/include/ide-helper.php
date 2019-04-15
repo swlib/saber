@@ -6,10 +6,11 @@
 
 namespace Swlib\Http\Exception {
 
+    use RuntimeException;
     use Swlib\Saber\Request;
     use Swlib\Saber\Response;
 
-    class TransferException extends \RuntimeException
+    class TransferException extends RuntimeException
     {
     }
 
