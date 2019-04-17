@@ -4,6 +4,8 @@
  * Date: 2018/7/22 下午5:53
  */
 
+use Swoole\Process;
+
 function get_one_free_port()
 {
     $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
@@ -28,15 +30,15 @@ return (function () {
     {
         $ip = '127.0.0.1';
         $port = get_one_free_port();
-        $process = new \swoole_process(function (\swoole_process $process) use ($file, $ip, $port) {
+        $process = new Process(function (Process $process) use ($file, $ip, $port) {
             $process->exec(PHP_BINARY, [$file, $ip, $port]);
         }, '/dev/null');
         $pid = $process->start();
 
         return [
-            'ip' => $ip,
+            'ip'   => $ip,
             'port' => $port,
-            'pid' => $pid
+            'pid'  => $pid
         ];
     }
 

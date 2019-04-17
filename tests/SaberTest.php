@@ -7,6 +7,7 @@
 
 namespace Swlib\Tests\Saber;
 
+use Exception;
 use PHPUnit\Framework\TestCase;
 use Swlib\Http\ContentType;
 use Swlib\Http\Exception\ClientException;
@@ -17,6 +18,7 @@ use Swlib\Http\Exception\TooManyRedirectsException;
 use Swlib\Http\SwUploadFile;
 use Swlib\Saber;
 use Swlib\SaberGM;
+use Swoole\Coroutine;
 
 class SaberTest extends TestCase
 {
@@ -36,18 +38,18 @@ class SaberTest extends TestCase
     public function testStaticAndRequests()
     {
         $responses = SaberGM::requests([
-            ['get', 'https://eu.httpbin.org/get'],
-            ['delete', 'https://eu.httpbin.org/delete'],
-            ['post', 'https://eu.httpbin.org/post', ['foo' => 'bar']],
-            ['patch', 'https://eu.httpbin.org/patch', ['foo' => 'bar']],
-            ['put', 'https://eu.httpbin.org/put', ['foo' => 'bar']],
+            ['get', 'http://www.httpbin.org/get'],
+            ['delete', 'http://www.httpbin.org/delete'],
+            ['post', 'http://www.httpbin.org/post', ['foo' => 'bar']],
+            ['patch', 'http://www.httpbin.org/patch', ['foo' => 'bar']],
+            ['put', 'http://www.httpbin.org/put', ['foo' => 'bar']],
         ]);
         $this->assertEquals(0, $responses->error_num);
     }
 
     public function testInstanceAndRequests()
     {
-        $saber = Saber::create(['base_uri' => 'https://eu.httpbin.org']);
+        $saber = Saber::create(['base_uri' => 'http://www.httpbin.org']);
         $responses = $saber->requests([
             ['get', '/get'],
             ['delete', '/delete'],
@@ -62,9 +64,9 @@ class SaberTest extends TestCase
     {
         $this->assertEquals(
             SaberGM::default()['useragent'],
-            SaberGM::get('https://eu.httpbin.org/get')->getParsedJsonArray()['headers']['User-Agent']
+            SaberGM::get('http://www.httpbin.org/get')->getParsedJsonArray()['headers']['User-Agent']
         );
-        $response = SaberGM::get('https://eu.httpbin.org/get', ['user-agent' => null]);
+        $response = SaberGM::get('http://www.httpbin.org/get', ['user-agent' => null]);
         $this->assertEquals(null, $response->getParsedJsonArray()['headers']['User-Agent'] ?? null);
     }
 
@@ -72,9 +74,9 @@ class SaberTest extends TestCase
     {
         [$json, $xml, $html] = SaberGM::list([
             'uri' => [
-                'https://eu.httpbin.org/get',
+                'https://www.httpbin.org/get',
                 'https://www.javatpoint.com/xmlpages/books.xml',
-                'https://eu.httpbin.org/html'
+                'http://www.httpbin.org/html'
             ]
         ]);
         $this->assertEquals((string)$json->uri, $json->getParsedJsonArray()['url']);
@@ -89,7 +91,7 @@ class SaberTest extends TestCase
     public function testSessionAndUriQuery()
     {
         $session = Saber::session([
-            'base_uri' => 'https://eu.httpbin.org',
+            'base_uri' => 'http://www.httpbin.org',
             'redirect' => 0,
             'exception_report' => HttpExceptionMask::E_ALL ^ HttpExceptionMask::E_REDIRECT
         ]);
@@ -110,11 +112,11 @@ class SaberTest extends TestCase
         $this->expectException(ConnectException::class);
         $saber->get('http://foo.bar');
         $this->expectException(ClientException::class);
-        $saber->get('https://eu.httpbin.org/status/401');
+        $saber->get('http://www.httpbin.org/status/401');
         $this->expectException(ServerException::class);
-        $saber->get('https://eu.httpbin.org/status/500');
+        $saber->get('http://www.httpbin.org/status/500');
         $this->expectException(TooManyRedirectsException::class);
-        $saber->get('https://eu.httpbin.org//redirect/1', ['redirect' => 0]);
+        $saber->get('http://www.httpbin.org//redirect/1', ['redirect' => 0]);
     }
 
     /**
@@ -123,11 +125,11 @@ class SaberTest extends TestCase
     public function testExceptionHandle()
     {
         $saber = Saber::create(['exception_report' => true]);
-        $saber->exceptionHandle(function (\Exception $e) use (&$exception) {
+        $saber->exceptionHandle(function (Exception $e) use (&$exception) {
             $exception = get_class($e);
             return true;
         });
-        $saber->get('https://eu.httpbin.org/status/500');
+        $saber->get('http://www.httpbin.org/status/500');
         $this->assertEquals(ServerException::class, $exception);
     }
 
@@ -148,7 +150,7 @@ class SaberTest extends TestCase
             ContentType::get('png')
         );
 
-        $res = SaberGM::post('https://eu.httpbin.org/post', null, [
+        $res = SaberGM::post('http://www.httpbin.org/post', null, [
                 'files' => [
                     'image1' => $file1,
                     'image2' => $file2,
@@ -233,16 +235,16 @@ class SaberTest extends TestCase
 
     public function testRetryAndAuth()
     {
-        $uri = 'https://eu.httpbin.org/basic-auth/foo/bar';
+        $uri = 'http://www.httpbin.org/basic-auth/foo/bar';
         $res = SaberGM::get(
             $uri, [
-                'exception_report' => 0,
+                'exception_report' => HttpExceptionMask::E_NONE,
                 'retry' => function (Saber\Request $request) {
                     $request->withBasicAuth('foo', 'bar');
                 }
             ]
         );
-        $this->assertEquals(true, $res->success);
+        $this->assertEquals(true, $res->success, (string)$res);
     }
 
     public function testIconv()
@@ -269,7 +271,7 @@ class SaberTest extends TestCase
     public function testBeforeRedirect()
     {
         $response = SaberGM::get(
-            'https://eu.httpbin.org/redirect-to?url=https://www.qq.com/', [
+            'http://www.httpbin.org/redirect-to?url=https://www.qq.com/', [
                 'before_redirect' => function (Saber\Request $request) {
                     $this->assertEquals('https://www.qq.com/', (string)$request->getUri());
                 }
@@ -294,7 +296,7 @@ class SaberTest extends TestCase
 
     public function testWithHost()
     {
-        $ip = \Swoole\Coroutine::getHostByName('httpbin.org');
+        $ip = Coroutine::getHostByName('httpbin.org');
         $saber = Saber::create([
             'base_uri' => "http://{$ip}",
             'headers' => [

@@ -3,7 +3,7 @@
 /** For Swoole coroutine tests */
 
 Co::set([
-    'log_level' => SWOOLE_LOG_INFO,
+    'log_level'   => SWOOLE_LOG_INFO,
     'trace_flags' => 0
 ]);
 
@@ -52,26 +52,28 @@ if (!defined('PHPUNIT_COMPOSER_INSTALL')) {
     fwrite(
         STDERR,
         'You need to set up the project dependencies using Composer:' . PHP_EOL . PHP_EOL .
-        '    composer install' . PHP_EOL . PHP_EOL .
+        '        composer install' . PHP_EOL . PHP_EOL .
         'You can learn all about Composer on https://getcomposer.org/.' . PHP_EOL
     );
 
     die(1);
-} else if (array_reverse(explode('/',__DIR__))[0] ?? '' === 'tests') {
-    $vendor_dir = dirname(PHPUNIT_COMPOSER_INSTALL);
-    $bin_unit = "{$vendor_dir}/bin/phpunit";
-    $unit_uint = "{$vendor_dir}/phpunit/phpunit/phpunit";
-    if (file_exists($bin_unit)) {
-        @unlink($bin_unit);
-        @symlink(__FILE__, $bin_unit);
-    }
-    if (file_exists($unit_uint)) {
-        @unlink($unit_uint);
-        @symlink(__FILE__, $unit_uint);
+} else {
+    if (array_reverse(explode('/', __DIR__))[0] ?? '' === 'tests') {
+        $vendor_dir = dirname(PHPUNIT_COMPOSER_INSTALL);
+        $bin_unit = "{$vendor_dir}/bin/phpunit";
+        $unit_uint = "{$vendor_dir}/phpunit/phpunit/phpunit";
+        if (file_exists($bin_unit)) {
+            @unlink($bin_unit);
+            @symlink(__FILE__, $bin_unit);
+        }
+        if (file_exists($unit_uint)) {
+            @unlink($unit_uint);
+            @symlink(__FILE__, $unit_uint);
+        }
     }
 }
 
-if (!in_array('-c', $_SERVER['argv'])){
+if (!in_array('-c', $_SERVER['argv'])) {
     $_SERVER['argv'][] = '-c';
     $_SERVER['argv'][] = __DIR__ . '/phpunit.xml';
 }
@@ -79,13 +81,14 @@ if (!in_array('-c', $_SERVER['argv'])){
 require PHPUNIT_COMPOSER_INSTALL;
 
 $server_list = require __DIR__ . '/servers/manager.php';
+sleep(1);
 
-go(function () {
-    try{
-        // run tests
-        PHPUnit\TextUI\Command::main();
+go(function () use ($server_list) {
+    PHPUnit\TextUI\Command::main(false);
+    foreach ($server_list as $server) {
+        Swoole\Process::kill($server['pid']);
     }
-    catch (\Swoole\ExitException $e) {
-        return;
-    }
+    Swoole\Process::wait();
 });
+
+Swoole\Event::wait();
