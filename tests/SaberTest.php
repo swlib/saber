@@ -189,8 +189,8 @@ class SaberTest extends TestCase
     {
         $uri_list = [
             'https://www.qq.com/',
-            'https://www.baidu.com/',
-            'https://eu.httpbin.org/'
+            'https://m.cust.edu.cn/',
+            'http://www.cust.edu.cn/'
         ];
         $res = SaberGM::list(['uri' => $uri_list]);
         $this->assertEquals(count($uri_list), $res->success_num);

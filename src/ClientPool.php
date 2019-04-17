@@ -19,7 +19,7 @@ class ClientPool extends MapPool
     public function createEx(array $options, bool $temp = false)
     {
         if (Coroutine::getuid() < 0) {
-            throw  new BadMethodCallException(
+            throw new BadMethodCallException(
                 'You can only use coroutine client in `go` function or some Event callback functions.' . PHP_EOL .
                 'Please check https://wiki.swoole.com/wiki/page/696.html'
             );
