@@ -33,7 +33,6 @@ class Response extends \Swlib\Http\Response
      */
     public $statusCode = 0;
     public $reasonPhrase = 'Failed';
-    public $uri;
     public $time;
     /** @var StreamInterface */
     public $body;
@@ -144,11 +143,6 @@ class Response extends \Swlib\Http\Response
     public function isSuccess(): bool
     {
         return $this->success;
-    }
-
-    public function getUri(): ?UriInterface
-    {
-        return $this->uri;
     }
 
     public function getTime(): float
