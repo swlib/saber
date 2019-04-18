@@ -7,7 +7,6 @@
 
 namespace Swlib\Saber;
 
-use Psr\Http\Message\UriInterface;
 use Swlib\Http\BufferStream;
 use Swlib\Http\CookiesManagerTrait;
 use Swlib\Http\Exception\BadResponseException;
@@ -15,15 +14,21 @@ use Swlib\Http\Exception\ClientException;
 use Swlib\Http\Exception\HttpExceptionMask;
 use Swlib\Http\Exception\ServerException;
 use Swlib\Http\Exception\TooManyRedirectsException;
+use Swlib\Http\Exception\TransferException;
 use Swlib\Http\StreamInterface;
 use Swlib\Util\StringDataParserTrait;
 use Swlib\Util\SpecialMarkTrait;
 
 class Response extends \Swlib\Http\Response
 {
-
-    public $redirect_headers = [];
-    public $success = false;
+    /** @var array */
+    protected $redirect_headers = [];
+    /** @var TransferException */
+    protected $exception = null;
+    /** @var bool */
+    protected $success = false;
+    /** @var float */
+    protected $time;
     /**
      * @var int $statusCode
      * Http status code, such as 200, 404 and so on. If the status code is negative, there is a problem with the connection.
@@ -32,10 +37,10 @@ class Response extends \Swlib\Http\Response
      * -3: After the client sends a request, the server forcibly cuts off the connection
      */
     public $statusCode = 0;
+    /** @var string */
     public $reasonPhrase = 'Failed';
-    public $time;
     /** @var StreamInterface */
-    public $body;
+    public $body = null;
 
     use CookiesManagerTrait;
 
@@ -48,18 +53,10 @@ class Response extends \Swlib\Http\Response
     {
         /** consuming time */
         $this->time = $request->_time;
-        /** status code */
-        $this->withStatus($request->client->statusCode ?: 0);
-        /** 设定uri */
-        $this->uri = $request->getUri();
-
-        /** 初始化 */
+        $this->withStatus($request->client->statusCode);
+        $this->withUri($request->getUri());
         $this->withHeaders($request->client->headers ?: []);
-
-        /** 记录重定向头 */
-        $this->redirect_headers = $request->_redirect_headers; //记录重定向前的headers
-
-        /** 置Cookie对象 */
+        $this->redirect_headers = $request->_redirect_headers; // record headers before redirect
         $this->cookies = $request->incremental_cookies;
 
         if (!empty($body = $request->client->body)) {
@@ -105,42 +102,40 @@ class Response extends \Swlib\Http\Response
 
         $e_level = $request->getExceptionReport();
         $exception = null;
+        $should_be_thrown = false;
         $status = ($this->statusCode / 100) % 10;
         switch ($status) {
             case 2:
                 $this->success = true;
                 break;
             case 3:
-                if ($e_level & HttpExceptionMask::E_REDIRECT) {
-                    $exception =
-                        new TooManyRedirectsException($request, $this, $this->statusCode, $this->redirect_headers);
-                }
+                $should_be_thrown = !!($e_level & HttpExceptionMask::E_REDIRECT);
+                $exception = new TooManyRedirectsException($request, $this, $this->statusCode, $this->redirect_headers);
                 break;
             case 4:
-                if ($e_level & HttpExceptionMask::E_CLIENT) {
-                    $exception = new ClientException($request, $this, $this->statusCode);
-                }
+                $should_be_thrown = !!($e_level & HttpExceptionMask::E_CLIENT);
+                $exception = new ClientException($request, $this, $this->statusCode);
                 break;
             case 5:
-                if ($e_level & HttpExceptionMask::E_SERVER) {
-                    $exception = new ServerException($request, $this, $this->statusCode);
-                }
+                $should_be_thrown = !!($e_level & HttpExceptionMask::E_SERVER);
+                $exception = new ServerException($request, $this, $this->statusCode);
                 break;
             default:
-                if ($e_level & HttpExceptionMask::E_BAD_RESPONSE) {
-                    $exception = new BadResponseException($request, $this, $this->statusCode);
-                }
+                $should_be_thrown = !!($e_level & HttpExceptionMask::E_BAD_RESPONSE);
+                $exception = new BadResponseException($request, $this, $this->statusCode);
         }
         if ($exception) {
             $ret = $request->callInterceptor('exception', $exception);
-            if (!$ret) {
+            if ($should_be_thrown && !$ret) {
                 $request->tryToRevertClientToPool();
                 throw $exception;
+            } else {
+                $this->exception = $exception;
             }
         }
     }
 
-    public function isSuccess(): bool
+    public function getSuccess(): bool
     {
         return $this->success;
     }
@@ -153,6 +148,11 @@ class Response extends \Swlib\Http\Response
     public function getRedirectHeaders(): array
     {
         return $this->redirect_headers;
+    }
+
+    public function getException(): TransferException
+    {
+        return $this->exception;
     }
 
 }

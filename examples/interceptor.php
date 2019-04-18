@@ -17,12 +17,12 @@ go(function () {
             echo "log: request $uri now...\n";
         },
         'after' => function (Saber\Response $response) {
-            if ($response->success) {
+            if ($response->getSuccess()) {
                 echo "log: success!\n";
             } else {
                 echo "log: failed\n";
             }
-            echo "use {$response->time}s";
+            echo "use {$response->getTime()}s";
         }
     ]);
 });

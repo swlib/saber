@@ -690,7 +690,7 @@ class Request extends \Swlib\Http\Request
              * just return a bool type value
              */
             $allow_redirect = true;
-            $ret = $this->callInterceptor('before_redirect', $this, $response);
+            $ret = $this->callInterceptor('before_redirect', $this);
             if ($ret !== null) {
                 if (is_bool($ret)) {
                     $allow_redirect = $ret;
@@ -726,7 +726,7 @@ class Request extends \Swlib\Http\Request
         }
 
         /** auto retry */
-        while (!$response->success && $this->_retried_time++ < $this->retry_time) {
+        while (!$response->getSuccess() && $this->_retried_time++ < $this->retry_time) {
             $ret = $this->callInterceptor('before_retry', $this, $response);
             if ($ret === false) {
                 break;

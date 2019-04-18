@@ -30,10 +30,11 @@ class ResponseMap extends ArrayObject
             throw new InvalidArgumentException("Value must be instance of " . Response::class);
         }
         parent::offsetSet($index, $response);
-        $this->time = $this->time ?: max($this->time, $response->time);
+        $this->time = $this->time ?: max($this->time, $response->getTime());
         $this->status_map[$index] = $response->getStatusCode();
-        $this->success_map[$index] = $response->success;
-        $response->success ? $this->success_num++ : $this->error_num++;
+        $success = $response->getSuccess();
+        $this->success_map[$index] = $success;
+        $success ? $this->success_num++ : $this->error_num++;
     }
 
     public function __toString()

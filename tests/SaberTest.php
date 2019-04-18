@@ -79,8 +79,8 @@ class SaberTest extends TestCase
                 'http://www.httpbin.org/html'
             ]
         ]);
-        $this->assertEquals((string)$json->uri, $json->getParsedJsonArray()['url']);
-        $this->assertEquals((string)$json->uri, $json->getParsedJsonObject()->url);
+        $this->assertEquals((string)$json->getUri(), $json->getParsedJsonArray()['url']);
+        $this->assertEquals((string)$json->getUri(), $json->getParsedJsonObject()->url);
         $this->assertEquals('Everyday Italian', $xml->getParsedXmlObject()->book[0]->title);
         $this->assertStringStartsWith(
             'Herman',
@@ -180,7 +180,7 @@ class SaberTest extends TestCase
                 $uri = $request->getUri();
             },
             'after' => function (Saber\Response $response) use (&$success) {
-                $success = $response->success;
+                $success = $response->getSuccess();
             }
         ]);
         $this->assertEquals($target, $uri ?? '');
@@ -212,7 +212,7 @@ class SaberTest extends TestCase
                 }
             ]
         );
-        $this->assertEquals(false, $res->success);
+        $this->assertEquals(false, $res->getSuccess());
         $this->assertEquals(1, $count);
     }
 
@@ -229,7 +229,7 @@ class SaberTest extends TestCase
                 }
             ]
         );
-        $this->assertEquals(false, $res->success);
+        $this->assertEquals(false, $res->getSuccess());
         $this->assertEquals(['retry 1', 'retry 2', 'retry 3'], $log);
     }
 
@@ -244,7 +244,7 @@ class SaberTest extends TestCase
                 }
             ]
         );
-        $this->assertEquals(true, $res->success, (string)$res);
+        $this->assertEquals(true, $res->getSuccess(), (string)$res);
     }
 
     public function testIconv()
@@ -262,8 +262,8 @@ class SaberTest extends TestCase
             'https://ws1.sinaimg.cn/large/006DQdzWly1fsr8jt2botj31hc0wxqfs.jpg',
             $download_dir
         );
-        $this->assertTrue($response->success);
-        if ($response->success) {
+        $this->assertTrue($response->getSuccess());
+        if ($response->getSuccess()) {
             unlink($download_dir);
         }
     }
@@ -277,7 +277,7 @@ class SaberTest extends TestCase
                 }
             ]
         );
-        $this->assertTrue($response->success);
+        $this->assertTrue($response->getSuccess());
         $this->assertContains('www.qq.com', (string)$response->body);
     }
 

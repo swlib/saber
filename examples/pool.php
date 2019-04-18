@@ -15,9 +15,9 @@ go(function () {
         'use_pool' => true
     ]);
     $start = microtime(true);
-    assert($pool->get('/')->success, true);
-    assert($pool->get('/contract.shtml')->success, true);
-    assert($pool->get('/dzwfggcns.htm')->success, true);
+    assert($pool->get('/')->getSuccess(), true);
+    assert($pool->get('/contract.shtml')->getSuccess(), true);
+    assert($pool->get('/dzwfggcns.htm')->getSuccess(), true);
     $pool_time = microtime(true) - $start;
     var_dump($pool_time);
 
@@ -26,9 +26,9 @@ go(function () {
         'use_pool' => false
     ]);
     $start = microtime(true);
-    assert($not_pool->get('/')->success, true);
-    assert($not_pool->get('/contract.shtml')->success, true);
-    assert($not_pool->get('/dzwfggcns.htm')->success, true);
+    assert($not_pool->get('/')->getSuccess(), true);
+    assert($not_pool->get('/contract.shtml')->getSuccess(), true);
+    assert($not_pool->get('/dzwfggcns.htm')->getSuccess(), true);
     $not_pool_time = microtime(true) - $start;
     var_dump($not_pool_time);
 
