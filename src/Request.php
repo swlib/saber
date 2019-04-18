@@ -618,7 +618,7 @@ class Request extends \Swlib\Http\Request
      */
     public function recv()
     {
-        retry_recv:
+        _retry_recv:
         if (self::STATUS_WAITING !== $this->_status) {
             throw new BadMethodCallException('You can\'t recv because client is not in waiting stat.');
         }
@@ -637,7 +637,7 @@ class Request extends \Swlib\Http\Request
                     $timeout = $this->getTimeout();
                     $message = "Request timeout! the server hasn't responded over the timeout setting({$timeout}s)!";
                 } elseif ($statusCode === -3) {
-                    $message = 'Connection is forcibly cut off by the remote server';
+                    $message = 'Connection is reset by the remote server';
                 } else {
                     $message = "Linux Code {$errCode}: " . swoole_strerror($errCode);
                 }
@@ -736,7 +736,7 @@ class Request extends \Swlib\Http\Request
             if ($this->isInQueue()) {
                 return $this;
             } else {
-                goto retry_recv;
+                goto _retry_recv;
             }
         }
 
