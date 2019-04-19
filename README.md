@@ -461,7 +461,7 @@ go(function(){
 | useragent             | string                | 用户代理           | `curl-1.0`                                                   | 默认为macos平台的chrome                                      |
 | referer               | string                | 来源地址           | `https://www.google.com`                                     | 默认为空                                                     |
 | redirect              | int                   | 最大重定向次数     | 5                                                            | 默认为3, 为0时不重定向.                                      |
-| keep_alive            | bool                  | 是否保持连接       | `true` \| `false`                                            | 默认为true, 重定向时会自动复用连接                           |
+| keep_alive            | bool                  | 是否保持连接       | `true` \| `false`                                            | 默认为true, 重定向时会自动复用连接（当前版本非重定向请求的长连接需要开启连接池，否则默认都是短连接）                           |
 | content_type          | string                | 发送的内容编码类型 | `text/plain` \| `Swlib\Http\ContentType::JSON`               | 默认为application/x-www-form-urlencoded                      |
 | data                  | `array` \| `string`   | 发送的数据         | `'foo=bar&dog=cat'` \|` ['foo' => 'bar']`                    | 会根据content_type自动编码数据                               |
 | before                | `callable` \| `array` | 请求前拦截器       | `function(Request $request){}`                               | [具体参考拦截器一节](#拦截器)                                |
