@@ -26,8 +26,11 @@
   },
   "require": {
     "php": ">=7.0",
-    "swlib/http": "1.0.2",
-    "swlib/util": "1.0.0"
+    "swlib/http": "dev-master",
+    "swlib/util": "dev-master"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "~7"
   },
   "autoload": {
     "classmap": [
@@ -46,10 +49,6 @@
       "type": "composer",
       "url": "https://packagist.laravel-china.org/"
     }
-  },
-  "require-dev": {
-    "eaglewu/swoole-ide-helper": "dev-master",
-    "phpunit/phpunit": "~7"
   },
   "config": {
     "optimize-autoloader": true,
