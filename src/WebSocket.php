@@ -39,7 +39,15 @@ class WebSocket extends \Swlib\Http\Request
         if ($mock) {
             $this->withMock($ssl);
         }
-        $ret = $this->client->upgrade($uri->getPath() ?: '/');
+
+        parse_str($this->uri->getQuery(), $query);
+        $query = $this->getQueryParams() + $query; //attribute value first
+        $query = http_build_query($query);
+
+        $path = $this->uri->getPath() ?: '/';
+        $path = empty($query) ? $path : $path . '?' . $query;
+
+        $ret = $this->client->upgrade($path);
         if (!$ret) {
             throw new ConnectException(
                 $this, $this->client->errCode,
