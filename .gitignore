@@ -10,4 +10,4 @@ temp/
 *.lock
 /tools
 /debug
-.phpunit*
+.phpunit.*
