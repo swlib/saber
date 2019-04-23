@@ -128,6 +128,12 @@ class Request extends \Swlib\Http\Request
         return ['host' => $host, 'port' => $port, 'ssl' => $ssl];
     }
 
+    public function shouldRecycleClient($client)
+    {
+        $connectionInfo = $this->getConnectionTarget();
+
+        return (!$client || ($client->host !== $connectionInfo['host'] || $client->port !== $connectionInfo['port']));
+    }
     /** @return null|bool */
     public function getPool()
     {
@@ -498,24 +504,20 @@ class Request extends \Swlib\Http\Request
             return $ret;
         }
 
-        /** get connection info */
-        list($host, $port, $ssl) = array_values($this->getConnectionTarget());
-        if ($this->client && ($this->client->host !== $host || $this->client->port !== $port)) {
+
+        if ($this->client && ($this->shouldRecycleClient($this->client))) {
             // target maybe changed
             $this->tryToRevertClientToPool();
         }
         if (!$this->client) {
+            /** get connection info */
+            list($host, $port, $ssl) = array_values($this->getConnectionTarget());
             /** create a new coroutine client */
             $client_pool = ClientPool::getInstance();
             if ($this->use_pool && $client = $client_pool->getEx($host, $port)) {
                 $this->client = $client;
             } else {
-                $options = [
-                    'host' => $host,
-                    'port' => $port,
-                    'ssl' => $ssl
-                ];
-                $this->client = $client_pool->createEx($options, !$this->use_pool);
+                $this->client = $client_pool->createEx($this->getConnectionTarget(), !$this->use_pool);
             }
         }
 

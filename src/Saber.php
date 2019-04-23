@@ -161,10 +161,9 @@ class Saber
         if (!$request->getPool()) {
             $lastTempClient =& $this->lastTempClient;
 
-            /** get connection info */
-            $connectionInfo = $request->getConnectionTarget();
-            if (!($lastTempClient) || ($lastTempClient->host !== $connectionInfo['host'] || $lastTempClient->port !== $connectionInfo['port'])) {
-                $lastTempClient = $request->client = \Swlib\Saber\ClientPool::getInstance()->createEx($connectionInfo, true);
+
+            if ($request->shouldRecycleClient($lastTempClient)) {
+                $lastTempClient = $request->client = \Swlib\Saber\ClientPool::getInstance()->createEx($request->getConnectionTarget(), true);
                 //This Temp Client will Recyle by https://github.com/swlib/saber/blob/1188d0a67d18430d5c1a11f8dcdc135852fc1e31/src/Request.php#L502-L506
             } else {
                 $request->client = $lastTempClient;
