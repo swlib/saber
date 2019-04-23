@@ -322,11 +322,11 @@ class SaberTest extends TestCase
     {
         global $server_list;
         list($ip, $port) = array_values($server_list['httpd']);
-        SaberGM::exceptionReport(HttpExceptionMask::E_ALL);
         $saber = Saber::create([
             'base_uri' => "http://$ip:$port",
             //'base_uri' => "http://127.0.0.1:8081",
             'use_pool' => false,
+            'exception_report' => HttpExceptionMask::E_ALL
         ]);
 
         $ReqWithSaber         = $saber->get('/anything?dump_info=$ReqWithSaber')->getParsedJsonArray();
