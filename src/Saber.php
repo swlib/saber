@@ -613,8 +613,8 @@ class Saber
         }
 
         if (array_key_exists('iconv', $options)) {
-            $options['iconv'] = $options['iconv'] + self::$default_options['iconv'];
             if (is_array($options['iconv'])) {
+                $options['iconv'] = $options['iconv'] + self::$default_options['iconv'];
                 $request->withExpectCharset(...$options['iconv']);
             } else {
                 $request->withAutoIconv($options['iconv'] !== false);
