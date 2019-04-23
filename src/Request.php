@@ -115,7 +115,7 @@ class Request extends \Swlib\Http\Request
         return $this->_status === self::STATUS_WAITING;
     }
 
-    protected function getConnectionTarget(): array
+    public function getConnectionTarget(): array
     {
         $host = $this->uri->getHost();
         if (empty($host)) {
