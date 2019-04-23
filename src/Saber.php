@@ -147,6 +147,7 @@ class Saber
         );
     }
 
+    /** @var \Swoole\Coroutine\Http\Client  a temp client when not use pool */
     protected $lastTempClient;
     /**
      * @param array $options

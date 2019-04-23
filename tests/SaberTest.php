@@ -331,14 +331,13 @@ class SaberTest extends TestCase
 
         $ReqWithSaber         = $saber->get('/anything?dump_info=$ReqWithSaber')->getParsedJsonArray();
         $ReqWithSaber2        = $saber->get('/anything?dump_info=$ReqWithSaber2')->getParsedJsonArray();
-        $ReqWithSwooleClient  = json_decode($saber->request(['psr' => 1])->client->get('/anything?dump_info=$ReqWithSwooleClient'),true);
-        $ReqWithSwooleClient2  = json_decode($saber->request(['psr' => 1])->client->get('/anything?dump_info=$ReqWithSwooleClient2'),true);
         $ReqWithSaberPSR      = $saber->request(['psr' => 1])->withMethod('GET')->withUri(new Uri("http://$ip:$port/anything?dump_info=ReqWithSaberPSR"))->exec()->recv()->getParsedJsonArray();
         $ReqWithSaberPSR2     = $saber->request(['psr' => 1])->withMethod('GET')->withUri(new Uri("http://$ip:$port/anything?dump_info=ReqWithSaberPSR2"))->exec()->recv()->getParsedJsonArray();
 
         $this->assertTrue($ReqWithSaber['server']['remote_port'] === $ReqWithSaber2['server']['remote_port']);
-        $this->assertTrue($ReqWithSwooleClient['server']['remote_port'] === $ReqWithSwooleClient2['server']['remote_port']);
         $this->assertTrue($ReqWithSaberPSR['server']['remote_port'] === $ReqWithSaberPSR2['server']['remote_port']);
+        $this->assertTrue($ReqWithSaber2['header']['connection'] === 'keep-alive');
+        $this->assertTrue($ReqWithSaberPSR2['header']['connection'] === 'keep-alive');
     }
 
 }
