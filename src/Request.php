@@ -748,7 +748,9 @@ class Request extends \Swlib\Http\Request
         }
         $this->client->body = '';
 
-        $this->tryToRevertClientToPool();
+        if($this->use_pool){
+            $this->tryToRevertClientToPool();
+        }
 
         return $response;
     }
