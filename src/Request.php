@@ -511,13 +511,13 @@ class Request extends \Swlib\Http\Request
         }
         if (!$this->client) {
             /** get connection info */
-            list($host, $port, $ssl) = array_values($this->getConnectionTarget());
+            $connectionInfo = $this->getConnectionTarget();
             /** create a new coroutine client */
             $client_pool = ClientPool::getInstance();
-            if ($this->use_pool && $client = $client_pool->getEx($host, $port)) {
+            if ($this->use_pool && $client = $client_pool->getEx($connectionInfo['host'], $connectionInfo['port'])) {
                 $this->client = $client;
             } else {
-                $this->client = $client_pool->createEx($this->getConnectionTarget(), !$this->use_pool);
+                $this->client = $client_pool->createEx($connectionInfo, !$this->use_pool);
             }
         }
 
