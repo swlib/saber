@@ -247,6 +247,13 @@ class SaberTest extends TestCase
         $this->assertEquals(true, $res->getSuccess(), (string)$res);
     }
 
+    public function testRetryAndAuthWithUserInfoInURI()
+    {
+        $uri = 'http://foo:bar@www.httpbin.org/basic-auth/foo/bar';
+        $res = SaberGM::get($uri);
+        $this->assertEquals(true, $res->getSuccess(), (string)$res);
+    }
+
     public function testIconv()
     {
         $this->assertContains(

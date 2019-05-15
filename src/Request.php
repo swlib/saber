@@ -96,6 +96,7 @@ class Request extends \Swlib\Http\Request
     {
         parent::__construct($method, $uri, $headers, $body);
         $this->__cookiesInitialization(true);
+        $this->initBasicAuth();
     }
 
     public function getExceptionReport(): int
@@ -113,6 +114,17 @@ class Request extends \Swlib\Http\Request
     public function isWaiting(): bool
     {
         return $this->_status === self::STATUS_WAITING;
+    }
+
+    protected function initBasicAuth()
+    {
+        $userInfo = $this->getUri()->getUserInfo();
+        if($userInfo) {
+            $userInfo = explode(':', $userInfo);
+            $username = $userInfo[0];
+            $password = $userInfo[1] ?? null;
+            $this->withBasicAuth($username, $password);
+        }
     }
 
     protected function getConnectionTarget(): array
