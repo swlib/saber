@@ -588,6 +588,11 @@ class Request extends \Swlib\Http\Request
             'timeout' => (($this->_form_flag & self::FROM_REDIRECT) && $this->_timeout) ? $this->_timeout : $this->getTimeout(),
             'keep_alive' => $this->getKeepAlive(),
         ];
+
+        if($this->ssl) {
+            $settings['ssl_host_name'] = $this->uri->getHost();
+        }
+
         $settings += $this->getProxy();
 
         if (!empty($ca_file = $this->getCAFile())) {
