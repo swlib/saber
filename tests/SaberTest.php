@@ -16,6 +16,7 @@ use Swlib\Http\Exception\HttpExceptionMask;
 use Swlib\Http\Exception\ServerException;
 use Swlib\Http\Exception\TooManyRedirectsException;
 use Swlib\Http\SwUploadFile;
+use Swlib\Http\Uri;
 use Swlib\Saber;
 use Swlib\SaberGM;
 use Swoole\Coroutine;
@@ -315,6 +316,32 @@ class SaberTest extends TestCase
             });
         }
         $this->assertTrue(saber_pool_release());
+    }
+
+    public function testKeepAliveAmongSameHostAndPortWithOutUsePool()
+    {
+        global $server_list;
+        list($ip, $port) = array_values($server_list['httpd']);
+        $saber = Saber::create([
+            'base_uri' => "http://$ip:$port",
+            //'base_uri' => "http://127.0.0.1:8081",
+            'use_pool' => false,
+            'exception_report' => HttpExceptionMask::E_ALL
+        ]);
+
+        $ReqWithSaber         = $saber->get('/anything?dump_info=$ReqWithSaber')->getParsedJsonArray();
+        $ReqWithSaber2        = $saber->get('/anything?dump_info=$ReqWithSaber2')->getParsedJsonArray();
+        $ReqWithSaberPSR      = $saber->request(['psr' => 1])->withMethod('GET')->withUri(new Uri("http://$ip:$port/anything?dump_info=ReqWithSaberPSR"))->exec()->recv()->getParsedJsonArray();
+        $ReqWithSaberPSR2     = $saber->request(['psr' => 1])->withMethod('GET')->withUri(new Uri("http://$ip:$port/anything?dump_info=ReqWithSaberPSR2"))->exec()->recv()->getParsedJsonArray();
+        $ReqAfterAnotherPort        = $saber->get('http://httpbin.org/anything?dump_info=$ReqWithSaber2')->getParsedJsonArray();
+        $ReqAfterAnotherPort        = $saber->get('/anything?dump_info=$ReqWithSaber2')->getParsedJsonArray();
+
+        $this->assertTrue($ReqWithSaber['server']['remote_port'] === $ReqWithSaber2['server']['remote_port']);
+        $this->assertTrue($ReqWithSaberPSR['server']['remote_port'] === $ReqWithSaberPSR2['server']['remote_port']);
+        $this->assertTrue($ReqWithSaber2['server']['remote_port'] === $ReqWithSaberPSR2['server']['remote_port']);
+        $this->assertFalse($ReqWithSaber2['server']['remote_port'] === $ReqAfterAnotherPort['server']['remote_port']);
+        $this->assertTrue($ReqWithSaber2['header']['connection'] === 'keep-alive');
+        $this->assertTrue($ReqWithSaberPSR2['header']['connection'] === 'keep-alive');
     }
 
 }

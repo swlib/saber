@@ -115,7 +115,7 @@ class Request extends \Swlib\Http\Request
         return $this->_status === self::STATUS_WAITING;
     }
 
-    protected function getConnectionTarget(): array
+    public function getConnectionTarget(): array
     {
         $host = $this->uri->getHost();
         if (empty($host)) {
@@ -128,6 +128,12 @@ class Request extends \Swlib\Http\Request
         return ['host' => $host, 'port' => $port, 'ssl' => $ssl];
     }
 
+    public function shouldRecycleClient($client)
+    {
+        $connectionInfo = $this->getConnectionTarget();
+
+        return (!$client || ($client->host !== $connectionInfo['host'] || $client->port !== $connectionInfo['port']));
+    }
     /** @return null|bool */
     public function getPool()
     {
@@ -498,24 +504,20 @@ class Request extends \Swlib\Http\Request
             return $ret;
         }
 
-        /** get connection info */
-        list($host, $port, $ssl) = array_values($this->getConnectionTarget());
-        if ($this->client && ($this->client->host !== $host || $this->client->port !== $port)) {
+
+        if ($this->client && ($this->shouldRecycleClient($this->client))) {
             // target maybe changed
             $this->tryToRevertClientToPool();
         }
         if (!$this->client) {
+            /** get connection info */
+            $connectionInfo = $this->getConnectionTarget();
             /** create a new coroutine client */
             $client_pool = ClientPool::getInstance();
-            if ($this->use_pool && $client = $client_pool->getEx($host, $port)) {
+            if ($this->use_pool && $client = $client_pool->getEx($connectionInfo['host'], $connectionInfo['port'])) {
                 $this->client = $client;
             } else {
-                $options = [
-                    'host' => $host,
-                    'port' => $port,
-                    'ssl' => $ssl
-                ];
-                $this->client = $client_pool->createEx($options, !$this->use_pool);
+                $this->client = $client_pool->createEx($connectionInfo, !$this->use_pool);
             }
         }
 
@@ -748,7 +750,9 @@ class Request extends \Swlib\Http\Request
         }
         $this->client->body = '';
 
-        $this->tryToRevertClientToPool();
+        if($this->use_pool){
+            $this->tryToRevertClientToPool();
+        }
 
         return $response;
     }

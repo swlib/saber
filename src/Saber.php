@@ -147,6 +147,8 @@ class Saber
         );
     }
 
+    /** @var \Swoole\Coroutine\Http\Client  a temp client when not use pool */
+    protected $lastTempClient;
     /**
      * @param array $options
      * @return Request|Response
@@ -156,6 +158,15 @@ class Saber
         $request = clone $this->raw;
         $this->setOptions($options, $request);
 
+        if (!$request->getPool()) {
+            $lastTempClient =& $this->lastTempClient;
+            if ($request->shouldRecycleClient($lastTempClient)) {
+                $lastTempClient = $request->client = \Swlib\Saber\ClientPool::getInstance()->createEx($request->getConnectionTarget(), true);
+                //This Temp Client will Recyle by https://github.com/swlib/saber/blob/1188d0a67d18430d5c1a11f8dcdc135852fc1e31/src/Request.php#L502-L506
+            } else {
+                $request->client = $lastTempClient;
+            }
+        }
         /** Psr style */
         if ($options['psr'] ?? false) {
             return $request;

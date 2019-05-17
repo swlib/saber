@@ -43,6 +43,7 @@ return (function () {
     }
 
     return [
-        'mixed' => run_server(__DIR__ . '/mixed.php')
+        'mixed' => run_server(__DIR__ . '/mixed.php'),
+        'httpd' => run_server(__DIR__ . '/httpd.php')
     ];
 })();
