@@ -248,6 +248,27 @@ class SaberTest extends TestCase
         $this->assertEquals(true, $res->getSuccess(), (string)$res);
     }
 
+    public function testAuthWithUserInfoInURI()
+    {
+        $uri = 'http://foo:bar@www.httpbin.org/basic-auth/foo/bar';
+        $res = SaberGM::get($uri);
+        $this->assertEquals(true, $res->getSuccess(), (string)$res);
+    }
+
+    public function testAuthOverrideUserInfoInURI()
+    {
+        $uri = 'http://doo:zar@www.httpbin.org/basic-auth/foo/bar';
+        $res = SaberGM::get($uri,
+            [
+            'before' => function (Request $request) {
+                $request->withBasicAuth('foo', 'bar');
+            }
+            ]
+        );
+
+        $this->assertEquals(true, $res->getSuccess(), (string)$res);
+    }
+
     public function testIconv()
     {
         $this->assertContains(
