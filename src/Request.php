@@ -123,7 +123,7 @@ class Request extends \Swlib\Http\Request
         }
         $port = $this->uri->getRealPort();
         $ssl = $this->getSSL();
-        $ssl = ($ssl === self::SSL_AUTO) ? $port === 443 : (bool)$ssl;
+        $ssl = ($ssl === self::SSL_AUTO) ? ('https' === $this->uri->getScheme()) : (bool)$ssl;
 
         return ['host' => $host, 'port' => $port, 'ssl' => $ssl];
     }
