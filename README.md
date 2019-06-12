@@ -448,13 +448,14 @@ go(function(){
 
 ## 配置参数表
 
-`|`符号分割多种可选值
+> `|`符号分割多种可选值
 
 | key                   | type                  | introduction       | example                                                      | remark                                                       |
 | --------------------- | --------------------- | ------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | protocol_version      | string                | HTTP协议版本       | 1.1                                                          | HTTP2还在规划中                                              |
 | base_uri              | string                | 基础路径           | `http://httpbin.org`                                         | 将会与uri按照rfc3986合并                                     |
 | uri                   | string                | 资源标识符         | `http://httpbin.org/get` \| `/get` \| `get`                  | 可以使用绝对路径和相对路径                                   |
+| uri_query             | string\|array         | 请求信息           | `['foo' => 'bar']`                                           | 非字符串会自动转换                                           |
 | method                | string                | 请求方法           | `get` \| `post` \| `head` \| `patch` \| `put` \| `delete`    | 底层自动转换为大写                                           |
 | headers               | array                 | 请求报头           | `['DNT' => '1']` \| `['accept' => ['text/html'], ['application/xml']]` | 字段名不区分大小写, 但会保留设定时的原始大小写规则, 底层每个字段值会根据PSR-7自动分割为数组 |
 | cookies               | `array`\|`string`     |                    | `['foo '=> 'bar']` \| `'foo=bar; foz=baz'`                   | 底层自动转化为Cookies对象, 并设置其domain为当前的uri, 具有[浏览器级别的完备属性](#cookies). |
@@ -478,7 +479,7 @@ go(function(){
 | exception_handle      | callable\|array       | 异常自定义处理函数 | `function(Exception $e){}`                                   | 函数返回true时可忽略错误                                     |
 | retry                 | callable              | 自动重试拦截器     | `function(Request $request, Response $response){}`           | 位于发生错误后及重试之前                                     |
 | retry_time            | int                   | 自动重试次数       |                                                              | 默认不重试                                                   |
-| use_pool              | bool\|int             | 连接池             | `true`| `false` |`100`                                       | 是否启用连接池, 为数字时可限制连接池最大容量                 |
+| use_pool              | bool\|int             | 连接池             | `true`                                                       | `false`                                                      |
 
 ### 配置参数别名
 
