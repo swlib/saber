@@ -96,6 +96,7 @@ class Request extends \Swlib\Http\Request
     {
         parent::__construct($method, $uri, $headers, $body);
         $this->__cookiesInitialization(true);
+        $this->initBasicAuth();
     }
 
     public function getExceptionReport(): int
@@ -115,7 +116,18 @@ class Request extends \Swlib\Http\Request
         return $this->_status === self::STATUS_WAITING;
     }
 
-    protected function getConnectionTarget(): array
+    protected function initBasicAuth()
+    {
+        $userInfo = $this->getUri()->getUserInfo();
+        if($userInfo) {
+            $userInfo = explode(':', $userInfo);
+            $username = $userInfo[0];
+            $password = $userInfo[1] ?? null;
+            $this->withBasicAuth($username, $password);
+        }
+    }
+
+    public function getConnectionTarget(): array
     {
         $host = $this->uri->getHost();
         if (empty($host)) {
@@ -123,11 +135,17 @@ class Request extends \Swlib\Http\Request
         }
         $port = $this->uri->getRealPort();
         $ssl = $this->getSSL();
-        $ssl = ($ssl === self::SSL_AUTO) ? $port === 443 : (bool)$ssl;
+        $ssl = ($ssl === self::SSL_AUTO) ? ('https' === $this->uri->getScheme()) : (bool)$ssl;
 
         return ['host' => $host, 'port' => $port, 'ssl' => $ssl];
     }
 
+    public function shouldRecycleClient($client)
+    {
+        $connectionInfo = $this->getConnectionTarget();
+
+        return (!$client || ($client->host !== $connectionInfo['host'] || $client->port !== $connectionInfo['port']));
+    }
     /** @return null|bool */
     public function getPool()
     {
@@ -498,24 +516,20 @@ class Request extends \Swlib\Http\Request
             return $ret;
         }
 
-        /** get connection info */
-        list($host, $port, $ssl) = array_values($this->getConnectionTarget());
-        if ($this->client && ($this->client->host !== $host || $this->client->port !== $port)) {
+
+        if ($this->client && ($this->shouldRecycleClient($this->client))) {
             // target maybe changed
             $this->tryToRevertClientToPool();
         }
         if (!$this->client) {
+            /** get connection info */
+            $connectionInfo = $this->getConnectionTarget();
             /** create a new coroutine client */
             $client_pool = ClientPool::getInstance();
-            if ($this->use_pool && $client = $client_pool->getEx($host, $port)) {
+            if ($this->use_pool && $client = $client_pool->getEx($connectionInfo['host'], $connectionInfo['port'])) {
                 $this->client = $client;
             } else {
-                $options = [
-                    'host' => $host,
-                    'port' => $port,
-                    'ssl' => $ssl
-                ];
-                $this->client = $client_pool->createEx($options, !$this->use_pool);
+                $this->client = $client_pool->createEx($connectionInfo, !$this->use_pool);
             }
         }
 
@@ -588,6 +602,11 @@ class Request extends \Swlib\Http\Request
             'timeout' => (($this->_form_flag & self::FROM_REDIRECT) && $this->_timeout) ? $this->_timeout : $this->getTimeout(),
             'keep_alive' => $this->getKeepAlive(),
         ];
+
+        if($this->ssl) {
+            $settings['ssl_host_name'] = $this->uri->getHost();
+        }
+
         $settings += $this->getProxy();
 
         if (!empty($ca_file = $this->getCAFile())) {
@@ -748,7 +767,9 @@ class Request extends \Swlib\Http\Request
         }
         $this->client->body = '';
 
-        $this->tryToRevertClientToPool();
+        if($this->use_pool){
+            $this->tryToRevertClientToPool();
+        }
 
         return $response;
     }
