@@ -26,7 +26,7 @@
   },
   "require": {
     "php": ">=7.1",
-    "swlib/http": "1.0.3",
+    "swlib/http": "1.0.4",
     "swlib/util": "1.0.0"
   },
   "autoload": {
