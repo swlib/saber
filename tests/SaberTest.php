@@ -189,7 +189,7 @@ class SaberTest extends TestCase
     {
         $uri_list = [
             'https://www.qq.com/',
-            'https://www.baidu.com/',
+            'https://news.qq.com/',
             'https://eu.httpbin.org/'
         ];
         $res = SaberGM::list(['uri' => $uri_list]);
