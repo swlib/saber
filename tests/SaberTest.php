@@ -185,17 +185,6 @@ class SaberTest extends TestCase
         $this->assertTrue($success ?? false);
     }
 
-    public function testList()
-    {
-        $uri_list = [
-            'https://www.qq.com/',
-            'https://news.qq.com/',
-            'https://eu.httpbin.org/'
-        ];
-        $res = SaberGM::list(['uri' => $uri_list]);
-        $this->assertEquals(count($uri_list), $res->success_num);
-    }
-
     public function testRetryInterceptor()
     {
         $count = 0;
