@@ -26,6 +26,7 @@
   },
   "require": {
     "php": ">=7.1",
+    "ext-swoole": ">=4.3.6",
     "swlib/http": "1.0.3",
     "swlib/util": "1.0.0"
   },
