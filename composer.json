@@ -25,8 +25,8 @@
     "issues": "https://github.com/swlib/saber/issues"
   },
   "require": {
-    "php": ">=7.0",
-    "swlib/http": "1.0.2",
+    "php": ">=7.1",
+    "swlib/http": "1.0.3",
     "swlib/util": "1.0.0"
   },
   "autoload": {
@@ -44,7 +44,7 @@
   "repositories": {
     "packagist": {
       "type": "composer",
-      "url": "https://packagist.laravel-china.org/"
+      "url": "https://mirrors.aliyun.com/composer"
     }
   },
   "require-dev": {
