@@ -77,8 +77,8 @@ class SaberTest extends TestCase
                 'https://eu.httpbin.org/html'
             ]
         ]);
-        $this->assertEquals((string)$json->uri, $json->getParsedJsonArray()['url']);
-        $this->assertEquals((string)$json->uri, $json->getParsedJsonObject()->url);
+        $this->assertEquals((string)$json->getUri(), $json->getParsedJsonArray()['url']);
+        $this->assertEquals((string)$json->getUri(), $json->getParsedJsonObject()->url);
         $this->assertEquals('Everyday Italian', $xml->getParsedXmlObject()->book[0]->title);
         $this->assertStringStartsWith(
             'Herman',
