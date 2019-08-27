@@ -44,12 +44,6 @@
       "src/include/functions.php"
     ]
   },
-  "repositories": {
-    "packagist": {
-      "type": "composer",
-      "url": "https://packagist.laravel-china.org/"
-    }
-  },
   "config": {
     "optimize-autoloader": true,
     "sort-packages": true
