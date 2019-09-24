@@ -97,7 +97,9 @@ class Response extends \Swlib\Http\Response
             $body = '';
         }
 
-        $this->withBody(new BufferStream($body));
+        $buffer = new BufferStream();
+        $buffer->write($body);
+        $this->withBody($buffer);
 
         /** data parser */
         $this->__stringDataParserInitialization($this->body);
