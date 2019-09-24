@@ -531,7 +531,7 @@ class Saber
         }
 
         /** 设置来源页面 */
-        if (array_key_exists('referer', $options)) {
+        if (array_key_exists('referer', $options) && !empty($options['referer'])) {
             $request->withHeader('Referer', $options['referer']);
         }
 
