@@ -1,62 +1,55 @@
 {
-  "name": "swlib/saber",
-  "type": "library",
-  "keywords": [
-    "php",
-    "swoole",
-    "http",
-    "client",
-    "psr7",
-    "coroutine",
-    "axios",
-    "ajax",
-    "requests",
-    "curl"
-  ],
-  "description": "Swoole coroutine HTTP client",
-  "license": "Apache-2.0",
-  "authors": [
-    {
-      "name": "twosee",
-      "email": "twose@qq.com"
-    }
-  ],
-  "support": {
-    "issues": "https://github.com/swlib/saber/issues"
-  },
-  "require": {
-    "php": ">=7.1",
-    "swlib/http": "1.0.3",
-    "swlib/util": "1.0.0"
-  },
-  "autoload": {
-    "classmap": [
-      "src/Saber.php",
-      "src/SaberGM.php"
-    ],
-    "psr-4": {
-      "Swlib\\Saber\\": "src"
-    },
-    "files": [
-      "src/include/functions.php"
-    ]
-  },
-  "repositories": {
-    "packagist": {
-      "type": "composer",
-      "url": "https://mirrors.aliyun.com/composer"
-    }
-  },
-  "require-dev": {
-    "eaglewu/swoole-ide-helper": "dev-master",
-    "phpunit/phpunit": "~7"
-  },
-  "config": {
-    "optimize-autoloader": true,
-    "sort-packages": true
-  },
-  "scripts": {
-    "test": "php ./tests/phpunit -c ./tests/phpunit.xml",
-    "install-test": "php --ri swoole && composer install && composer test"
-  }
+	"name" : "swlib/saber",
+	"type" : "library",
+	"keywords" : [
+		"php",
+		"swoole",
+		"http",
+		"client",
+		"psr7",
+		"coroutine",
+		"axios",
+		"ajax",
+		"requests",
+		"curl"
+	],
+	"description" : "Swoole coroutine HTTP client",
+	"license" : "Apache-2.0",
+	"authors" : [{
+			"name" : "twosee",
+			"email" : "twose@qq.com"
+		}
+	],
+	"support" : {
+		"issues" : "https://github.com/swlib/saber/issues"
+	},
+	"require" : {
+		"php" : ">=7.1",
+		"swlib/http" : "1.0.5",
+		"swlib/util" : "1.0.0"
+	},
+	"autoload" : {
+		"classmap" : [
+			"src/Saber.php",
+			"src/SaberGM.php"
+		],
+		"psr-4" : {
+			"Swlib\\Saber\\" : "src"
+		},
+		"files" : [
+			"src/include/functions.php"
+		]
+	},
+	"require-dev" : {
+		"eaglewu/swoole-ide-helper" : "dev-master",
+		"phpunit/phpunit" : "~7"
+	},
+	"config" : {
+		"optimize-autoloader" : true,
+		"sort-packages" : true
+	},
+	"scripts" : {
+		"test" : "php ./tests/phpunit -c ./tests/phpunit.xml",
+		"install-test" : "php --ri swoole && composer install && composer test"
+	}
 }
