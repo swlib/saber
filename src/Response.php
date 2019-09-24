@@ -49,6 +49,8 @@ class Response extends \Swlib\Http\Response
         $this->time = $request->_time;
         /** status code */
         $this->withStatus($request->client->statusCode ?: 0);
+        /** protocol version */
+        $this->withProtocolVersion($request->getProtocolVersion());
         /** 设定uri */
         $this->uri = $request->getUri();
 
