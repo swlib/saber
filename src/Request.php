@@ -563,13 +563,6 @@ class Request extends \Swlib\Http\Request
             $this->client->setData($body);
         }
 
-        parse_str($this->uri->getQuery(), $query);
-        $query = $this->getQueryParams() + $query; //attribute value first
-        $query = http_build_query($query);
-
-        $path = $this->uri->getPath() ?: '/';
-        $path = empty($query) ? $path : $path . '?' . $query;
-
         /** calc timeout value */
         if ($this->_redirect_times > 0) {
             $timeout = $this->getTimeout() - (microtime(true) - $this->_start_time);
@@ -596,9 +589,9 @@ class Request extends \Swlib\Http\Request
         $this->client->setDefer(); //总是延迟回包以使用timeout定时器特性
 
         if (empty($this->download_dir)) {
-            $this->client->execute($path);
+            $this->client->execute($this->getRequestTarget());
         } else {
-            $this->client->download($path, $this->download_dir, $this->download_offset);
+            $this->client->download($this->getRequestTarget(), $this->download_dir, $this->download_offset);
             // reset: download mode only once
             $this->download_dir = '';
             $this->download_offset = 0;
