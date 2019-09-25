@@ -7,8 +7,6 @@
 
 namespace Swlib\Saber;
 
-use Psr\Http\Message\UriInterface;
-use Swlib\Http\BufferStream;
 use Swlib\Http\CookiesManagerTrait;
 use Swlib\Http\Exception\BadResponseException;
 use Swlib\Http\Exception\ClientException;
@@ -17,6 +15,7 @@ use Swlib\Http\Exception\ServerException;
 use Swlib\Http\Exception\TooManyRedirectsException;
 use Swlib\Util\StringDataParserTrait;
 use Swlib\Util\SpecialMarkTrait;
+use function Swlib\Http\stream_for;
 
 class Response extends \Swlib\Http\Response
 {
@@ -96,10 +95,7 @@ class Response extends \Swlib\Http\Response
         } else {
             $body = '';
         }
-
-        $buffer = new BufferStream();
-        $buffer->write($body);
-        $this->withBody($buffer);
+        $this->withBody(stream_for($body));
 
         /** data parser */
         $this->__stringDataParserInitialization($this->body);
