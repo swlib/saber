@@ -7,7 +7,6 @@
 
 namespace Swlib;
 
-use Swlib\Http\BufferStream;
 use Swlib\Http\ContentType;
 use Swlib\Http\Exception\HttpExceptionMask;
 use Swlib\Http\SwUploadFile;
@@ -19,6 +18,7 @@ use Swlib\Saber\ResponseMap;
 use Swlib\Saber\WebSocket;
 use Swlib\Util\DataParser;
 use Swlib\Util\TypeDetector;
+use function Swlib\Http\stream_for;
 
 class Saber
 {
@@ -598,7 +598,7 @@ class Saber
         } else {
             $options['data'] = null;
         }
-        $buffer = $options['data'] ? new BufferStream((string)$options['data']) : null;
+        $buffer = $options['data'] ? stream_for((string)$options['data']) : null;
         if (isset($buffer)) {
             $request->withBody($buffer);
         }
