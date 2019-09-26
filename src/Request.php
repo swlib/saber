@@ -298,11 +298,13 @@ class Request extends \Swlib\Http\Request
      * @param int $port
      * @return $this
      */
-    public function withProxy(string $host, int $port): self
+    public function withProxy(string $host, int $port, ?string $username = null, ?string $password = null): self
     {
         $this->proxy = [
             'http_proxy_host' => $host,
             'http_proxy_port' => $port,
+            'http_proxy_user' => $username,
+            'http_proxy_password' => $password,
         ];
 
         return $this;
