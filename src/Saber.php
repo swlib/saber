@@ -568,7 +568,7 @@ class Saber
                         $parse['user'] ?? null, $parse['pass'] ?? null
                     );
                 } else {
-                    $request->withProxy($parse['host'], $parse['port']);
+                    $request->withProxy($parse['host'], $parse['port'], $parse['user'] ?? null, $parse['pass'] ?? null);
                 }
             }
         }
