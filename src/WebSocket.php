@@ -33,6 +33,11 @@ class WebSocket extends \Swlib\Http\Request
                 $host = $this->uri->getHost();
             }
         }
+        
+        if (empty($port)) {
+            $port = $ssl ? 443 : 80;
+        }
+        
         $this->client = new \Swoole\Coroutine\Http\Client($host, $port, $ssl);
         if ($mock) {
             $this->withMock($ssl);
