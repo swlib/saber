@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright: Swlib
  * Author: Twosee <twose@qq.com>
@@ -26,7 +27,7 @@ class WebSocket extends \Swlib\Http\Request
         $port = $this->uri->getPort();
         $ssl = $this->uri->getScheme() === 'wss';
         if (empty($host)) {
-            $host = explode('/', ($uri_string = (string)$this->uri))[0] ?? '';
+            $host = explode('/', ($uri_string = (string) $this->uri))[0] ?? '';
             if (empty($host) || !preg_match('/\.\w+$/', $host)) {
                 throw new InvalidArgumentException('Host should not be empty!');
             } else {
@@ -35,6 +36,11 @@ class WebSocket extends \Swlib\Http\Request
                 $host = $this->uri->getHost();
             }
         }
+        
+        if (empty($port)) {
+            $port = $ssl ? 443 : 80;
+        }
+
         $this->client = new Client($host, $port, $ssl);
         if ($mock) {
             $this->withMock($ssl);
@@ -50,7 +56,8 @@ class WebSocket extends \Swlib\Http\Request
         $ret = $this->client->upgrade($path);
         if (!$ret) {
             throw new ConnectException(
-                $this, $this->client->errCode,
+                $this,
+                $this->client->errCode,
                 'Websocket upgrade failed by [' . swoole_strerror($this->client->errCode) . '].'
             );
         }
@@ -91,5 +98,4 @@ class WebSocket extends \Swlib\Http\Request
     {
         $this->close();
     }
-
 }
