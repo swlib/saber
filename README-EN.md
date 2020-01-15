@@ -200,7 +200,7 @@ composer update
 | timeout               | float                 |                                | 0.5                                                          | Default 5s, support millisecond timeout                      |
 | proxy                 | string                |                                | `http://127.0.0.1:1087` \| `socks5://127.0.0.1:1087`         | suport `http` and `socks5`                                   |
 | ssl                   | int                   | enable ssl?                    | `0=disable` `1=enable` `2=auto`                              | auto default                                                 |
-| cafile                | string                | ca file                        | `CaBundle::getSystemCaRootBundlePath()`                      | [composer/ca-bundle](https://github.com/composer/ca-bundle)  |
+| cafile                | string                | ca file                        | `SABER_DEFAULT_CACERT_PATH`                      | [composer/ca-bundle](https://github.com/composer/ca-bundle)  |
 | ssl_verify_peer       | bool                  | Verify server certificate      | `false` \| `true`                                            | close default                                                |
 | ssl_allow_self_signed | bool                  | Allow self-signed certificates | `true` \| `false`                                            | allow default                                                |
 

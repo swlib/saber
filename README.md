@@ -471,7 +471,7 @@ go(function(){
 | timeout               | float                 | 超时时间           | 0.5                                                          | 默认5s, 支持毫秒级超时                                       |
 | proxy                 | string                | 代理               | `http://127.0.0.1:1087` \| `socks5://127.0.0.1:1087`         | 支持http和socks5                                             |
 | ssl                   | int                   | 是否开启ssl连接    | `0=关闭` `1=开启` `2=自动`                                   | 默认自动                                                     |
-| cafile                | string                | ca文件            | `CaBundle::getSystemCaRootBundlePath()`                    | [composer/ca-bundle](https://github.com/composer/ca-bundle) |
+| cafile                | string                | ca文件            | `SABER_DEFAULT_CACERT_PATH`                    | [composer/ca-bundle](https://github.com/composer/ca-bundle) |
 | ssl_verify_peer       | bool                  | 验证服务器端证书   | `false` \| `true`                                            | 默认关闭                                                     |
 | ssl_allow_self_signed | bool                  | 允许自签名证书     | `true` \| `false`                                            | 默认允许                                                     |
 | iconv                 | array                 | 指定编码转换       | `['gbk', 'utf-8']`                                           | 共三个参数为`from,to,use_mb`, 默认自动识别                   |
