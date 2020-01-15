@@ -26,6 +26,7 @@
   },
   "require": {
     "php": ">=7.0",
+    "composer/ca-bundle": "^1.2",
     "swlib/http": "dev-master",
     "swlib/util": "dev-master"
   },

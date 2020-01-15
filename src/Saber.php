@@ -28,7 +28,7 @@ class Saber
         'timeout' => 5.000,
         'proxy' => null,
         'ssl' => Request::SSL_AUTO,
-        'cafile' => __DIR__ . '/cacert.pem',
+        'cafile' => SABER_DEFAULT_CACERT_PATH,
         'ssl_verify_peer' => false,
         'ssl_host_name' => null,
         'ssl_allow_self_signed' => true,

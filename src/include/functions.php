@@ -10,6 +10,8 @@ define('SABER_SW_LE_V401', version_compare(swoole_version(), '4.0.1', '<='));
 // ref-count check problem with debug version, and in ver >= 4.0.1 swoole can auto clear
 define('SABER_HCP_NEED_CLEAR', !PHP_DEBUG && SABER_SW_LE_V401);
 
+define('SABER_DEFAULT_CACERT_PATH', Composer\CaBundle\CaBundle::getSystemCaRootBundlePath());
+
 function saber_exit(): bool
 {
     swoole_event_exit();
