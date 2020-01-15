@@ -225,9 +225,9 @@ class Request extends \Swlib\Http\Request
         return $this->ca_file;
     }
 
-    public function withCAFile(string $ca_file = __DIR__ . '/cacert.pem'): self
+    public function withCAFile(string $ca_file = null): self
     {
-        $this->ca_file = $ca_file;
+        $this->ca_file = $ca_file ?: SABER_DEFAULT_CACERT_PATH;
 
         return $this;
     }
