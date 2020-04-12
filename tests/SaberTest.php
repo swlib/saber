@@ -303,8 +303,7 @@ class SaberTest extends TestCase
     {
         $download_dir = __DIR__ . '/mascot.png';
         $response = SaberGM::download(
-//            'https://raw.githubusercontent.com/swoole/swoole-src/master/mascot.png',
-            'https://cdn.jsdelivr.net/gh/swoole/swoole-src/mascot.png',
+            'https://raw.githubusercontent.com/swoole/swoole-src/master/mascot.png',
             $download_dir
         );
         $this->assertTrue($response->getSuccess());
