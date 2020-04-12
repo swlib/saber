@@ -213,10 +213,11 @@ echo $saber->requests([
         'http://httpbin.org/html'
     ]
 ]);
-var_dump($json->getParsedJson());
+var_dump($json->getParsedJsonArray());
 var_dump($json->getParsedJsonObject());
-var_dump($xml->getParsedXml());
-var_dump($html->getParsedHtml()->getElementsByTagName('h1')->item(0)->textContent);
+var_dump($xml->getParsedXmlArray());
+var_dump($xml->getParsedXmlObject(true));
+var_dump($html->getParsedDomObject()->getElementsByTagName('h1')->item(0)->textContent);
 ```
 
 ### 网络代理

@@ -18,6 +18,7 @@ use Swlib\Http\Exception\TransferException;
 use Swlib\Http\StreamInterface;
 use Swlib\Util\StringDataParserTrait;
 use Swlib\Util\SpecialMarkTrait;
+use function Swlib\Http\stream_for;
 
 class Response extends \Swlib\Http\Response
 {
@@ -93,7 +94,7 @@ class Response extends \Swlib\Http\Response
             $body = '';
         }
 
-        $this->withBody(new BufferStream($body));
+        $this->withBody(stream_for($body));
 
         /** data parser */
         $this->__stringDataParserInitialization($this->body);
