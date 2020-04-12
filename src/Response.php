@@ -109,6 +109,10 @@ class Response extends \Swlib\Http\Response
                 $this->success = true;
                 break;
             case 3:
+                if ($this->statusCode === 304) {
+                    $this->success = true;
+                    break;
+                }
                 $should_be_thrown = !!($e_level & HttpExceptionMask::E_REDIRECT);
                 $exception = new TooManyRedirectsException($request, $this, $this->statusCode, $this->redirect_headers);
                 break;
