@@ -18,6 +18,7 @@ use Swlib\Http\Exception\TransferException;
 use Swlib\Http\StreamInterface;
 use Swlib\Util\StringDataParserTrait;
 use Swlib\Util\SpecialMarkTrait;
+use Swlib\Http\Status;
 use function Swlib\Http\stream_for;
 
 class Response extends \Swlib\Http\Response
@@ -110,6 +111,10 @@ class Response extends \Swlib\Http\Response
                 $this->success = true;
                 break;
             case 3:
+                if ($this->statusCode === Status::NOT_MODIFIED) {
+                    $this->success = true;
+                    break;
+                }
                 $should_be_thrown = !!($e_level & HttpExceptionMask::E_REDIRECT);
                 $exception = new TooManyRedirectsException($request, $this, $this->statusCode, $this->redirect_headers);
                 break;
