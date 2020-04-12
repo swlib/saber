@@ -19,7 +19,6 @@ use Swlib\Http\SwUploadFile;
 use Swlib\Http\Uri;
 use Swlib\Saber;
 use Swlib\SaberGM;
-use Swoole\Coroutine;
 
 class SaberTest extends TestCase
 {
@@ -38,26 +37,30 @@ class SaberTest extends TestCase
 
     public function testStaticAndRequests()
     {
-        $responses = SaberGM::requests([
-            ['get', 'http://www.httpbin.org/get'],
-            ['delete', 'http://www.httpbin.org/delete'],
-            ['post', 'http://www.httpbin.org/post', ['foo' => 'bar']],
-            ['patch', 'http://www.httpbin.org/patch', ['foo' => 'bar']],
-            ['put', 'http://www.httpbin.org/put', ['foo' => 'bar']],
-        ]);
+        $responses = SaberGM::requests(
+            [
+                ['get', 'http://www.httpbin.org/get'],
+                ['delete', 'http://www.httpbin.org/delete'],
+                ['post', 'http://www.httpbin.org/post', ['foo' => 'bar']],
+                ['patch', 'http://www.httpbin.org/patch', ['foo' => 'bar']],
+                ['put', 'http://www.httpbin.org/put', ['foo' => 'bar']],
+            ]
+        );
         $this->assertEquals(0, $responses->error_num);
     }
 
     public function testInstanceAndRequests()
     {
         $saber = Saber::create(['base_uri' => 'http://www.httpbin.org']);
-        $responses = $saber->requests([
-            ['get', '/get'],
-            ['delete', '/delete'],
-            ['post', '/post', ['foo' => 'bar']],
-            ['patch', '/patch', ['foo' => 'bar']],
-            ['put', '/put', ['foo' => 'bar']],
-        ]);
+        $responses = $saber->requests(
+            [
+                ['get', '/get'],
+                ['delete', '/delete'],
+                ['post', '/post', ['foo' => 'bar']],
+                ['patch', '/patch', ['foo' => 'bar']],
+                ['put', '/put', ['foo' => 'bar']],
+            ]
+        );
         $this->assertEquals(0, $responses->error_num);
     }
 
@@ -73,13 +76,15 @@ class SaberTest extends TestCase
 
     public function testDataParser()
     {
-        [$json, $xml, $html] = SaberGM::list([
-            'uri' => [
-                'https://www.httpbin.org/get',
-                'https://www.javatpoint.com/xmlpages/books.xml',
-                'http://www.httpbin.org/html'
+        [$json, $xml, $html] = SaberGM::list(
+            [
+                'uri' => [
+                    'https://www.httpbin.org/get',
+                    'https://www.javatpoint.com/xmlpages/books.xml',
+                    'http://www.httpbin.org/html'
+                ]
             ]
-        ]);
+        );
         $this->assertEquals((string)$json->getUri(), $json->getParsedJsonArray()['url']);
         $this->assertEquals((string)$json->getUri(), $json->getParsedJsonObject()->url);
         $this->assertEquals('Everyday Italian', $xml->getParsedXmlObject()->book[0]->title);
@@ -91,14 +96,18 @@ class SaberTest extends TestCase
 
     public function testSessionAndUriQuery()
     {
-        $session = Saber::session([
-            'base_uri' => 'http://www.httpbin.org',
-            'redirect' => 0,
-            'exception_report' => HttpExceptionMask::E_ALL ^ HttpExceptionMask::E_REDIRECT
-        ]);
-        $session->get('/cookies/set?apple=orange', [
-            'uri_query' => ['apple' => 'banana', 'foo' => 'bar', 'k' => 'v']
-        ]);
+        $session = Saber::session(
+            [
+                'base_uri' => 'http://www.httpbin.org',
+                'exception_report' => HttpExceptionMask::E_ALL ^ HttpExceptionMask::E_REDIRECT
+            ]
+        );
+        $session->get(
+            '/cookies/set?apple=orange',
+            [
+                'uri_query' => ['apple' => 'banana', 'foo' => 'bar', 'k' => 'v']
+            ]
+        );
         $session->get('/cookies/delete?k');
         $cookies = $session->get('/cookies')->getParsedJsonArray()['cookies'];
         $expected = ['apple' => 'banana', 'foo' => 'bar'];
@@ -126,10 +135,12 @@ class SaberTest extends TestCase
     public function testExceptionHandle()
     {
         $saber = Saber::create(['exception_report' => true]);
-        $saber->exceptionHandle(function (Exception $e) use (&$exception) {
-            $exception = get_class($e);
-            return true;
-        });
+        $saber->exceptionHandle(
+            function (Exception $e) use (&$exception) {
+                $exception = get_class($e);
+                return true;
+            }
+        );
         $saber->get('http://www.httpbin.org/status/500');
         $this->assertEquals(ServerException::class, $exception);
     }
@@ -151,7 +162,10 @@ class SaberTest extends TestCase
             ContentType::get('png')
         );
 
-        $res = SaberGM::post('http://www.httpbin.org/post', null, [
+        $res = SaberGM::post(
+            'http://www.httpbin.org/post',
+            null,
+            [
                 'files' => [
                     'image1' => $file1,
                     'image2' => $file2,
@@ -166,24 +180,29 @@ class SaberTest extends TestCase
     public function testMark()
     {
         $mark = 'it is request one!';
-        $responses = SaberGM::requests([
-            ['uri' => 'https://www.qq.com/', 'mark' => $mark],
-            ['uri' => 'https://www.qq.com']
-        ]);
+        $responses = SaberGM::requests(
+            [
+                ['uri' => 'https://www.qq.com/', 'mark' => $mark],
+                ['uri' => 'https://www.qq.com']
+            ]
+        );
         $this->assertEquals($mark, $responses[0]->getSpecialMark());
     }
 
     public function testInterceptor()
     {
         $target = 'https://www.qq.com/';
-        SaberGM::get($target, [
-            'before' => function (Saber\Request $request) use (&$uri) {
-                $uri = $request->getUri();
-            },
-            'after' => function (Saber\Response $response) use (&$success) {
-                $success = $response->getSuccess();
-            }
-        ]);
+        SaberGM::get(
+            $target,
+            [
+                'before' => function (Saber\Request $request) use (&$uri) {
+                    $uri = $request->getUri();
+                },
+                'after' => function (Saber\Response $response) use (&$success) {
+                    $success = $response->getSuccess();
+                }
+            ]
+        );
         $this->assertEquals($target, $uri ?? '');
         $this->assertTrue($success ?? false);
     }
@@ -192,8 +211,7 @@ class SaberTest extends TestCase
     {
         $uri_list = [
             'https://www.qq.com/',
-            'https://m.cust.edu.cn/',
-            'http://www.cust.edu.cn/'
+            'https://www.cust.edu.cn/'
         ];
         $res = SaberGM::list(['uri' => $uri_list]);
         $this->assertEquals(count($uri_list), $res->success_num);
@@ -203,7 +221,8 @@ class SaberTest extends TestCase
     {
         $count = 0;
         $res = SaberGM::get(
-            'http://127.0.0.1:65535', [
+            'http://127.0.0.1:65535',
+            [
                 'exception_report' => 0,
                 'timeout' => 0.001,
                 'retry_time' => 999,
@@ -221,7 +240,8 @@ class SaberTest extends TestCase
     {
         $log = [];
         $res = SaberGM::get(
-            'http://127.0.0.1:65535', [
+            'http://127.0.0.1:65535',
+            [
                 'exception_report' => 0,
                 'timeout' => 0.001,
                 'retry_time' => 3,
@@ -238,50 +258,53 @@ class SaberTest extends TestCase
     {
         $uri = 'http://www.httpbin.org/basic-auth/foo/bar';
         $res = SaberGM::get(
-            $uri, [
+            $uri,
+            [
                 'exception_report' => HttpExceptionMask::E_NONE,
                 'retry' => function (Saber\Request $request) {
                     $request->withBasicAuth('foo', 'bar');
                 }
             ]
         );
-        $this->assertEquals(true, $res->getSuccess(), (string)$res);
+        $this->assertEquals(true, $res->getSuccess());
     }
 
     public function testAuthWithUserInfoInURI()
     {
         $uri = 'http://foo:bar@www.httpbin.org/basic-auth/foo/bar';
         $res = SaberGM::get($uri);
-        $this->assertEquals(true, $res->getSuccess(), (string)$res);
+        $this->assertEquals(true, $res->getSuccess());
     }
 
     public function testAuthOverrideUserInfoInURI()
     {
         $uri = 'http://doo:zar@www.httpbin.org/basic-auth/foo/bar';
-        $res = SaberGM::get($uri,
+        $res = SaberGM::get(
+            $uri,
             [
-            'before' => function (Request $request) {
-                $request->withBasicAuth('foo', 'bar');
-            }
+                'before' => function (Saber\Request $request) {
+                    $request->withBasicAuth('foo', 'bar');
+                }
             ]
         );
 
-        $this->assertEquals(true, $res->getSuccess(), (string)$res);
+        $this->assertEquals(true, $res->getSuccess());
     }
 
     public function testIconv()
     {
         $this->assertContains(
             '编码转换',
-            (string)SaberGM::get('http://www.ip138.com/', ['iconv' => ['gbk', 'utf-8']])
+            (string)SaberGM::get('https://www.ip138.com/', ['iconv' => ['gbk', 'utf-8']])->getBody()
         );
     }
 
     public function testDownload()
     {
-        $download_dir = __DIR__ . '/saber.jpg';
+        $download_dir = __DIR__ . '/mascot.png';
         $response = SaberGM::download(
-            'https://ws1.sinaimg.cn/large/006DQdzWly1fsr8jt2botj31hc0wxqfs.jpg',
+//            'https://raw.githubusercontent.com/swoole/swoole-src/master/mascot.png',
+            'https://cdn.jsdelivr.net/gh/swoole/swoole-src/mascot.png',
             $download_dir
         );
         $this->assertTrue($response->getSuccess());
@@ -293,7 +316,8 @@ class SaberTest extends TestCase
     public function testBeforeRedirect()
     {
         $response = SaberGM::get(
-            'http://www.httpbin.org/redirect-to?url=https://www.qq.com/', [
+            'http://www.httpbin.org/redirect-to?url=https://www.qq.com/',
+            [
                 'before_redirect' => function (Saber\Request $request) {
                     $this->assertEquals('https://www.qq.com/', (string)$request->getUri());
                 }
@@ -319,12 +343,14 @@ class SaberTest extends TestCase
     public function testWithHost()
     {
         $ip = Coroutine::getHostByName('httpbin.org');
-        $saber = Saber::create([
-            'base_uri' => "http://{$ip}",
-            'headers' => [
-                'Host' => 'httpbin.org'
+        $saber = Saber::create(
+            [
+                'base_uri' => "http://{$ip}",
+                'headers' => [
+                    'Host' => 'httpbin.org'
+                ]
             ]
-        ]);
+        );
         $this->assertTrue($saber->get('/get')->getParsedJsonArray()['headers']['Host'] === 'httpbin.org');
     }
 
@@ -332,9 +358,12 @@ class SaberTest extends TestCase
     {
         if (!SABER_SW_LE_V401) {
             $status = saber_pool_get_status();
-            array_walk($status, function ($pool) {
-                $this->assertEquals($pool['created'], $pool['in_pool']);
-            });
+            array_walk(
+                $status,
+                function ($pool) {
+                    $this->assertEquals($pool['created'], $pool['in_pool']);
+                }
+            );
         }
         $this->assertTrue(saber_pool_release());
     }
@@ -343,19 +372,26 @@ class SaberTest extends TestCase
     {
         global $server_list;
         list($ip, $port) = array_values($server_list['httpd']);
-        $saber = Saber::create([
-            'base_uri' => "http://$ip:$port",
-            //'base_uri' => "http://127.0.0.1:8081",
-            'use_pool' => false,
-            'exception_report' => HttpExceptionMask::E_ALL
-        ]);
+        $saber = Saber::create(
+            [
+                'base_uri' => "http://$ip:$port",
+                //'base_uri' => "http://127.0.0.1:8081",
+                'use_pool' => false,
+                'exception_report' => HttpExceptionMask::E_ALL
+            ]
+        );
 
-        $ReqWithSaber         = $saber->get('/anything?dump_info=$ReqWithSaber')->getParsedJsonArray();
-        $ReqWithSaber2        = $saber->get('/anything?dump_info=$ReqWithSaber2')->getParsedJsonArray();
-        $ReqWithSaberPSR      = $saber->request(['psr' => 1])->withMethod('GET')->withUri(new Uri("http://$ip:$port/anything?dump_info=ReqWithSaberPSR"))->exec()->recv()->getParsedJsonArray();
-        $ReqWithSaberPSR2     = $saber->request(['psr' => 1])->withMethod('GET')->withUri(new Uri("http://$ip:$port/anything?dump_info=ReqWithSaberPSR2"))->exec()->recv()->getParsedJsonArray();
-        $ReqAfterAnotherPort        = $saber->get('http://httpbin.org/anything?dump_info=$ReqWithSaber2')->getParsedJsonArray();
-        $ReqAfterAnotherPort        = $saber->get('/anything?dump_info=$ReqWithSaber2')->getParsedJsonArray();
+        $ReqWithSaber = $saber->get('/anything?dump_info=$ReqWithSaber')->getParsedJsonArray();
+        $ReqWithSaber2 = $saber->get('/anything?dump_info=$ReqWithSaber2')->getParsedJsonArray();
+        $ReqWithSaberPSR = $saber->request(['psr' => 1])->withMethod('GET')->withUri(
+            new Uri("http://$ip:$port/anything?dump_info=ReqWithSaberPSR")
+        )->exec()->recv()->getParsedJsonArray();
+        $ReqWithSaberPSR2 = $saber->request(['psr' => 1])->withMethod('GET')->withUri(
+            new Uri("http://$ip:$port/anything?dump_info=ReqWithSaberPSR2")
+        )->exec()->recv()->getParsedJsonArray();
+        $ReqAfterAnotherPort = $saber->get('http://httpbin.org/anything?dump_info=$ReqWithSaber2')->getParsedJsonArray(
+        );
+        $ReqAfterAnotherPort = $saber->get('/anything?dump_info=$ReqWithSaber2')->getParsedJsonArray();
 
         $this->assertTrue($ReqWithSaber['server']['remote_port'] === $ReqWithSaber2['server']['remote_port']);
         $this->assertTrue($ReqWithSaberPSR['server']['remote_port'] === $ReqWithSaberPSR2['server']['remote_port']);
