@@ -19,6 +19,7 @@ use Swlib\Http\SwUploadFile;
 use Swlib\Http\Uri;
 use Swlib\Saber;
 use Swlib\SaberGM;
+use Swoole\Coroutine;
 
 class SaberTest extends TestCase
 {
