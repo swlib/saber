@@ -537,6 +537,10 @@ class Request extends \Swlib\Http\Request
             }
         }
 
+        if (!$this->getHeader("Authorization")) {
+            $this->initBasicAuth();
+        }
+
         /** Clear useless cookies property */
         $this->client->cookies = null;
 
