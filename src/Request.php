@@ -537,7 +537,7 @@ class Request extends \Swlib\Http\Request
             }
         }
 
-        if (!$this->getHeader("Authorization")) {
+        if (!$this->hasHeader('Authorization')) {
             $this->initBasicAuth();
         }
 
