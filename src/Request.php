@@ -115,6 +115,10 @@ class Request extends \Swlib\Http\Request
             $this->updateHostFromUri();
         }
 
+        if (!$this->hasHeader('Authorization')) {
+            $this->initBasicAuth();
+        }
+
         return $this;
     }
 
@@ -132,10 +136,6 @@ class Request extends \Swlib\Http\Request
         } else {
             $raw_name = 'Host';
             $this->headerNames['host'] = 'Host';
-        }
-
-        if (!$this->hasHeader('Authorization')) {
-            $this->initBasicAuth();
         }
 
         // Ensure Host is the first header.
