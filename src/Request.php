@@ -9,6 +9,7 @@ namespace Swlib\Saber;
 
 use BadMethodCallException;
 use InvalidArgumentException;
+use Psr\Http\Message\UriInterface;
 use Swlib\Http\Cookies;
 use Swlib\Http\CookiesManagerTrait;
 use Swlib\Http\Exception\ConnectException;
@@ -97,6 +98,49 @@ class Request extends \Swlib\Http\Request
         parent::__construct($method, $uri, $headers, $body);
         $this->__cookiesInitialization(true);
         $this->initBasicAuth();
+    }
+
+    /**
+     * @param UriInterface|null $uri
+     * @param bool $preserveHost
+     * @return \Swlib\Http\Request
+     */
+    public function withUri(?UriInterface $uri, $preserveHost = false): \Swlib\Http\Request
+    {
+        if ($uri !== $this->uri) {
+            $this->uri = $uri;
+        }
+
+        if (!$preserveHost) {
+            $this->updateHostFromUri();
+        }
+
+        if (!$this->hasHeader('Authorization')) {
+            $this->initBasicAuth();
+        }
+
+        return $this;
+    }
+
+    private function updateHostFromUri()
+    {
+        $host = $this->uri->getHost();
+        if ($host == '') {
+            return;
+        }
+        if (($port = $this->uri->getPort()) !== null) {
+            $host .= ':' . $port;
+        }
+        if (isset($this->headerNames['host'])) {
+            $raw_name = $this->headerNames['host'];
+        } else {
+            $raw_name = 'Host';
+            $this->headerNames['host'] = 'Host';
+        }
+
+        // Ensure Host is the first header.
+        // See: http://tools.ietf.org/html/rfc7230#section-5.4
+        $this->headers = [$raw_name => [$host]] + $this->headers;
     }
 
     public function getExceptionReport(): int
