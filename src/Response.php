@@ -7,7 +7,6 @@
 
 namespace Swlib\Saber;
 
-use Swlib\Http\BufferStream;
 use Swlib\Http\CookiesManagerTrait;
 use Swlib\Http\Exception\BadResponseException;
 use Swlib\Http\Exception\ClientException;
@@ -24,13 +23,13 @@ use function Swlib\Http\stream_for;
 class Response extends \Swlib\Http\Response
 {
     /** @var array */
-    protected $redirect_headers = [];
+    public $redirect_headers = [];
     /** @var TransferException */
-    protected $exception = null;
+    public $exception = null;
     /** @var bool */
-    protected $success = false;
+    public $success = false;
     /** @var float */
-    protected $time;
+    public $time;
     /**
      * @var int $statusCode
      * Http status code, such as 200, 404 and so on. If the status code is negative, there is a problem with the connection.
@@ -67,7 +66,7 @@ class Response extends \Swlib\Http\Response
                 // enable auto iconv
                 if ($request->charset_source && strcasecmp($request->charset_source, 'auto') !== 0) {
                     $charset_source = $request->charset_source;
-                } elseif (
+                } /** @noinspection PhpStatementHasEmptyBodyInspection */ elseif (
                     ($contentType = $request->client->headers['content-type'] ?? '') &&
                     ($charset_source = explode('=', $contentType)[1] ?? null)
                 ) {
@@ -139,6 +138,11 @@ class Response extends \Swlib\Http\Response
                 $this->exception = $exception;
             }
         }
+    }
+
+    public function isSuccess(): bool
+    {
+        return $this->success;
     }
 
     public function getSuccess(): bool
