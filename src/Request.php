@@ -7,6 +7,9 @@
 
 namespace Swlib\Saber;
 
+use BadMethodCallException;
+use InvalidArgumentException;
+use Psr\Http\Message\UriInterface;
 use Swlib\Http\Cookies;
 use Swlib\Http\CookiesManagerTrait;
 use Swlib\Http\Exception\ConnectException;
@@ -16,6 +19,7 @@ use Swlib\Http\SwUploadFile;
 use Swlib\Http\Uri;
 use Swlib\Util\InterceptorTrait;
 use Swlib\Util\SpecialMarkTrait;
+use Swoole\Coroutine\Http\Client;
 
 class Request extends \Swlib\Http\Request
 {
@@ -25,7 +29,7 @@ class Request extends \Swlib\Http\Request
     protected const FROM_REDIRECT = 1 << 1;
     protected const FROM_RETRY = 1 << 2;
 
-    /** @var $client \Swoole\Coroutine\Http\Client */
+    /** @var $client Client */
     public $client;
     /** @var bool must be changed through method */
     protected $use_pool = false;
@@ -93,6 +97,50 @@ class Request extends \Swlib\Http\Request
     {
         parent::__construct($method, $uri, $headers, $body);
         $this->__cookiesInitialization(true);
+        $this->initBasicAuth();
+    }
+
+    /**
+     * @param UriInterface|null $uri
+     * @param bool $preserveHost
+     * @return \Swlib\Http\Request
+     */
+    public function withUri(?UriInterface $uri, $preserveHost = false): \Swlib\Http\Request
+    {
+        if ($uri !== $this->uri) {
+            $this->uri = $uri;
+        }
+
+        if (!$preserveHost) {
+            $this->updateHostFromUri();
+        }
+
+        if (!$this->hasHeader('Authorization')) {
+            $this->initBasicAuth();
+        }
+
+        return $this;
+    }
+
+    private function updateHostFromUri()
+    {
+        $host = $this->uri->getHost();
+        if ($host == '') {
+            return;
+        }
+        if (($port = $this->uri->getPort()) !== null) {
+            $host .= ':' . $port;
+        }
+        if (isset($this->headerNames['host'])) {
+            $raw_name = $this->headerNames['host'];
+        } else {
+            $raw_name = 'Host';
+            $this->headerNames['host'] = 'Host';
+        }
+
+        // Ensure Host is the first header.
+        // See: http://tools.ietf.org/html/rfc7230#section-5.4
+        $this->headers = [$raw_name => [$host]] + $this->headers;
     }
 
     public function getExceptionReport(): int
@@ -112,19 +160,36 @@ class Request extends \Swlib\Http\Request
         return $this->_status === self::STATUS_WAITING;
     }
 
-    protected function getConnectionTarget(): array
+    protected function initBasicAuth()
+    {
+        $userInfo = $this->getUri()->getUserInfo();
+        if($userInfo) {
+            $userInfo = explode(':', $userInfo);
+            $username = $userInfo[0];
+            $password = $userInfo[1] ?? null;
+            $this->withBasicAuth($username, $password);
+        }
+    }
+
+    public function getConnectionTarget(): array
     {
         $host = $this->uri->getHost();
         if (empty($host)) {
-            throw new \InvalidArgumentException('Host should not be empty!');
+            throw new InvalidArgumentException('Host should not be empty!');
         }
         $port = $this->uri->getRealPort();
         $ssl = $this->getSSL();
-        $ssl = ($ssl === self::SSL_AUTO) ? $port === 443 : (bool)$ssl;
+        $ssl = ($ssl === self::SSL_AUTO) ? ('https' === $this->uri->getScheme()) : (bool)$ssl;
 
         return ['host' => $host, 'port' => $port, 'ssl' => $ssl];
     }
 
+    public function shouldRecycleClient($client)
+    {
+        $connectionInfo = $this->getConnectionTarget();
+
+        return (!$client || ($client->host !== $connectionInfo['host'] || $client->port !== $connectionInfo['port']));
+    }
     /** @return null|bool */
     public function getPool()
     {
@@ -296,6 +361,8 @@ class Request extends \Swlib\Http\Request
      *
      * @param string $host
      * @param int $port
+     * @param null|string $username
+     * @param null|string $password
      * @return $this
      */
     public function withProxy(string $host, int $port, ?string $username = null, ?string $password = null): self
@@ -497,24 +564,20 @@ class Request extends \Swlib\Http\Request
             return $ret;
         }
 
-        /** get connection info */
-        list($host, $port, $ssl) = array_values($this->getConnectionTarget());
-        if ($this->client && ($this->client->host !== $host || $this->client->port !== $port)) {
+
+        if ($this->client && ($this->shouldRecycleClient($this->client))) {
             // target maybe changed
             $this->tryToRevertClientToPool();
         }
         if (!$this->client) {
+            /** get connection info */
+            $connectionInfo = $this->getConnectionTarget();
             /** create a new coroutine client */
             $client_pool = ClientPool::getInstance();
-            if ($this->use_pool && $client = $client_pool->getEx($host, $port)) {
+            if ($this->use_pool && $client = $client_pool->getEx($connectionInfo['host'], $connectionInfo['port'])) {
                 $this->client = $client;
             } else {
-                $options = [
-                    'host' => $host,
-                    'port' => $port,
-                    'ssl' => $ssl
-                ];
-                $this->client = $client_pool->createEx($options, !$this->use_pool);
+                $this->client = $client_pool->createEx($connectionInfo, !$this->use_pool);
             }
         }
 
@@ -580,6 +643,11 @@ class Request extends \Swlib\Http\Request
             'timeout' => (($this->_form_flag & self::FROM_REDIRECT) && $this->_timeout) ? $this->_timeout : $this->getTimeout(),
             'keep_alive' => $this->getKeepAlive(),
         ];
+
+        if($this->ssl) {
+            $settings['ssl_host_name'] = $this->uri->getHost();
+        }
+
         $settings += $this->getProxy();
 
         if (!empty($ca_file = $this->getCAFile())) {
@@ -610,9 +678,9 @@ class Request extends \Swlib\Http\Request
      */
     public function recv()
     {
-        retry_recv:
+        _retry_recv:
         if (self::STATUS_WAITING !== $this->_status) {
-            throw new \BadMethodCallException('You can\'t recv because client is not in waiting stat.');
+            throw new BadMethodCallException('You can\'t recv because client is not in waiting stat.');
         }
         $this->client->recv($this->getTimeout());
         $this->_status = self::STATUS_NONE;
@@ -629,7 +697,7 @@ class Request extends \Swlib\Http\Request
                     $timeout = $this->getTimeout();
                     $message = "Request timeout! the server hasn't responded over the timeout setting({$timeout}s)!";
                 } elseif ($statusCode === -3) {
-                    $message = 'Connection is forcibly cut off by the remote server';
+                    $message = 'Connection is reset by the remote server';
                 } else {
                     $message = "Linux Code {$errCode}: " . swoole_strerror($errCode);
                 }
@@ -682,7 +750,7 @@ class Request extends \Swlib\Http\Request
              * just return a bool type value
              */
             $allow_redirect = true;
-            $ret = $this->callInterceptor('before_redirect', $this, $response);
+            $ret = $this->callInterceptor('before_redirect', $this);
             if ($ret !== null) {
                 if (is_bool($ret)) {
                     $allow_redirect = $ret;
@@ -718,7 +786,7 @@ class Request extends \Swlib\Http\Request
         }
 
         /** auto retry */
-        while (!$response->success && $this->_retried_time++ < $this->retry_time) {
+        while (!$response->getSuccess() && $this->_retried_time++ < $this->retry_time) {
             $ret = $this->callInterceptor('before_retry', $this, $response);
             if ($ret === false) {
                 break;
@@ -728,7 +796,7 @@ class Request extends \Swlib\Http\Request
             if ($this->isInQueue()) {
                 return $this;
             } else {
-                goto retry_recv;
+                goto _retry_recv;
             }
         }
 
@@ -740,7 +808,9 @@ class Request extends \Swlib\Http\Request
         }
         $this->client->body = '';
 
-        $this->tryToRevertClientToPool();
+        if($this->use_pool){
+            $this->tryToRevertClientToPool();
+        }
 
         return $response;
     }

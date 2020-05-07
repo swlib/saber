@@ -14,7 +14,7 @@ go(function () {
 
     $response = SaberGM::request(['uri' => 'https://github.com/']);
     echo "single-request [ status: {$response->statusCode} ]: \n" .
-        "consuming-time: {$response->time}s\n";
+        "consuming-time: {$response->getTime()}s\n";
 
     echo str_repeat("=", 20) . "\n";
 

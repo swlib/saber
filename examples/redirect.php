@@ -12,5 +12,5 @@ require __DIR__ . '/../vendor/autoload.php';
 go(function () {
     $uri = 'http://t.cn/Rn3tRyK';
     $res = SaberGM::get($uri);
-    var_dump($res->redirect_headers);
+    var_dump($res->getRedirectHeaders());
 });

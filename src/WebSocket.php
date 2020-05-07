@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright: Swlib
  * Author: Twosee <twose@qq.com>
@@ -7,9 +8,11 @@
 
 namespace Swlib\Saber;
 
+use InvalidArgumentException;
 use Psr\Http\Message\UriInterface;
 use Swlib\Http\Exception\ConnectException;
 use Swlib\Http\Uri;
+use Swoole\Coroutine\Http\Client;
 
 class WebSocket extends \Swlib\Http\Request
 {
@@ -24,21 +27,21 @@ class WebSocket extends \Swlib\Http\Request
         $port = $this->uri->getPort();
         $ssl = $this->uri->getScheme() === 'wss';
         if (empty($host)) {
-            $host = explode('/', ($uri_string = (string)$this->uri))[0] ?? '';
+            $host = explode('/', ($uri_string = (string) $this->uri))[0] ?? '';
             if (empty($host) || !preg_match('/\.\w+$/', $host)) {
-                throw new \InvalidArgumentException('Host should not be empty!');
+                throw new InvalidArgumentException('Host should not be empty!');
             } else {
                 $uri_string = 'ws://' . rtrim($uri_string, '/');
                 $this->uri = new Uri($uri_string);
                 $host = $this->uri->getHost();
             }
         }
-        
+
         if (empty($port)) {
             $port = $ssl ? 443 : 80;
         }
-        
-        $this->client = new \Swoole\Coroutine\Http\Client($host, $port, $ssl);
+
+        $this->client = new Client($host, $port, $ssl);
         if ($mock) {
             $this->withMock($ssl);
         }
@@ -53,7 +56,8 @@ class WebSocket extends \Swlib\Http\Request
         $ret = $this->client->upgrade($path);
         if (!$ret) {
             throw new ConnectException(
-                $this, $this->client->errCode,
+                $this,
+                $this->client->errCode,
                 'Websocket upgrade failed by [' . swoole_strerror($this->client->errCode) . '].'
             );
         }
@@ -94,5 +98,4 @@ class WebSocket extends \Swlib\Http\Request
     {
         $this->close();
     }
-
 }

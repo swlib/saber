@@ -14,7 +14,7 @@ go(function () {
         'https://ws1.sinaimg.cn/large/006DQdzWly1fsr8jt2botj31hc0wxqfs.jpg',
         $download_dir
     );
-    if ($response->success) {
+    if ($response->getSuccess()) {
         exec('open ' . $download_dir);
     }
 });

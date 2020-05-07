@@ -7,6 +7,8 @@
 
 namespace Swlib\Saber;
 
+use Swoole\WebSocket\Frame;
+
 class WebSocketFrame
 {
     /** @var bool */
@@ -16,7 +18,7 @@ class WebSocketFrame
     /** @var string */
     public $data;
 
-    public function __construct(\Swoole\WebSocket\Frame $frame)
+    public function __construct(Frame $frame)
     {
         foreach ($frame as $key => $val) {
             $this->$key = $val;
