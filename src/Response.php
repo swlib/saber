@@ -7,7 +7,6 @@
 
 namespace Swlib\Saber;
 
-use Swlib\Http\BufferStream;
 use Swlib\Http\CookiesManagerTrait;
 use Swlib\Http\Exception\BadResponseException;
 use Swlib\Http\Exception\ClientException;
@@ -18,7 +17,6 @@ use Swlib\Http\Exception\TransferException;
 use Swlib\Http\StreamInterface;
 use Swlib\Util\StringDataParserTrait;
 use Swlib\Util\SpecialMarkTrait;
-use Swlib\Http\Status;
 use function Swlib\Http\stream_for;
 
 class Response extends \Swlib\Http\Response
@@ -67,7 +65,7 @@ class Response extends \Swlib\Http\Response
                 // enable auto iconv
                 if ($request->charset_source && strcasecmp($request->charset_source, 'auto') !== 0) {
                     $charset_source = $request->charset_source;
-                } elseif (
+                } /** @noinspection PhpStatementHasEmptyBodyInspection */ elseif (
                     ($contentType = $request->client->headers['content-type'] ?? '') &&
                     ($charset_source = explode('=', $contentType)[1] ?? null)
                 ) {
@@ -111,7 +109,8 @@ class Response extends \Swlib\Http\Response
                 $this->success = true;
                 break;
             case 3:
-                if ($this->statusCode === Status::NOT_MODIFIED) {
+                if (!$this->hasHeader('Location')) {
+                    /* not a redirect response */
                     $this->success = true;
                     break;
                 }
