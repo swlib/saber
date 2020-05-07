@@ -163,7 +163,7 @@ class Request extends \Swlib\Http\Request
     protected function initBasicAuth()
     {
         $userInfo = $this->getUri()->getUserInfo();
-        if($userInfo) {
+        if ($userInfo) {
             $userInfo = explode(':', $userInfo);
             $username = $userInfo[0];
             $password = $userInfo[1] ?? null;
@@ -179,7 +179,7 @@ class Request extends \Swlib\Http\Request
         }
         $port = $this->uri->getRealPort();
         $ssl = $this->getSSL();
-        $ssl = ($ssl === self::SSL_AUTO) ? ('https' === $this->uri->getScheme()) : (bool)$ssl;
+        $ssl = ($ssl === self::SSL_AUTO) ? ('https' === $this->uri->getScheme()) : (bool) $ssl;
 
         return ['host' => $host, 'port' => $port, 'ssl' => $ssl];
     }
@@ -190,6 +190,7 @@ class Request extends \Swlib\Http\Request
 
         return (!$client || ($client->host !== $connectionInfo['host'] || $client->port !== $connectionInfo['port']));
     }
+
     /** @return null|bool */
     public function getPool()
     {
@@ -516,7 +517,7 @@ class Request extends \Swlib\Http\Request
     {
         $this->charset_source = $source;
         $this->charset_target = $target;
-        $this->charset_use_mb = (bool)$use_mb;
+        $this->charset_use_mb = (bool) $use_mb;
 
         return $this;
     }
@@ -563,7 +564,6 @@ class Request extends \Swlib\Http\Request
         if ($ret !== null) {
             return $ret;
         }
-
 
         if ($this->client && ($this->shouldRecycleClient($this->client))) {
             // target maybe changed
@@ -623,7 +623,7 @@ class Request extends \Swlib\Http\Request
             }
         }
         /** 设置请求主体 */
-        $body = (string)($this->getBody() ?? '');
+        $body = (string) ($this->getBody() ?? '');
         if ($body !== '') {
             $this->client->setData($body);
         }
@@ -644,7 +644,7 @@ class Request extends \Swlib\Http\Request
             'keep_alive' => $this->getKeepAlive(),
         ];
 
-        if($this->ssl) {
+        if ($this->ssl) {
             $settings['ssl_host_name'] = $this->uri->getHost();
         }
 
@@ -728,7 +728,7 @@ class Request extends \Swlib\Http\Request
 
         /** Solve redirect */
         if (($this->client->headers['location'] ?? false) && $this->_redirect_times < $this->redirect) {
-            $current_uri = (string)$this->uri;
+            $current_uri = (string) $this->uri;
             //record headers before redirect
             $this->_redirect_headers[$current_uri] = PHP_DEBUG ?
                 array_merge([], $this->client->headers) :
@@ -808,9 +808,7 @@ class Request extends \Swlib\Http\Request
         }
         $this->client->body = '';
 
-        if($this->use_pool){
-            $this->tryToRevertClientToPool();
-        }
+        $this->tryToRevertClientToPool();
 
         return $response;
     }
