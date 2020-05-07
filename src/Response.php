@@ -17,7 +17,6 @@ use Swlib\Http\Exception\TransferException;
 use Swlib\Http\StreamInterface;
 use Swlib\Util\StringDataParserTrait;
 use Swlib\Util\SpecialMarkTrait;
-use Swlib\Http\Status;
 use function Swlib\Http\stream_for;
 
 class Response extends \Swlib\Http\Response
@@ -110,7 +109,8 @@ class Response extends \Swlib\Http\Response
                 $this->success = true;
                 break;
             case 3:
-                if ($this->statusCode === Status::NOT_MODIFIED) {
+                if (!$this->hasHeader('Location')) {
+                    /* not a redirect response */
                     $this->success = true;
                     break;
                 }
