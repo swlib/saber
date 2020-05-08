@@ -38,7 +38,7 @@ class Response extends \Swlib\Http\Response
      */
     public $statusCode = 0;
     /** @var string */
-    public $reasonPhrase = 'Failed';
+    public $reasonPhrase = 'Unknown';
     /** @var StreamInterface */
     public $body = null;
 
@@ -48,14 +48,11 @@ class Response extends \Swlib\Http\Response
 
     use StringDataParserTrait;
 
-    /** @noinspection PhpMissingParentConstructorInspection */
     function __construct(Request $request)
     {
-        /** consuming time */
-        $this->time = $request->_time;
-        $this->withStatus($request->client->statusCode);
+        parent::__construct($request->client->statusCode, $request->client->headers ?: []);
         $this->withUri($request->getUri());
-        $this->withHeaders($request->client->headers ?: []);
+        $this->time = $request->_time;
         $this->redirect_headers = $request->_redirect_headers; // record headers before redirect
         $this->cookies = $request->incremental_cookies;
 
