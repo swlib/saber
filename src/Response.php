@@ -93,7 +93,7 @@ class Response extends \Swlib\Http\Response
         $this->withBody(stream_for($body));
 
         /** data parser */
-        $this->__stringDataParserInitialization($this->body);
+        $this->__constructStringDataParser($this->body);
         /** mark */
         $this->special_marks = $request->special_marks;
 

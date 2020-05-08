@@ -96,7 +96,7 @@ class Request extends \Swlib\Http\Request
     function __construct(string $method = 'GET', $uri = '', array $headers = [], ?StreamInterface $body = null)
     {
         parent::__construct($method, $uri, $headers, $body);
-        $this->__cookiesInitialization(true);
+        $this->__constructCookiesManager(true);
         $this->initBasicAuth();
     }
 
