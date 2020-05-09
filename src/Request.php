@@ -743,7 +743,7 @@ class Request extends \Swlib\Http\Request
                 ->withBody(null)
                 ->withHeader('Host', $this->uri->getHost())
                 ->withHeader('Referer', $current_uri)
-                ->removeInterceptor('request');
+                ->withoutInterceptor('request');
 
             /**
              * Redirect-interceptors have permission to release or intercept redirects,

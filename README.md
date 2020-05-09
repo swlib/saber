@@ -858,7 +858,7 @@ public function setCookie(array $options): self
 public function unsetCookie(string $name, string $path = '', string $domain = ''): self
 public function withInterceptor(string $name, array $interceptor)
 public function withAddedInterceptor(string $name, array $functions): self
-public function removeInterceptor(string $name): self
+public function withoutInterceptor(string $name): self
 public function callInterceptor(string $name, $arguments)
 public function getSpecialMark(string $name = 'default')
 public function withSpecialMark($mark, string $name = 'default'): self
@@ -910,7 +910,7 @@ public function withMaxConcurrency(int $num = -1): self
 public function recv(): Swlib\Saber\ResponseMap
 public function withInterceptor(string $name, array $interceptor)
 public function withAddedInterceptor(string $name, array $functions): self
-public function removeInterceptor(string $name): self
+public function withoutInterceptor(string $name): self
 public function callInterceptor(string $name, $arguments)
 ```
 #### Swlib\Saber\ResponseMap
