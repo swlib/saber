@@ -311,14 +311,15 @@ echo $res;
 ### PSR风格
 
 ```php
-$response = SaberGM::psr()
+$bufferStream = new \Swlib\Http\BufferStream();
+$bufferStream->write(json_encode(['foo' => 'bar']));
+$response = \Swlib\SaberGM::psr()
     ->withMethod('POST')
-    ->withUri(new Uri('http://httpbin.org/post?foo=bar'))
+    ->withUri(new \Swlib\Http\Uri('http://httpbin.org/post?foo=bar'))
     ->withQueryParams(['foo' => 'option is higher-level than uri'])
-    ->withHeader('content-type', ContentType::JSON)
-    ->withBody(new BufferStream(json_encode(['foo' => 'bar'])))
+    ->withHeader('content-type', \Swlib\Http\ContentType::JSON)
+    ->withBody($bufferStream)
     ->exec()->recv();
-
 echo $response->getBody();
 ```
 
