@@ -106,7 +106,7 @@ go(function () {
       - <a href="#掩码表">掩码表</a>
     - <a href="#异常自定义处理函数">异常自定义处理函数</a>
   - <a href="#road-map">Road Map</a>
-      - <a href="#why-not-http2-?">Why not Http2 ?</a>
+      - <a href="#why-not-http2-">Why not Http2 ?</a>
   - <a href="#ide-helper">IDE Helper</a>
   - <a href="#重中之重">重中之重</a>
   - <a href="#附录">附录</a>
@@ -311,14 +311,15 @@ echo $res;
 ### PSR风格
 
 ```php
+$bufferStream = new BufferStream();
+$bufferStream->write(json_encode(['foo' => 'bar']));
 $response = SaberGM::psr()
     ->withMethod('POST')
     ->withUri(new Uri('http://httpbin.org/post?foo=bar'))
     ->withQueryParams(['foo' => 'option is higher-level than uri'])
     ->withHeader('content-type', ContentType::JSON)
-    ->withBody(new BufferStream(json_encode(['foo' => 'bar'])))
+    ->withBody($bufferStream)
     ->exec()->recv();
-
 echo $response->getBody();
 ```
 
@@ -709,7 +710,7 @@ As the main HTTP/2 benefit is that it allows multiplexing many requests within a
 
 对于底层Swoole相关类的IDE提示则需要引入eaglewu的[swoole-ide-helper](https://github.com/eaglewu/swoole-ide-helper)(composer在dev环境下会默认安装), 但是该项目为手动维护, 不太完整, 也可以使用[swoft-ide-helper](https://github.com/swoft-cloud/swoole-ide-helper)或:
 
-**Swoole官方的[ide-helper](https://github.com/swoole/ide-helper/)并运行`php dump.php`生成一下.**
+**Swoole官方的[ide-helper](https://github.com/swoole/ide-helper).**
 
 <br>
 
