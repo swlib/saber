@@ -241,14 +241,14 @@ $file1 = __DIR__ . '/black.png';
 $file2 = [
     'path' => __DIR__ . '/black.png',
     'name' => 'white.png',
-    'type' => ContentType::$Map['png'],
+    'type' => ContentType::MAP['png'],
     'offset' => null, //re-upload from break
     'size' => null //upload a part of the file
 ];
 $file3 = new SwUploadFile(
     __DIR__ . '/black.png',
     'white.png',
-    ContentType::$Map['png']
+    ContentType::MAP['png']
 );
 
 echo SaberGM::post('http://httpbin.org/post', null, [
