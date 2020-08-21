@@ -10,7 +10,6 @@ namespace Swlib\Saber;
 use BadMethodCallException;
 use InvalidArgumentException;
 use Psr\Http\Message\UriInterface;
-use Swlib\Http\ContentType;
 use Swlib\Http\Cookies;
 use Swlib\Http\CookiesManagerTrait;
 use Swlib\Http\Exception\ConnectException;
