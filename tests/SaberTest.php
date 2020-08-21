@@ -405,4 +405,20 @@ class SaberTest extends TestCase
         $this->assertTrue($ReqWithSaberPSR2['header']['connection'] === 'keep-alive');
     }
 
+    public function testPostDataAndUploadFile()
+    {
+        $file = __DIR__ . '/resources/black.png';
+        $array = SaberGM::post(
+            'http://httpbin.org/post',
+            ['foo' => 'bar'],
+            [
+                'files' => [
+                    'image' => $file,
+                ]
+            ]
+        )->getParsedJsonArray();
+
+        $this->assertEquals($array['form']['foo'], 'bar');
+    }
+
 }
