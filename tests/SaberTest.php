@@ -455,6 +455,7 @@ class SaberTest extends TestCase
             ]
         )->getParsedJsonArray();
 
-        $this->assertEquals($array['form']['foo'], 'bar');
+        $this->assertEquals($array['form']['from'], 'saber');
+        $this->assertEquals($array['form']['to'], 'httpbin');
     }
 }
