@@ -10,6 +10,7 @@ namespace Swlib\Saber;
 use BadMethodCallException;
 use InvalidArgumentException;
 use Psr\Http\Message\UriInterface;
+use Swlib\Http\ContentType;
 use Swlib\Http\Cookies;
 use Swlib\Http\CookiesManagerTrait;
 use Swlib\Http\Exception\ConnectException;
@@ -17,6 +18,7 @@ use Swlib\Http\Exception\HttpExceptionMask;
 use Swlib\Http\StreamInterface;
 use Swlib\Http\SwUploadFile;
 use Swlib\Http\Uri;
+use Swlib\Util\DataParser;
 use Swlib\Util\InterceptorTrait;
 use Swlib\Util\SpecialMarkTrait;
 use Swoole\Coroutine\Http\Client;
@@ -623,7 +625,19 @@ class Request extends \Swlib\Http\Request
                 }
                 $this->client->addFile(...$file_options);
             }
-            parse_str($body, $body);
+
+            if (!empty($body)) {
+                switch ($this->getHeaderLine('Content-Type')) {
+                    case ContentType::JSON:
+                        $body = DataParser::toJsonArray($body);
+                        break;
+                    case ContentType::XML:
+                        $body = DataParser::toXmlArray($body);
+                        break;
+                    default:
+                        parse_str($body, $body);
+                }
+            }
         }
 
         if ($body !== '') {

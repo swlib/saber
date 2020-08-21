@@ -421,4 +421,40 @@ class SaberTest extends TestCase
         $this->assertEquals($array['form']['foo'], 'bar');
     }
 
+    public function testPostJsonDataAndUploadFile()
+    {
+        $file = __DIR__ . '/resources/black.png';
+        $array = SaberGM::post(
+            'http://httpbin.org/post',
+            null,
+            [
+                'files' => [
+                    'image' => $file,
+                ],
+                'json' => json_encode(['foo' => 'bar'])
+            ]
+        )->getParsedJsonArray();
+
+        $this->assertEquals($array['form']['foo'], 'bar');
+    }
+
+    public function testPostXmlDataAndUploadFile()
+    {
+        $file = __DIR__ . '/resources/black.png';
+        $array = SaberGM::post(
+            'http://httpbin.org/post',
+            null,
+            [
+                'files' => [
+                    'image' => $file,
+                ],
+                'xml' => "<data>
+<to>httpbin</to>
+<from>saber</from>
+</data>"
+            ]
+        )->getParsedJsonArray();
+
+        $this->assertEquals($array['form']['foo'], 'bar');
+    }
 }
