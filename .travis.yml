@@ -9,9 +9,6 @@ before_install:
   - sudo mv docker-compose /usr/local/bin
   - docker-compose -v
   - docker -v
-  - wget https://github.com/composer/composer/releases/download/1.8.6/composer.phar
-  - chmod u+x composer.phar
-  - sudo mv composer.phar /usr/local/bin/composer
   - ls -al
   - pwd
   - mkdir data
@@ -20,4 +17,4 @@ before_install:
   - chmod -R 777 data
 script:
   - docker-compose -f .travis-dc.yml up -d
-  - docker run -it -v `pwd`:/app:rw -w /app --name="test" phpswoole/swoole composer install-test
+  - docker run -it -v `pwd`:/app:rw -w /app --name="test" twosee/swoole-coroutine composer install-test
