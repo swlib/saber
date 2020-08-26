@@ -431,7 +431,7 @@ class SaberTest extends TestCase
                 'files' => [
                     'image' => $file,
                 ],
-                'json' => json_encode(['foo' => 'bar'])
+                'json' => '{"foo":"bar"}'
             ]
         )->getParsedJsonArray();
 
