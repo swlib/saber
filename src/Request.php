@@ -625,7 +625,6 @@ class Request extends \Swlib\Http\Request
                 }
                 $this->client->addFile(...$file_options);
             }
-
             if ($body !== '') {
                 switch ($this->getHeaderLine('Content-Type')) {
                     case ContentType::JSON:
@@ -637,6 +636,7 @@ class Request extends \Swlib\Http\Request
                     default:
                         parse_str($body, $body);
                 }
+                $this->client->setData($body);
             }
         } elseif ($body !== '') {
             $this->client->setData($body);
