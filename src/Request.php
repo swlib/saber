@@ -10,7 +10,6 @@ namespace Swlib\Saber;
 use BadMethodCallException;
 use InvalidArgumentException;
 use Psr\Http\Message\UriInterface;
-use Swlib\Http\ContentType;
 use Swlib\Http\Cookies;
 use Swlib\Http\CookiesManagerTrait;
 use Swlib\Http\Exception\ConnectException;
@@ -18,7 +17,6 @@ use Swlib\Http\Exception\HttpExceptionMask;
 use Swlib\Http\StreamInterface;
 use Swlib\Http\SwUploadFile;
 use Swlib\Http\Uri;
-use Swlib\Util\DataParser;
 use Swlib\Util\InterceptorTrait;
 use Swlib\Util\SpecialMarkTrait;
 use Swoole\Coroutine\Http\Client;
@@ -602,7 +600,6 @@ class Request extends \Swlib\Http\Request
         $this->client->setMethod($this->getMethod());
         /** Get body as string */
         $body = (string) ($this->getBody() ?? '');
-        var_dump($body);
         /** Set Upload file */
         $files = $this->getUploadedFiles();
         if (!empty($files)) {
