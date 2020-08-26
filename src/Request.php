@@ -600,7 +600,7 @@ class Request extends \Swlib\Http\Request
 
         /** Set method */
         $this->client->setMethod($this->getMethod());
-        /** 设置请求主体 */
+        /** Get body as string */
         $body = (string) ($this->getBody() ?? '');
         /** Set Upload file */
         $files = $this->getUploadedFiles();
@@ -626,7 +626,7 @@ class Request extends \Swlib\Http\Request
                 $this->client->addFile(...$file_options);
             }
 
-            if (!empty($body)) {
+            if ($body !== '') {
                 switch ($this->getHeaderLine('Content-Type')) {
                     case ContentType::JSON:
                         $body = DataParser::toJsonArray($body);
@@ -638,9 +638,7 @@ class Request extends \Swlib\Http\Request
                         parse_str($body, $body);
                 }
             }
-        }
-
-        if ($body !== '') {
+        } elseif ($body !== '') {
             $this->client->setData($body);
         }
 
