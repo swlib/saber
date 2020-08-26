@@ -602,6 +602,7 @@ class Request extends \Swlib\Http\Request
         $this->client->setMethod($this->getMethod());
         /** Get body as string */
         $body = (string) ($this->getBody() ?? '');
+        var_dump($body);
         /** Set Upload file */
         $files = $this->getUploadedFiles();
         if (!empty($files)) {
@@ -626,16 +627,7 @@ class Request extends \Swlib\Http\Request
                 $this->client->addFile(...$file_options);
             }
             if ($body !== '') {
-                switch ($this->getHeaderLine('Content-Type')) {
-                    case ContentType::JSON:
-                        $body = DataParser::toJsonArray($body);
-                        break;
-                    case ContentType::XML:
-                        $body = DataParser::toXmlArray($body);
-                        break;
-                    default:
-                        parse_str($body, $body);
-                }
+                parse_str($body, $body);
                 $this->client->setData($body);
             }
         } elseif ($body !== '') {
