@@ -598,6 +598,8 @@ class Request extends \Swlib\Http\Request
 
         /** Set method */
         $this->client->setMethod($this->getMethod());
+        /** Get body as string */
+        $body = (string) ($this->getBody() ?? '');
         /** Set Upload file */
         $files = $this->getUploadedFiles();
         if (!empty($files)) {
@@ -621,10 +623,11 @@ class Request extends \Swlib\Http\Request
                 }
                 $this->client->addFile(...$file_options);
             }
-        }
-        /** 设置请求主体 */
-        $body = (string) ($this->getBody() ?? '');
-        if ($body !== '') {
+            if ($body !== '') {
+                parse_str($body, $body);
+                $this->client->setData($body);
+            }
+        } elseif ($body !== '') {
             $this->client->setData($body);
         }
 

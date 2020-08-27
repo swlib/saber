@@ -316,7 +316,7 @@ class SaberTest extends TestCase
     public function testBeforeRedirect()
     {
         $response = SaberGM::get(
-            'http://www.httpbin.org/redirect-to?url=https://www.qq.com/',
+            'http://www.httpbingo.org/redirect-to?url=https://www.qq.com/',
             [
                 'before_redirect' => function (Saber\Request $request) {
                     $this->assertEquals('https://www.qq.com/', (string)$request->getUri());
@@ -405,4 +405,19 @@ class SaberTest extends TestCase
         $this->assertTrue($ReqWithSaberPSR2['header']['connection'] === 'keep-alive');
     }
 
+    public function testPostDataAndUploadFile()
+    {
+        $file = __DIR__ . '/resources/black.png';
+        $array = SaberGM::post(
+            'http://httpbin.org/post',
+            ['foo' => 'bar'],
+            [
+                'files' => [
+                    'image' => $file,
+                ]
+            ]
+        )->getParsedJsonArray();
+
+        $this->assertEquals($array['form']['foo'], 'bar');
+    }
 }
