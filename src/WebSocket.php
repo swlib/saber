@@ -13,6 +13,7 @@ use Psr\Http\Message\UriInterface;
 use Swlib\Http\Exception\ConnectException;
 use Swlib\Http\Uri;
 use Swoole\Coroutine\Http\Client;
+use Swoole\Http\Status;
 
 class WebSocket extends \Swlib\Http\Request
 {
@@ -55,10 +56,18 @@ class WebSocket extends \Swlib\Http\Request
 
         $ret = $this->client->upgrade($path);
         if (!$ret) {
+            if ($this->client->errCode !== 0) {
+                $errCode = $this->client->errCode;
+                $errMsg = $this->client->errMsg;
+            } else {
+                $errCode = $this->client->statusCode;
+                $errMsg = Status::getReasonPhrase($errCode);
+            }
+
             throw new ConnectException(
                 $this,
-                $this->client->errCode,
-                'Websocket upgrade failed by [' . swoole_strerror($this->client->errCode) . '].'
+                $errCode,
+                'Websocket upgrade failed by [' . $errMsg . '].'
             );
         }
     }
