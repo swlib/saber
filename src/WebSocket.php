@@ -56,7 +56,7 @@ class WebSocket extends \Swlib\Http\Request
 
         $ret = $this->client->upgrade($path);
         if (!$ret) {
-            if (!empty($this->client->errCode)) {
+            if ($this->client->errCode !== 0) {
                 $errCode = $this->client->errCode;
                 $errMsg = $this->client->errMsg;
             } else {
