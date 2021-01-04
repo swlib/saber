@@ -127,7 +127,7 @@ class SaberTest extends TestCase
         $this->expectException(ServerException::class);
         $saber->get('http://www.httpbin.org/status/500');
         $this->expectException(TooManyRedirectsException::class);
-        $saber->get('http://www.httpbin.org//redirect/1', ['redirect' => 0]);
+        $saber->get('http://httpbingo.org/redirect/3', ['redirect' => 1]);
     }
 
     /**
@@ -419,5 +419,12 @@ class SaberTest extends TestCase
         )->getParsedJsonArray();
 
         $this->assertEquals($array['form']['foo'], 'bar');
+    }
+
+    public function testNonRedirect()
+    {
+        $saber = Saber::create(['exception_report' => true]);
+        $res = $saber->get('http://baidu.com', ['redirect' => 0]);
+        $this->assertTrue((string)$res->body !== '');
     }
 }
