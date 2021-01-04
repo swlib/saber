@@ -1,0 +1,32 @@
+name: PHPUnit for Saber
+
+on: [push, pull_request]
+
+jobs:
+  ci:
+    runs-on: "${{ matrix.os }}"
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+      max-parallel: 4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+
+      - name: Setup Services
+        run: |
+          docker-compose -v
+          docker -v
+          ls -al
+          pwd
+          mkdir data
+          mkdir data/mysql
+          mkdir data/redis
+          chmod -R 777 data
+          docker-compose -f .travis-dc.yml up -d
+
+      - name: Run Test Cases
+        run: |
+          docker run -it -v `pwd`:/app:rw -w /app --name="test" phpswoole/swoole composer install-test
