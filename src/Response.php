@@ -55,6 +55,7 @@ class Response extends \Swlib\Http\Response
         $this->time = $request->_time;
         $this->redirect_headers = $request->_redirect_headers; // record headers before redirect
         $this->cookies = $request->incremental_cookies;
+
         if (!empty($body = $request->client->body)) {
             if ($request->auto_iconv) {
                 /** 自动化转码 */
