@@ -29,4 +29,4 @@ jobs:
 
       - name: Run Test Cases
         run: |
-          docker run --rm -v `pwd`:/app:rw -w /app --name="test" phpswoole/swoole composer install-test
+          docker run --rm -v `pwd`:/app:rw -w /app --name="test" phpswoole/swoole:7.4 composer install-test
