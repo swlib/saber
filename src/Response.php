@@ -106,7 +106,7 @@ class Response extends \Swlib\Http\Response
                 $this->success = true;
                 break;
             case 3:
-                if (!$this->hasHeader('Location')) {
+                if (!$this->hasHeader('Location') || $request->getRedirect() === 0) {
                     /* not a redirect response */
                     $this->success = true;
                     break;

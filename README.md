@@ -1,6 +1,6 @@
 # Saber
 
-[![Latest Version](https://img.shields.io/github/release/swlib/saber.svg?style=flat-square)](https://github.com/swlib/saber/releases)
+[![Latest Version](https://img.shields.io/github/release/swlib/saber.svg)](https://github.com/swlib/saber/releases)
 [![PHPUnit for Saber](https://github.com/swlib/saber/workflows/PHPUnit%20for%20Saber/badge.svg)](https://github.com/swlib/saber/actions)
 [![Php Version](https://img.shields.io/badge/php-%3E=7.1-brightgreen.svg?maxAge=2592000)](https://secure.php.net/)
 [![Swoole Version](https://img.shields.io/badge/swoole-%3E=2.1.2-brightgreen.svg?maxAge=2592000)](https://github.com/swoole/swoole-src)
