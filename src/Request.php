@@ -628,8 +628,10 @@ class Request extends \Swlib\Http\Request
                 $this->client->setData($body);
             }
         } else {
-            if ($body !== '' || $this->getPool()) {
+            if ($body !== '') {
                 $this->client->setData($body);
+            } else {
+                $this->client->setData(null);
             }
         }
 
