@@ -627,8 +627,12 @@ class Request extends \Swlib\Http\Request
                 parse_str($body, $body);
                 $this->client->setData($body);
             }
-        } elseif ($body !== '') {
-            $this->client->setData($body);
+        } else {
+            if ($body !== '') {
+                $this->client->setData($body);
+            } else {
+                $this->client->setData(null);
+            }
         }
 
         /** calc timeout value */
