@@ -26,6 +26,8 @@ class Saber
 
     private static $default_options = [
         'timeout' => 5.000,
+        'bind_address' => null,
+        'bind_port' => null,
         'proxy' => null,
         'ssl' => Request::SSL_AUTO,
         'cafile' => __DIR__ . '/cacert.pem',
@@ -490,6 +492,14 @@ class Saber
                 $options['ssl_verify_peer'],
                 $options['ssl_host_name'] ?? ''
             );
+        }
+
+        /** 绑定地址 */
+        if (isset($options['bind_address'])) {
+            $request->withBindAddress();
+        }
+        if (isset($options['bind_port'])) {
+            $request->withBindPort();
         }
 
         /** 设置超时 */

@@ -49,6 +49,10 @@ class Request extends \Swlib\Http\Request
 
     /** @var array 代理配置 */
     public $proxy = [];
+    /** @var string 绑定地址 */
+    public $bind_address;
+    /** @var int 绑定端口 */
+    public $bind_port;
     /** @var int IO超时时间 */
     public $timeout = 3;
     /** @var int 最大重定向次数,为0时关闭 */
@@ -410,6 +414,52 @@ class Request extends \Swlib\Http\Request
     }
 
     /**
+     * 获取绑定地址
+     *
+     * @return string
+     */
+    public function getBindAddress(): ?string
+    {
+        return $this->bind_address;
+    }
+
+    /**
+     * 设置绑定地址, 如192.168.1.2或eth0
+     *
+     * @param string $address
+     * @return $this
+     */
+    public function withBindAddress(string $address): self
+    {
+        $this->bind_address = $address;
+
+        return $this;
+    }
+
+    /**
+     * 获取绑定端口
+     *
+     * @return int
+     */
+    public function getBindPort(): ?int
+    {
+        return $this->bind_port;
+    }
+
+    /**
+     * 设置绑定端口
+     *
+     * @param int $port
+     * @return $this
+     */
+    public function withBindPort(int $port): self
+    {
+        $this->bind_port = $port;
+
+        return $this;
+    }
+
+    /**
      * 获取超时时间
      *
      * @return float
@@ -651,7 +701,14 @@ class Request extends \Swlib\Http\Request
             'keep_alive' => $this->getKeepAlive(),
         ];
 
-        if ($this->ssl) {
+        if ($this->getBindAddress()) {
+            $settings += [
+                'bind_address' => $this->getBindAddress(),
+                'bind_port' => $this->getBindPort() ?? 0,
+            ];
+        }
+
+        if ($this->getSSL()) {
             $settings['ssl_host_name'] = $this->uri->getHost();
         }
 
