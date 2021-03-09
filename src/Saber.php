@@ -496,10 +496,10 @@ class Saber
 
         /** 绑定地址 */
         if (isset($options['bind_address'])) {
-            $request->withBindAddress();
+            $request->withBindAddress($options['bind_address']);
         }
         if (isset($options['bind_port'])) {
-            $request->withBindPort();
+            $request->withBindPort($options['bind_port']);
         }
 
         /** 设置超时 */
