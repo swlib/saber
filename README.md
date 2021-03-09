@@ -471,6 +471,8 @@ go(function(){
 | after                 | `callable` \| `array` | 响应后拦截器       | `function(Response $response){}`                             | [具体参考拦截器一节](#拦截器)                                |
 | before_redirect       | `callable` \| `array` | 重定向后拦截器     | `function(Request $request, Response $response){}`           | [具体参考拦截器一节](#拦截器)                                |
 | timeout               | float                 | 超时时间           | 0.5                                                          | 默认5s, 支持毫秒级超时                                       |
+| bind_address          | string                | 绑定地址           | 192.168.1.1 或 eth0                                          | 默认不设置                                                   |
+| bind_port             | int                   | 绑定端口           | 80                                                           | 默认不设置                                                   |
 | proxy                 | string                | 代理               | `http://127.0.0.1:1087` \| `socks5://127.0.0.1:1087`         | 支持http和socks5                                             |
 | ssl                   | int                   | 是否开启ssl连接    | `0=关闭` `1=开启` `2=自动`                                   | 默认自动                                                     |
 | cafile                | string                | ca文件             | `__DIR__ . '/cacert.pem'`                                    | 默认自带                                                     |
