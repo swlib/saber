@@ -478,6 +478,8 @@ go(function(){
 | cafile                | string                | ca文件             | `__DIR__ . '/cacert.pem'`                                    | 默认自带                                                     |
 | ssl_verify_peer       | bool                  | 验证服务器端证书   | `false` \| `true`                                            | 默认关闭                                                     |
 | ssl_allow_self_signed | bool                  | 允许自签名证书     | `true` \| `false`                                            | 默认允许                                                     |
+| ssl_cert_file         | string                | cert 证书        | `__DIR__ . '/ssl.cert'`                                       | 默认不设置                                                  |
+| ssl_key_file          | string                | key 私钥         | `__DIR__ . '/ssl.key'`                                        | 默认不设置                                                  |
 | iconv                 | array                 | 指定编码转换       | `['gbk', 'utf-8']`                                           | 共三个参数为`from,to,use_mb`, 默认自动识别                   |
 | exception_report      | int                   | 异常报告级别       | HttpExceptionMask::E_ALL                                     | 默认汇报所有异常                                             |
 | exception_handle      | callable\|array       | 异常自定义处理函数 | `function(Exception $e){}`                                   | 函数返回true时可忽略错误                                     |

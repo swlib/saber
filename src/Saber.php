@@ -31,6 +31,8 @@ class Saber
         'proxy' => null,
         'ssl' => Request::SSL_AUTO,
         'cafile' => __DIR__ . '/cacert.pem',
+        'ssl_cert_file' => '',
+        'ssl_key_file' => '',
         'ssl_verify_peer' => false,
         'ssl_host_name' => null,
         'ssl_allow_self_signed' => true,
@@ -492,6 +494,12 @@ class Saber
                 $options['ssl_verify_peer'],
                 $options['ssl_host_name'] ?? ''
             );
+        }
+        if (isset($options['ssl_cert_file'])) {
+            $request->withSSLCertFile($options['ssl_cert_file']);
+        }
+        if (isset($options['ssl_key_file'])) {
+            $request->withSSLKeyFile($options['ssl_key_file']);
         }
 
         /** 绑定地址 */
