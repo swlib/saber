@@ -43,6 +43,8 @@ class Request extends \Swlib\Http\Request
     public $ssl = self::SSL_AUTO;
     /** @var string CA证书目录 */
     public $ca_file = '';
+    public $ssl_cert_file = '';
+    public $ssl_key_file = '';
     public $ssl_verify_peer = false;
     public $ssl_host_name = '';
     public $ssl_allow_self_signed = true;
@@ -277,6 +279,30 @@ class Request extends \Swlib\Http\Request
     public function withCAFile(string $ca_file = __DIR__ . '/cacert.pem'): self
     {
         $this->ca_file = $ca_file;
+
+        return $this;
+    }
+
+    public function getSSLCertFile(): string
+    {
+        return $this->ssl_cert_file;
+    }
+
+    public function withSSLCertFile(string $cert_file): self
+    {
+        $this->ssl_cert_file = $cert_file;
+
+        return $this;
+    }
+
+    public function getSSLKeyFile(): string
+    {
+        return $this->ssl_key_file;
+    }
+
+    public function withSSLKeyFile(string $key_file): self
+    {
+        $this->ssl_key_file = $key_file;
 
         return $this;
     }
@@ -712,9 +738,16 @@ class Request extends \Swlib\Http\Request
             $settings['ssl_host_name'] = $this->uri->getHost();
         }
 
+        if ($this->getSSLCertFile()) {
+            $settings['ssl_cert_file'] = $this->getSSLCertFile();
+        }
+        if ($this->getSSLKeyFile()) {
+            $settings['ssl_key_file'] = $this->getSSLkeyFile();
+        }
+
         $settings += $this->getProxy();
 
-        if (!empty($ca_file = $this->getCAFile())) {
+        if (!empty($this->getCAFile())) {
             $settings += $this->getSSLConf();
         }
         $this->client->set($settings);
