@@ -793,7 +793,11 @@ public function tryToRevertClientToPool(bool $connect_failed = false)
 public function getSSL(): int
 public function withSSL(int $mode = 2): self
 public function getCAFile(): string
-public function withCAFile(string $ca_file = '/Users/twosee/Toast/swlib/saber/src/cacert.pem'): self
+public function withCAFile(string $ca_file = __DIR__ . '/cacert.pem'): self
+public function getSSLCertFile(): string
+public function withSSLCertFile(string $cert_file): self
+public function getSSLKeyFile(): string
+public function withSSLKeyFile(string $key_file): self
 public function withSSLVerifyPeer(bool $verify_peer = false, ?string $ssl_host_name = ''): self
 public function withSSLAllowSelfSigned(bool $allow = true): self
 public function getSSLConf()
@@ -805,6 +809,10 @@ public function getProxy(): array
 public function withProxy(string $host, int $port): self
 public function withSocks5(string $host, int $port, ?string $username, ?string $password): self
 public function withoutProxy(): self
+public function getBindAddress(): ?string
+public function withBindAddress(string $address): self
+public function getBindPort(): ?int
+public function withBindPort(int $port): self
 public function getTimeout(): float
 public function withTimeout(float $timeout): self
 public function getRedirect(): int
