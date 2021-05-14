@@ -469,10 +469,6 @@ class Saber
             );
         }
 
-        if (isset($options['use_pool'])) {
-            $request->withPool($options['use_pool']);
-        }
-
         if (!empty($options['uri_query']) && $uri = $request->getUri()) {
             $uri->withQuery(DataParser::toQueryString(($options['uri_query'])));
         }
@@ -661,6 +657,10 @@ class Saber
             $request->withAddedInterceptor('before_retry', (array)$options['before_retry']);
         }
 
+        if(!empty($options['pool_key'])){
+            $request->withAddedInterceptor('pool_key', (array)$options['pool_key']);
+        }
+
         /** register Interceptor before request */
         if (!empty($options['before'])) {
             $request->withAddedInterceptor('request', (array)$options['before']);
@@ -678,6 +678,10 @@ class Saber
 
         if (!empty($options['exception_handle'])) {
             $request->withAddedInterceptor('exception', (array)$options['exception_handle']);
+        }
+
+        if (isset($options['use_pool'])) {
+            $request->withPool($options['use_pool']);
         }
     }
 

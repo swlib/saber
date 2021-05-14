@@ -16,7 +16,7 @@ use Swoole\Coroutine\Http\Client;
 class ClientPool extends MapPool
 {
 
-    public function createEx(array $options, bool $temp = false)
+    public function createEx(array $options, string $key = null, bool $temp = false)
     {
         if (Coroutine::getuid() < 0) {
             throw new BadMethodCallException(
@@ -28,15 +28,15 @@ class ClientPool extends MapPool
         if ($temp) {
             return $client; // not record
         } else {
-            $key = "{$options['host']}:{$options['port']}";
+            $key = $key ?? "{$options['host']}:{$options['port']}";
             parent::create($options, $key);
             return $client;
         }
     }
 
-    public function setMaxEx(array $options, int $max_size = -1): int
+    public function setMaxEx(array $options, string $key = null, int $max_size = -1): int
     {
-        $key = "{$options['host']}:{$options['port']}";
+        $key = $key ?? "{$options['host']}:{$options['port']}";
         $ret = parent::setMax($key, $max_size);
         if ($ret === -1) { // chan reduce max size
             $chan = $this->resource_map[$key];
@@ -54,10 +54,10 @@ class ClientPool extends MapPool
         return $ret;
     }
 
-    public function getEx(string $host, string $port): ?Client
+    public function getEx(string $host, string $port, string $key = null): ?Client
     {
         /** @var $client Client */
-        $key = "{$host}:{$port}";
+        $key = $key ?? "{$host}:{$port}";
         $client = parent::get($key);
         if ($client && SABER_SW_LE_V401 && !$client->isConnected()) {
             @$this->status_map[$key]['disconnected']++;
@@ -66,19 +66,19 @@ class ClientPool extends MapPool
         return $client;
     }
 
-    public function putEx(Client $client)
+    public function putEx(Client $client, string $key = null)
     {
         /** @var $client Client */
         if (!($client instanceof Client)) {
             throw new InvalidArgumentException('$value should be instance of ' . Client::class);
         }
-        parent::put($client, "{$client->host}:{$client->port}");
+        parent::put($client, $key ?? "{$client->host}:{$client->port}");
     }
 
-    public function destroyEx(Client $client)
+    public function destroyEx(Client $client, string $key = null)
     {
         $client->close();
-        parent::destroy($client, "{$client->host}:{$client->port}");
+        parent::destroy($client, $key ?? "{$client->host}:{$client->port}");
     }
 
     public function release(string $key)
