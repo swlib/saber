@@ -28,7 +28,7 @@ class ClientPool extends MapPool
         if ($temp) {
             return $client; // not record
         } else {
-            $key = $key ?? "{$options['host']}:{$options['port']}";
+            $key = empty($key) ? "{$options['host']}:{$options['port']}" : $key;
             parent::create($options, $key);
             return $client;
         }
@@ -36,7 +36,7 @@ class ClientPool extends MapPool
 
     public function setMaxEx(array $options, string $key = null, int $max_size = -1): int
     {
-        $key = $key ?? "{$options['host']}:{$options['port']}";
+        $key = empty($key) ? "{$options['host']}:{$options['port']}" : $key;
         $ret = parent::setMax($key, $max_size);
         if ($ret === -1) { // chan reduce max size
             $chan = $this->resource_map[$key];
@@ -57,7 +57,7 @@ class ClientPool extends MapPool
     public function getEx(string $host, string $port, string $key = null): ?Client
     {
         /** @var $client Client */
-        $key = $key ?? "{$host}:{$port}";
+        $key = empty($key) ? "{$host}:{$port}" : $key;
         $client = parent::get($key);
         if ($client && SABER_SW_LE_V401 && !$client->isConnected()) {
             @$this->status_map[$key]['disconnected']++;
@@ -72,13 +72,13 @@ class ClientPool extends MapPool
         if (!($client instanceof Client)) {
             throw new InvalidArgumentException('$value should be instance of ' . Client::class);
         }
-        parent::put($client, $key ?? "{$client->host}:{$client->port}");
+        parent::put($client, empty($key) ? "{$client->host}:{$client->port}" : $key);
     }
 
     public function destroyEx(Client $client, string $key = null)
     {
         $client->close();
-        parent::destroy($client, $key ?? "{$client->host}:{$client->port}");
+        parent::destroy($client, empty($key) ? "{$client->host}:{$client->port}" : $key);
     }
 
     public function release(string $key)
