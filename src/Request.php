@@ -216,7 +216,7 @@ class Request extends \Swlib\Http\Request
         if (is_numeric($this->use_pool)) {
             // limit max num
             $key = $this->callInterceptor('pool_key', $this);
-            ClientPool::getInstance()->setMaxEx($this->getConnectionTarget(), $key, $bool_or_max_size);
+            ClientPool::getInstance()->setMaxEx($this->getConnectionTarget(), $bool_or_max_size, $key);
         }
         if ($bool_or_max_size) {
             $this->withKeepAlive(true);
@@ -656,7 +656,7 @@ class Request extends \Swlib\Http\Request
             if ($this->use_pool && $client = $client_pool->getEx($connectionInfo['host'], $connectionInfo['port'], $key)) {
                 $this->client = $client;
             } else {
-                $this->client = $client_pool->createEx($connectionInfo, $key, !$this->use_pool);
+                $this->client = $client_pool->createEx($connectionInfo, !$this->use_pool, $key);
             }
         }
 
