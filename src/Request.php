@@ -215,8 +215,11 @@ class Request extends \Swlib\Http\Request
         $this->use_pool = $bool_or_max_size;
         if (is_numeric($this->use_pool)) {
             // limit max num
-            $key = $this->callInterceptor('pool_key', $this);
-            ClientPool::getInstance()->setMaxEx($this->getConnectionTarget(), $bool_or_max_size, $key);
+            $connectionTarget = $this->getConnectionTarget();
+            if (($key = $this->callInterceptor('pool_key', $this))) {
+                $connectionTarget['pool_key'] = $key;
+            }
+            ClientPool::getInstance()->setMaxEx($connectionTarget, $bool_or_max_size);
         }
         if ($bool_or_max_size) {
             $this->withKeepAlive(true);
@@ -230,17 +233,16 @@ class Request extends \Swlib\Http\Request
         if ($this->use_pool) {
             $client_pool = ClientPool::getInstance();
             // revert the client to the pool
-            $key = $this->callInterceptor('pool_key', $this);
             if (SABER_SW_LE_V401) {
                 if ($connect_failed || $this->isInQueue()) {
                     // in ver <= 4.0.1 when connect failed we must create new one
                     // in ver <= 4.0.1 (https://github.com/swoole/swoole-src/pull/1790)
                     // swoole have a bug about defer client and auto reconnect
                     // so we can't reuse it anymore.
-                    $client_pool->destroyEx($this->client, $key);
+                    $client_pool->destroyEx($this->client);
                 }
             } else {
-                $client_pool->putEx($this->client, $key);
+                $client_pool->putEx($this->client);
             }
         } else {
             // it will be left
@@ -652,12 +654,13 @@ class Request extends \Swlib\Http\Request
             $connectionInfo = $this->getConnectionTarget();
             /** create a new coroutine client */
             $client_pool = ClientPool::getInstance();
-            $key = $this->callInterceptor('pool_key', $this);
-            if ($this->use_pool && $client = $client_pool->getEx($connectionInfo['host'], $connectionInfo['port'], $key)) {
-                $this->client = $client;
-            } else {
-                $this->client = $client_pool->createEx($connectionInfo, !$this->use_pool, $key);
+            if ($this->use_pool) {
+                if (($key = $this->callInterceptor('pool_key', $this))) {
+                    $connectionInfo['pool_key'] = $key;
+                }
+                $client = $client_pool->getEx($connectionInfo);
             }
+            $this->client = $client ?? $client_pool->createEx($connectionInfo, !$this->use_pool);
         }
 
         /** Clear useless cookies property */
