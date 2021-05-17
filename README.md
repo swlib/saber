@@ -486,7 +486,7 @@ go(function(){
 | retry                 | callable              | 自动重试拦截器     | `function(Request $request, Response $response){}`           | 位于发生错误后及重试之前                                     |
 | retry_time            | int                   | 自动重试次数       |                                                              | 默认不重试                                                   |
 | use_pool              | bool\|int             | 连接池             | `true`                                                       | `false`                                                      |
-| pool_key              | callable\|array       | 连接池的key        | `function(Request $request){}`                               | 默认为请求地址的`host:port`                                  |
+| pool_key              | callable\|array       | 连接池的key        | `function(Request $request):string { return $key; }`         | 默认为请求地址的`host:port`                                  |
 
 ### 配置参数别名
 
