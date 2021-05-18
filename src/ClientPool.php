@@ -25,18 +25,18 @@ class ClientPool extends MapPool
             );
         }
         $client = new Client($options['host'], $options['port'], $options['ssl']);
-        if ($temp) {
-            return $client; // not record
-        } else {
-            $key = "{$options['host']}:{$options['port']}";
+        if (!$temp) {
+            $key = $options['pool_key'] ?? "{$options['host']}:{$options['port']}";
             parent::create($options, $key);
-            return $client;
+            /** @noinspection PhpUndefinedFieldInspection */
+            $client->pool_key = $key;
         }
+        return $client;
     }
 
     public function setMaxEx(array $options, int $max_size = -1): int
     {
-        $key = "{$options['host']}:{$options['port']}";
+        $key = $options['pool_key'] ?? "{$options['host']}:{$options['port']}";
         $ret = parent::setMax($key, $max_size);
         if ($ret === -1) { // chan reduce max size
             $chan = $this->resource_map[$key];
@@ -54,10 +54,10 @@ class ClientPool extends MapPool
         return $ret;
     }
 
-    public function getEx(string $host, string $port): ?Client
+    public function getEx(array $options): ?Client
     {
         /** @var $client Client */
-        $key = "{$host}:{$port}";
+        $key = $options['pool_key'] ?? "{$options['host']}:{$options['port']}";
         $client = parent::get($key);
         if ($client && SABER_SW_LE_V401 && !$client->isConnected()) {
             @$this->status_map[$key]['disconnected']++;
@@ -68,17 +68,13 @@ class ClientPool extends MapPool
 
     public function putEx(Client $client)
     {
-        /** @var $client Client */
-        if (!($client instanceof Client)) {
-            throw new InvalidArgumentException('$value should be instance of ' . Client::class);
-        }
-        parent::put($client, "{$client->host}:{$client->port}");
+        parent::put($client, $client->pool_key ?? "{$client->host}:{$client->port}");
     }
 
     public function destroyEx(Client $client)
     {
         $client->close();
-        parent::destroy($client, "{$client->host}:{$client->port}");
+        parent::destroy($client, $client->pool_key ?? "{$client->host}:{$client->port}");
     }
 
     public function release(string $key)

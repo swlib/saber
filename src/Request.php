@@ -215,7 +215,11 @@ class Request extends \Swlib\Http\Request
         $this->use_pool = $bool_or_max_size;
         if (is_numeric($this->use_pool)) {
             // limit max num
-            ClientPool::getInstance()->setMaxEx($this->getConnectionTarget(), $bool_or_max_size);
+            $connectionTarget = $this->getConnectionTarget();
+            if (($key = $this->callInterceptor('pool_key', $this))) {
+                $connectionTarget['pool_key'] = $key;
+            }
+            ClientPool::getInstance()->setMaxEx($connectionTarget, $bool_or_max_size);
         }
         if ($bool_or_max_size) {
             $this->withKeepAlive(true);
@@ -650,11 +654,13 @@ class Request extends \Swlib\Http\Request
             $connectionInfo = $this->getConnectionTarget();
             /** create a new coroutine client */
             $client_pool = ClientPool::getInstance();
-            if ($this->use_pool && $client = $client_pool->getEx($connectionInfo['host'], $connectionInfo['port'])) {
-                $this->client = $client;
-            } else {
-                $this->client = $client_pool->createEx($connectionInfo, !$this->use_pool);
+            if ($this->use_pool) {
+                if (($key = $this->callInterceptor('pool_key', $this))) {
+                    $connectionInfo['pool_key'] = $key;
+                }
+                $client = $client_pool->getEx($connectionInfo);
             }
+            $this->client = $client ?? $client_pool->createEx($connectionInfo, !$this->use_pool);
         }
 
         /** Clear useless cookies property */

@@ -427,4 +427,18 @@ class SaberTest extends TestCase
         $res = $saber->get('http://baidu.com', ['redirect' => 0]);
         $this->assertTrue((string)$res->body !== '');
     }
+
+    public function testPoolKeyConfig(){
+        $saber = Saber::create(['exception_report' => true]);
+        $saber->get('http://www.httpbin.org', ['use_pool' => 5, 'pool_key' => function (Saber\Request $request) {
+            return 'test_pool';
+        }]);
+        $this->assertEquals(saber_pool_get_status('test_pool')['max'], 5);
+    }
+
+    public function testNoPoolKeyConfig(){
+        $saber = Saber::create(['exception_report' => true]);
+        $saber->get('http://www.httpbin.org', ['use_pool' => 5]);
+        $this->assertEquals(saber_pool_get_status('www.httpbin.org:80')['max'], 5);
+    }
 }
