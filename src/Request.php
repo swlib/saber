@@ -662,30 +662,16 @@ class Request extends \Swlib\Http\Request
             }
             $this->client = $client ?? $client_pool->createEx($connectionInfo, !$this->use_pool);
         }
-
         /** Clear useless cookies property */
         $this->client->cookies = null;
 
-        /** Set request headers */
-        $cookie = $this->cookies->toRequestString($this->uri);
-
-        // Ensure Host is the first header.
-        // See: http://tools.ietf.org/html/rfc7230#section-5.4
-        $headers = ['Host' => $this->getHeaderLine('Host') ?: $this->uri->getHost()] +
-            $this->getHeaders(true, true);
-        if (!empty($cookie) && empty($headers['Cookie'])) {
-            $headers['Cookie'] = $cookie;
-        }
-        $this->client->setHeaders($headers);
-
-        /** Set method */
-        $this->client->setMethod($this->getMethod());
         /** Get body as string */
         $body = (string) ($this->getBody() ?? '');
         /** Set Upload file */
         $files = $this->getUploadedFiles();
         if (!empty($files)) {
             /** @var $file SwUploadFile */
+            $fileAdded = false;
             foreach ($files as $key => $file) {
                 $file_options = [
                     $file->getFilePath(),
@@ -703,7 +689,11 @@ class Request extends \Swlib\Http\Request
                 if ($file_size = $file->getSize()) {
                     $file_options[] = $file_size;
                 }
-                $this->client->addFile(...$file_options);
+                $fileAdded = $fileAdded || $this->client->addFile(...$file_options);
+            }
+            if ($fileAdded) {
+                /** it will be set by Swoole kernel */
+                $this->withoutHeader('content-type');
             }
             if ($body !== '') {
                 parse_str($body, $body);
@@ -716,6 +706,24 @@ class Request extends \Swlib\Http\Request
                 $this->client->setData(null);
             }
         }
+
+        /** Code of set headers must be placed here (after parse body),
+         * because they may changed during parse body */
+
+        /** Set method */
+        $this->client->setMethod($this->getMethod());
+
+        /** Set request headers */
+        $cookie = $this->cookies->toRequestString($this->uri);
+
+        // Ensure Host is the first header.
+        // See: http://tools.ietf.org/html/rfc7230#section-5.4
+        $headers = ['Host' => $this->getHeaderLine('Host') ?: $this->uri->getHost()] +
+            $this->getHeaders(true, true);
+        if (!empty($cookie) && empty($headers['Cookie'])) {
+            $headers['Cookie'] = $cookie;
+        }
+        $this->client->setHeaders($headers);
 
         /** calc timeout value */
         if ($this->_redirect_times > 0) {
