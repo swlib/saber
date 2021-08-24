@@ -98,6 +98,7 @@ class ClientPool extends MapPool
             }
         }
         $this->resource_map[$key] = $this->status_map[$key] = null;
+        unset($this->resource_map[$key], $this->status_map[$key]);
     }
 
     public function releaseAll()
