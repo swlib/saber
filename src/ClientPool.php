@@ -68,7 +68,12 @@ class ClientPool extends MapPool
 
     public function putEx(Client $client)
     {
-        parent::put($client, $client->pool_key ?? "{$client->host}:{$client->port}");
+        $key = $client->pool_key ?? "{$client->host}:{$client->port}";
+        if ($this->resource_map[$key] ?? false) {
+            parent::put($client, $key);
+        } else {
+            $client->close();
+        }
     }
 
     public function destroyEx(Client $client)
