@@ -7,7 +7,6 @@
 namespace Swlib\Saber;
 
 use BadMethodCallException;
-use InvalidArgumentException;
 use Swlib\Util\MapPool;
 use Swoole\Coroutine;
 use Swoole\Coroutine\Channel;
@@ -79,7 +78,10 @@ class ClientPool extends MapPool
     public function destroyEx(Client $client)
     {
         $client->close();
-        parent::destroy($client, $client->pool_key ?? "{$client->host}:{$client->port}");
+        $key = $client->pool_key ?? "{$client->host}:{$client->port}";
+        if ($this->status_map[$key] ?? false) {
+            parent::destroy($client, $key);
+        }
     }
 
     public function release(string $key)

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright: Toast Studio
  * Author: Twosee <twose@qq.com>
@@ -18,6 +19,7 @@ use Swlib\Http\Exception\TooManyRedirectsException;
 use Swlib\Http\SwUploadFile;
 use Swlib\Http\Uri;
 use Swlib\Saber;
+use Swlib\Saber\ClientPool;
 use Swlib\SaberGM;
 use Swoole\Coroutine;
 
@@ -428,7 +430,8 @@ class SaberTest extends TestCase
         $this->assertTrue((string)$res->body !== '');
     }
 
-    public function testPoolKeyConfig(){
+    public function testPoolKeyConfig()
+    {
         $saber = Saber::create(['exception_report' => true]);
         $saber->get('http://www.httpbin.org', ['use_pool' => 5, 'pool_key' => function (Saber\Request $request) {
             return 'test_pool';
@@ -436,9 +439,34 @@ class SaberTest extends TestCase
         $this->assertEquals(saber_pool_get_status('test_pool')['max'], 5);
     }
 
-    public function testNoPoolKeyConfig(){
+    public function testNoPoolKeyConfig()
+    {
         $saber = Saber::create(['exception_report' => true]);
         $saber->get('http://www.httpbin.org', ['use_pool' => 5]);
         $this->assertEquals(saber_pool_get_status('www.httpbin.org:80')['max'], 5);
+    }
+
+    public function testReleasePool()
+    {
+        $saber = Saber::create(['exception_report' => true]);
+        $pool = ClientPool::getInstance();
+        $index = 0;
+        for ($i = 0; $i < 5; $i++) {
+            go(function () use ($saber, $pool, &$index) {
+                $saber->get('http://www.httpbin.org', ['use_pool' => 5, 'pool_key' => function (Saber\Request $request) {
+                    return 'test_release';
+                }]);
+                $index++;
+                if ($index === 1) {
+                    $this->assertEquals($pool->getStatus('test_release')['in_pool'], 1);
+                } elseif ($index === 2) {
+                    $this->assertEquals($pool->getStatus('test_release')['in_pool'], 2);
+                    $pool->release('test_release');
+                    $this->assertNull($pool->getStatus('test_release')['in_pool']);
+                } else {
+                    $this->assertNull($pool->getStatus('test_release')['in_pool']);
+                }
+            });
+        }
     }
 }
