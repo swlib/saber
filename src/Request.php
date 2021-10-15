@@ -49,6 +49,8 @@ class Request extends \Swlib\Http\Request
     public $ssl_host_name = '';
     public $ssl_allow_self_signed = true;
 
+    public $ssl_ciphers = null;
+
     /** @var array 代理配置 */
     public $proxy = [];
     /** @var string 绑定地址 */
@@ -340,6 +342,17 @@ class Request extends \Swlib\Http\Request
                 'ssl_host_name' => $this->ssl_host_name ?: $this->uri->getHost()
             ] : []
             );
+    }
+
+    public function withSSLCiphers(string $ciphers): self
+    {
+        $this->ssl_ciphers = $ciphers;
+        return $this;
+    }
+
+    public function getSSLCiphers()
+    {
+        return $this->ssl_ciphers;
     }
 
     public function getKeepAlive()
@@ -757,6 +770,9 @@ class Request extends \Swlib\Http\Request
         }
         if ($this->getSSLKeyFile()) {
             $settings['ssl_key_file'] = $this->getSSLkeyFile();
+        }
+        if ($this->getSSLCiphers()) {
+            $settings['ssl_ciphers'] = $this->getSSLCiphers();
         }
 
         $settings += $this->getProxy();

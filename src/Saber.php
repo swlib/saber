@@ -36,6 +36,7 @@ class Saber
         'ssl_verify_peer' => false,
         'ssl_host_name' => null,
         'ssl_allow_self_signed' => true,
+        'ssl_ciphers' => null,
         'protocol_version' => '1.1',
         'method' => 'GET',
         'base_uri' => null,
@@ -496,6 +497,9 @@ class Saber
         }
         if (isset($options['ssl_key_file'])) {
             $request->withSSLKeyFile($options['ssl_key_file']);
+        }
+        if (isset($options['ssl_ciphers'])) {
+            $request->withSSLCiphers($options['ssl_ciphers']);
         }
 
         /** 绑定地址 */

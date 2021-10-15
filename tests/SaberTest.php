@@ -469,4 +469,34 @@ class SaberTest extends TestCase
             });
         }
     }
+
+    public function testSSLCiphers()
+    {
+        $ja3 = [];
+        for ($i = 0; $i < 2; $i++) {
+            $saber = Saber::create(['exception_report' => true]);
+            $ja3[] = $saber->get("https://ja3er.com/json")->getParsedJsonArray()['ja3_hash'];
+        }
+        [$j1, $j2] = $ja3;
+        $this->assertEquals($j1, $j2);
+
+        $ciphers = explode(':', 'ECDH+AESGCM:DH+AESGCM:ECDH+AES256:DH+AES256:ECDH+AES128:DH+AES:ECDH+HIGH:DH+HIGH:ECDH+3DES:DH+3DES:RSA+AESGCM:RSA+AES:RSA+HIGH:RSA+3DES');
+        $ja3 = [];
+        for ($i = 0; $i < 2; $i++) {
+            shuffle($ciphers);
+            $saber = Saber::create(['exception_report' => true]);
+            $ja3[] = $saber->get("https://ja3er.com/json", ['ssl_ciphers' => implode(':', $ciphers) . ':!aNULL:!eNULL:!MD5'])->getParsedJsonArray()['ja3_hash'];
+        }
+        [$j1, $j2] = $ja3;
+        $this->assertNotEquals($j1, $j2);
+
+        $ja3 = [];
+        $saber = Saber::create(['exception_report' => true]);
+        for ($i = 0; $i < 2; $i++) {
+            shuffle($ciphers);
+            $ja3[] = $saber->get("https://ja3er.com/json", ['ssl_ciphers' => implode(':', $ciphers) . ':!aNULL:!eNULL:!MD5'])->getParsedJsonArray()['ja3_hash'];
+        }
+        [$j1, $j2] = $ja3;
+        $this->assertNotEquals($j1, $j2);
+    }
 }
